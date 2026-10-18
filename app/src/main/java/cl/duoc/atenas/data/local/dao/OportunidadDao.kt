@@ -1,6 +1,7 @@
 package cl.duoc.atenas.data.local.dao
 
 import androidx.room.Dao
+import androidx.room.Embedded
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
@@ -8,6 +9,7 @@ import cl.duoc.atenas.data.local.entity.Oportunidad
 import cl.duoc.atenas.domain.model.EstadoOportunidad
 import cl.duoc.atenas.domain.model.Prioridad
 import cl.duoc.atenas.domain.model.TipoOportunidad
+import cl.duoc.atenas.domain.model.TipoOrganizacion
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -34,8 +36,93 @@ data class ConteoPorEstado(
     val total: Int
 )
 
+/** Oportunidad con todas sus relaciones resueltas, para la pantalla de detalle. */
+data class OportunidadDetalle(
+    @Embedded val oportunidad: Oportunidad,
+    val organizacionNombre: String,
+    val organizacionTipo: TipoOrganizacion,
+    val organizacionRubro: String,
+    val comunaNombre: String,
+    val regionNombre: String,
+    val contactoNombre: String?,
+    val contactoCargo: String?,
+    val contactoCorreo: String?,
+    val contactoTelefono: String?,
+    val responsableNombre: String?,
+    val creadorNombre: String
+)
+
 @Dao
 interface OportunidadDao {
+
+    /**
+     * Listado con búsqueda y filtros opcionales.
+     *
+     * Los filtros de enum se reciben como texto para poder enviarlos nulos
+     * cuando el usuario no los aplica; el repositorio hace la conversión.
+     */
+    @Query(
+        """
+        SELECT o.id AS id,
+               o.nombre AS nombre,
+               o.tipo AS tipo,
+               o.estado AS estado,
+               o.prioridad AS prioridad,
+               o.fechaInicioEvento AS fechaInicioEvento,
+               o.publicoEsperado AS publicoEsperado,
+               org.nombre AS organizacionNombre,
+               c.nombre AS comunaNombre,
+               u.nombreCompleto AS responsableNombre
+        FROM oportunidad o
+        INNER JOIN organizacion org ON org.id = o.organizacionId
+        INNER JOIN comuna c ON c.id = o.comunaId
+        LEFT JOIN usuario u ON u.id = o.responsableId
+        WHERE (:responsableId IS NULL OR o.responsableId = :responsableId)
+          AND (
+                :texto = ''
+                OR o.nombre LIKE '%' || :texto || '%'
+                OR org.nombre LIKE '%' || :texto || '%'
+                OR c.nombre LIKE '%' || :texto || '%'
+              )
+          AND (:estado IS NULL OR o.estado = :estado)
+          AND (:prioridad IS NULL OR o.prioridad = :prioridad)
+          AND (:tipo IS NULL OR o.tipo = :tipo)
+        ORDER BY o.fechaInicioEvento ASC
+        """
+    )
+    fun buscar(
+        responsableId: Long?,
+        texto: String,
+        estado: String?,
+        prioridad: String?,
+        tipo: String?
+    ): Flow<List<OportunidadResumen>>
+
+    @Query(
+        """
+        SELECT o.*,
+               org.nombre AS organizacionNombre,
+               org.tipo AS organizacionTipo,
+               org.rubro AS organizacionRubro,
+               c.nombre AS comunaNombre,
+               r.nombre AS regionNombre,
+               ct.nombre AS contactoNombre,
+               ct.cargo AS contactoCargo,
+               ct.correo AS contactoCorreo,
+               ct.telefono AS contactoTelefono,
+               u.nombreCompleto AS responsableNombre,
+               cr.nombreCompleto AS creadorNombre
+        FROM oportunidad o
+        INNER JOIN organizacion org ON org.id = o.organizacionId
+        INNER JOIN comuna c ON c.id = o.comunaId
+        INNER JOIN region r ON r.id = c.regionId
+        INNER JOIN usuario cr ON cr.id = o.creadoPorId
+        LEFT JOIN contacto ct ON ct.id = o.contactoId
+        LEFT JOIN usuario u ON u.id = o.responsableId
+        WHERE o.id = :id
+        """
+    )
+    fun observarDetalle(id: Long): Flow<OportunidadDetalle?>
 
     @Query(
         """

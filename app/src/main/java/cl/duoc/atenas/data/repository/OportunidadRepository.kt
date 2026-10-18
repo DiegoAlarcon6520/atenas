@@ -3,9 +3,12 @@ package cl.duoc.atenas.data.repository
 import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.data.local.dao.ConteoPorEstado
 import cl.duoc.atenas.data.local.dao.OportunidadDao
+import cl.duoc.atenas.data.local.dao.OportunidadDetalle
 import cl.duoc.atenas.data.local.dao.OportunidadResumen
 import cl.duoc.atenas.data.local.entity.Oportunidad
 import cl.duoc.atenas.domain.model.EstadoOportunidad
+import cl.duoc.atenas.domain.model.Prioridad
+import cl.duoc.atenas.domain.model.TipoOportunidad
 import kotlinx.coroutines.flow.Flow
 
 class OportunidadRepository(private val dao: OportunidadDao) {
@@ -23,6 +26,22 @@ class OportunidadRepository(private val dao: OportunidadDao) {
         dao.observarConteoPorEstado(responsableId)
 
     fun observarSinResponsable(): Flow<List<OportunidadResumen>> = dao.observarSinResponsable()
+
+    fun buscar(
+        responsableId: Long?,
+        texto: String,
+        estado: EstadoOportunidad?,
+        prioridad: Prioridad?,
+        tipo: TipoOportunidad?
+    ): Flow<List<OportunidadResumen>> = dao.buscar(
+        responsableId = responsableId,
+        texto = texto.trim(),
+        estado = estado?.name,
+        prioridad = prioridad?.name,
+        tipo = tipo?.name
+    )
+
+    fun observarDetalle(id: Long): Flow<OportunidadDetalle?> = dao.observarDetalle(id)
 
     fun observarPorId(id: Long): Flow<Oportunidad?> = dao.observarPorId(id)
 

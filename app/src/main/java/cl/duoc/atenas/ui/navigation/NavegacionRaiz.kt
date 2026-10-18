@@ -4,9 +4,12 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -19,15 +22,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import cl.duoc.atenas.AtenasApp
 import cl.duoc.atenas.data.local.entity.Usuario
 import cl.duoc.atenas.domain.rules.Permisos
 import cl.duoc.atenas.ui.dashboard.DashboardEjecutivoScreen
 import cl.duoc.atenas.ui.login.LoginScreen
+import cl.duoc.atenas.ui.oportunidades.DetalleOportunidadScreen
+import cl.duoc.atenas.ui.oportunidades.ListaOportunidadesScreen
 import cl.duoc.atenas.ui.perfil.PerfilScreen
 import cl.duoc.atenas.ui.supervisor.PanelSupervisorScreen
 
@@ -63,15 +70,27 @@ private fun ContenedorPrincipal(usuario: Usuario) {
     val items = itemsDeNavegacion(usuario.rol)
     val entradaActual by navController.currentBackStackEntryAsState()
     val rutaActual = entradaActual?.destination?.route ?: Rutas.INICIO
+    val esRutaPrincipal = items.any { it.ruta == rutaActual }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Atenas") },
+                title = { Text(tituloDeRuta(rutaActual, usuario.rol)) },
+                navigationIcon = {
+                    if (!esRutaPrincipal) {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Volver"
+                            )
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             )
         },
@@ -111,6 +130,24 @@ private fun ContenedorPrincipal(usuario: Usuario) {
                     DashboardEjecutivoScreen()
                 }
             }
+
+            composable(Rutas.OPORTUNIDADES) {
+                ListaOportunidadesScreen(
+                    alAbrirDetalle = { id ->
+                        navController.navigate(Rutas.detalleOportunidad(id))
+                    }
+                )
+            }
+
+            composable(
+                route = Rutas.DETALLE_OPORTUNIDAD,
+                arguments = listOf(
+                    navArgument(Rutas.ARG_OPORTUNIDAD) { type = NavType.LongType }
+                )
+            ) {
+                DetalleOportunidadScreen()
+            }
+
             composable(Rutas.PERFIL) {
                 PerfilScreen(usuario = usuario)
             }

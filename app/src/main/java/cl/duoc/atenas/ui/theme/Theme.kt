@@ -73,6 +73,7 @@ fun AtenasTheme(
     MaterialTheme(
         colorScheme = if (temaOscuro) EsquemaOscuro else EsquemaClaro,
         typography = Tipografia,
+        shapes = Formas,
         content = content
     )
 }
