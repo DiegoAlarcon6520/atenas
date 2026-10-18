@@ -32,6 +32,11 @@ object Rutas {
 
     fun registrarSeguimiento(oportunidadId: Long): String = "seguimiento/$oportunidadId"
 
+    // ----- Evidencias fotográficas -----
+    const val EVIDENCIAS = "evidencias/{$ARG_OPORTUNIDAD}"
+
+    fun evidencias(oportunidadId: Long): String = "evidencias/$oportunidadId"
+
     // ----- Organizaciones y contactos -----
     const val ORGANIZACIONES = "organizaciones"
     const val ARG_ORGANIZACION = "organizacionId"
@@ -81,6 +86,7 @@ fun tituloDeRuta(ruta: String?, rol: RolUsuario): String = when (ruta) {
     Rutas.DETALLE_OPORTUNIDAD -> "Detalle de la oportunidad"
     Rutas.FORMULARIO_OPORTUNIDAD -> "Registrar oportunidad"
     Rutas.REGISTRAR_SEGUIMIENTO -> "Nueva gestión"
+    Rutas.EVIDENCIAS -> "Evidencias"
     Rutas.ORGANIZACIONES -> "Organizaciones"
     Rutas.DETALLE_ORGANIZACION -> "Ficha de la organización"
     Rutas.FORMULARIO_ORGANIZACION -> "Registrar organización"

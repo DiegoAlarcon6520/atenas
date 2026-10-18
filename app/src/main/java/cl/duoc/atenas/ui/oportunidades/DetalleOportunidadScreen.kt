@@ -1,5 +1,6 @@
 package cl.duoc.atenas.ui.oportunidades
 
+import android.content.ActivityNotFoundException
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
@@ -14,6 +15,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AssignmentInd
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.NoteAdd
 import androidx.compose.material.icons.filled.ExpandLess
@@ -26,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,8 +37,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cl.duoc.atenas.core.CalendarioApp
 import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.data.local.dao.OportunidadDetalle
 import cl.duoc.atenas.data.local.entity.Seguimiento
@@ -50,10 +56,14 @@ import java.util.Locale
 fun DetalleOportunidadScreen(
     alEditar: (Long) -> Unit,
     alRegistrarGestion: (Long) -> Unit,
+    alVerEvidencias: (Long) -> Unit,
+    mostrarMensaje: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: DetalleOportunidadViewModel = viewModel(factory = DetalleOportunidadViewModel.Factory)
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
+    // Se necesita el contexto para abrir la aplicación de calendario.
+    val contexto = LocalContext.current
 
     if (estado.cargando) {
         IndicadorCarga(modifier)
@@ -105,6 +115,55 @@ fun DetalleOportunidadScreen(
                         modifier = Modifier.padding(start = Espaciado.sm)
                     )
                 }
+                OutlinedButton(
+                    onClick = { alVerEvidencias(oportunidad.id) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.PhotoLibrary, contentDescription = null)
+                    Text(
+                        text = "Evidencias fotográficas",
+                        modifier = Modifier.padding(start = Espaciado.sm)
+                    )
+                }
+
+                // Agendar el evento en el calendario del dispositivo.
+                // Se combinan la fecha y las horas guardadas para armar el
+                // instante exacto de inicio y de término.
+                OutlinedButton(
+                    onClick = {
+                        val inicio = Fechas.fechaConHora(
+                            oportunidad.fechaInicioEvento,
+                            oportunidad.horaInicio
+                        )
+                        val termino = Fechas.fechaConHora(
+                            oportunidad.fechaTerminoEvento ?: oportunidad.fechaInicioEvento,
+                            oportunidad.horaTermino
+                        )
+                        val intent = CalendarioApp.intentNuevoEvento(
+                            titulo = oportunidad.nombre,
+                            descripcion = oportunidad.descripcion,
+                            lugar = "${oportunidad.direccion}, ${detalle.comunaNombre}",
+                            inicio = inicio,
+                            termino = termino
+                        )
+                        // Un dispositivo puede no tener aplicación de
+                        // calendario: hay que avisarlo en vez de que la app
+                        // se caiga con una excepción.
+                        try {
+                            contexto.startActivity(intent)
+                        } catch (excepcion: ActivityNotFoundException) {
+                            mostrarMensaje("No hay una aplicación de calendario disponible")
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.CalendarMonth, contentDescription = null)
+                    Text(
+                        text = "Agendar en el calendario",
+                        modifier = Modifier.padding(start = Espaciado.sm)
+                    )
+                }
+
                 OutlinedButton(
                     onClick = { alEditar(oportunidad.id) },
                     modifier = Modifier.fillMaxWidth()
@@ -228,7 +287,21 @@ fun DetalleOportunidadScreen(
             item { EstadoVacio("Aún no se registran gestiones para esta oportunidad.") }
         } else {
             items(estado.historial, key = { it.id }) { seguimiento ->
-                TarjetaSeguimiento(seguimiento)
+                TarjetaSeguimiento(
+                    seguimiento = seguimiento,
+                    alAgendarRecordatorio = { fecha ->
+                        val intent = CalendarioApp.intentRecordatorioGestion(
+                            tituloOportunidad = oportunidad.nombre,
+                            proximaAccion = seguimiento.proximaAccion.orEmpty(),
+                            fecha = fecha
+                        )
+                        try {
+                            contexto.startActivity(intent)
+                        } catch (excepcion: ActivityNotFoundException) {
+                            mostrarMensaje("No hay una aplicación de calendario disponible")
+                        }
+                    }
+                )
             }
         }
     }
@@ -288,7 +361,10 @@ private fun SeccionDatos(titulo: String, datos: List<Pair<String, String>>) {
 }
 
 @Composable
-private fun TarjetaSeguimiento(seguimiento: Seguimiento) {
+private fun TarjetaSeguimiento(
+    seguimiento: Seguimiento,
+    alAgendarRecordatorio: (Long) -> Unit
+) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(Espaciado.md),
@@ -325,6 +401,16 @@ private fun TarjetaSeguimiento(seguimiento: Seguimiento) {
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
+                // Solo tiene sentido agendar si hay una fecha comprometida.
+                seguimiento.fechaProximoSeguimiento?.let { fecha ->
+                    TextButton(onClick = { alAgendarRecordatorio(fecha) }) {
+                        Icon(Icons.Default.CalendarMonth, contentDescription = null)
+                        Text(
+                            text = "Agendar recordatorio",
+                            modifier = Modifier.padding(start = Espaciado.xs)
+                        )
+                    }
+                }
             }
         }
     }

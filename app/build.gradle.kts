@@ -57,6 +57,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.navigation.compose)
 
+    // Carga y cacheo de imágenes (vista previa de las evidencias)
+    implementation(libs.coil.compose)
+
     // Persistencia local
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)

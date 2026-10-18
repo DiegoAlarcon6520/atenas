@@ -38,6 +38,7 @@ import cl.duoc.atenas.AtenasApp
 import cl.duoc.atenas.data.local.entity.Usuario
 import cl.duoc.atenas.domain.rules.Permisos
 import cl.duoc.atenas.ui.dashboard.DashboardEjecutivoScreen
+import cl.duoc.atenas.ui.evidencias.EvidenciasScreen
 import cl.duoc.atenas.ui.login.LoginScreen
 import cl.duoc.atenas.ui.oportunidades.DetalleOportunidadScreen
 import cl.duoc.atenas.ui.oportunidades.FormularioOportunidadScreen
@@ -214,7 +215,9 @@ private fun ContenedorPrincipal(usuario: Usuario) {
                     alEditar = { id -> navController.navigate(Rutas.formularioOportunidad(id)) },
                     alRegistrarGestion = { id ->
                         navController.navigate(Rutas.registrarSeguimiento(id))
-                    }
+                    },
+                    alVerEvidencias = { id -> navController.navigate(Rutas.evidencias(id)) },
+                    mostrarMensaje = mostrarMensaje
                 )
             }
 
@@ -246,6 +249,16 @@ private fun ContenedorPrincipal(usuario: Usuario) {
                     alTerminar = { navController.popBackStack() },
                     mostrarMensaje = mostrarMensaje
                 )
+            }
+
+            // Evidencias fotográficas de una oportunidad.
+            composable(
+                route = Rutas.EVIDENCIAS,
+                arguments = listOf(
+                    navArgument(Rutas.ARG_OPORTUNIDAD) { type = NavType.LongType }
+                )
+            ) {
+                EvidenciasScreen(mostrarMensaje = mostrarMensaje)
             }
 
             // ----- Organizaciones y contactos -----

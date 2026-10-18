@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Carpetas que el FileProvider puede compartir.
+
+    Solo se expone Pictures/evidencias dentro del almacenamiento privado de
+    la aplicación: ninguna otra carpeta del dispositivo queda accesible.
+-->
+<paths>
+    <external-files-path
+        name="evidencias"
+        path="Pictures/evidencias/" />
+</paths>

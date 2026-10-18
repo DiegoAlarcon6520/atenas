@@ -1,6 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!--
+        Permiso de cámara: se declara acá y además se solicita en tiempo de
+        ejecución desde la pantalla de evidencias. Declararlo no basta: desde
+        Android 6 el usuario tiene que concederlo explícitamente.
+    -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!--
+        La cámara es opcional: si el dispositivo no tiene, la aplicación
+        igual se instala y el resto de las funciones siguen disponibles.
+    -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <application
         android:name=".AtenasApp"
         android:allowBackup="true"
@@ -11,6 +26,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Atenas">
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -22,6 +38,26 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--
+            FileProvider: entrega a la aplicación de cámara una URI de
+            contenido temporal para escribir la foto.
+
+            Desde Android 7 está prohibido pasar rutas de archivo (file://)
+            entre aplicaciones; hacerlo lanza FileUriExposedException. El
+            provider genera una URI content:// con permiso acotado solo a
+            esa foto y solo mientras dura la operación.
+        -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/rutas_archivos" />
+        </provider>
+
     </application>
 
 </manifest>
