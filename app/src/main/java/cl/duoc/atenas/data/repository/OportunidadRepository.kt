@@ -11,6 +11,19 @@ import cl.duoc.atenas.domain.model.Prioridad
 import cl.duoc.atenas.domain.model.TipoOportunidad
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * REPOSITORIO DE OPORTUNIDADES
+ *
+ * Capa intermedia entre los ViewModel y la base de datos. Los ViewModel nunca
+ * hablan con un DAO directamente.
+ *
+ * Para qué sirve esta capa:
+ *  - si mañana los datos vinieran de una API, solo cambia esta clase,
+ *  - acá se traducen cosas del dominio a cosas de la base (por ejemplo, los
+ *    enum de los filtros se convierten a texto con .name),
+ *  - acá se calculan parámetros derivados, como el rango de fechas de
+ *    "próximos 30 días".
+ */
 class OportunidadRepository(private val dao: OportunidadDao) {
 
     /** [responsableId] nulo trae todas: es la vista del supervisor. */

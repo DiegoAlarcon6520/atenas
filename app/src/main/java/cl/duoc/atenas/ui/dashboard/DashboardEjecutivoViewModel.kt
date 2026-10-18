@@ -18,6 +18,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
+/*
+ * VIEWMODEL DEL TABLERO DEL EJECUTIVO
+ *
+ * combine() junta varios Flow de la base de datos en un solo estado: cada vez
+ * que cualquiera de las consultas cambia, se recalcula el UiState completo y
+ * la pantalla se redibuja sola.
+ *
+ * stateIn() convierte ese Flow en un StateFlow con valor inicial.
+ * WhileSubscribed(5000) mantiene viva la suscripción cinco segundos después de
+ * que la pantalla desaparece, para no reconsultar la base al rotar el teléfono.
+ */
 data class DashboardEjecutivoUiState(
     val cargando: Boolean = true,
     val nombreUsuario: String = "",

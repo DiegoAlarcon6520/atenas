@@ -8,6 +8,16 @@ import cl.duoc.atenas.data.local.entity.Usuario
 import cl.duoc.atenas.domain.model.RolUsuario
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * DAO DE USUARIOS
+ *
+ * Un DAO (Data Access Object) es una interfaz donde se declaran las consultas;
+ * Room escribe la implementación. Las funciones suspend se ejecutan fuera del
+ * hilo principal, y las que devuelven Flow emiten de nuevo automáticamente
+ * cada vez que la tabla cambia.
+ *
+ * autenticar() compara el hash de la clave, nunca la clave en texto plano.
+ */
 @Dao
 interface UsuarioDao {
 

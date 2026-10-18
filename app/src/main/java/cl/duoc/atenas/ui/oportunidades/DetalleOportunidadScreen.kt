@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -41,6 +43,7 @@ import java.util.Locale
 
 @Composable
 fun DetalleOportunidadScreen(
+    alEditar: (Long) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: DetalleOportunidadViewModel = viewModel(factory = DetalleOportunidadViewModel.Factory)
 ) {
@@ -83,6 +86,19 @@ fun DetalleOportunidadScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                // Tanto el ejecutivo a cargo como el supervisor pueden editar
+                // los antecedentes; lo que cambia según el rol son los estados
+                // y la asignación, que se manejan aparte.
+                Button(
+                    onClick = { alEditar(oportunidad.id) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Edit, contentDescription = null)
+                    Text(
+                        text = "Editar oportunidad",
+                        modifier = Modifier.padding(start = Espaciado.sm)
+                    )
+                }
             }
         }
 

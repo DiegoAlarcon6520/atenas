@@ -15,6 +15,15 @@ import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.data.local.dao.OportunidadResumen
 import cl.duoc.atenas.ui.theme.Espaciado
 
+/**
+ * TARJETA DE OPORTUNIDAD
+ *
+ * Componente compartido por el tablero, el listado y el panel del supervisor.
+ * Si cambias algo acá, cambia en las tres pantallas.
+ *
+ * El parámetro onClick es opcional: cuando viene null la tarjeta es solo
+ * informativa, y cuando trae una función la tarjeta se vuelve tocable.
+ */
 @Composable
 fun TarjetaOportunidad(
     oportunidad: OportunidadResumen,

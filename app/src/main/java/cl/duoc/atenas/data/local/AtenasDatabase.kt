@@ -21,6 +21,19 @@ import cl.duoc.atenas.data.local.entity.Region
 import cl.duoc.atenas.data.local.entity.Seguimiento
 import cl.duoc.atenas.data.local.entity.Usuario
 
+/**
+ * BASE DE DATOS ROOM
+ *
+ * Declara las ocho tablas del modelo, la versión del esquema y los
+ * convertidores de tipo. Room genera en tiempo de compilación la
+ * implementación de esta clase y de todos los DAO.
+ *
+ * obtener() aplica el patrón singleton: una sola conexión a la base para toda
+ * la aplicación. El @Volatile y el synchronized evitan que dos hilos creen dos
+ * instancias al mismo tiempo.
+ *
+ * Si agregas o cambias una entidad tienes que subir el número de version.
+ */
 @Database(
     entities = [
         Usuario::class,

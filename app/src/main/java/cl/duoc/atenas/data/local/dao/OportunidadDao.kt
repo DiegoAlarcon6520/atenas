@@ -30,6 +30,18 @@ data class OportunidadResumen(
     val responsableNombre: String?
 )
 
+/*
+ * DAO DE OPORTUNIDADES
+ *
+ * Es el DAO más grande porque concentra las consultas del listado, los
+ * filtros, el detalle y las métricas de los tableros.
+ *
+ * Las data class que están antes de la interfaz son proyecciones: en vez de
+ * traer la entidad completa, cada consulta devuelve solo las columnas que esa
+ * pantalla necesita, ya cruzadas con las tablas relacionadas. Room las arma
+ * haciendo calzar el nombre de cada columna del SELECT con el nombre del
+ * parámetro de la data class; por eso todos los campos llevan AS.
+ */
 /** Cantidad de oportunidades agrupadas por estado, para los tableros. */
 data class ConteoPorEstado(
     val estado: EstadoOportunidad,

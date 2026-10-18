@@ -16,6 +16,16 @@ import cl.duoc.atenas.ui.theme.Espaciado
 import cl.duoc.atenas.ui.theme.colorDeEstado
 import cl.duoc.atenas.ui.theme.colorDePrioridad
 
+/*
+ * ETIQUETAS DE ESTADO Y PRIORIDAD
+ *
+ * Las "pastillas" de colores que se ven en las tarjetas. El color NO está
+ * escrito acá: se pide a colorDeEstado() y colorDePrioridad(), que viven en
+ * ui/theme/ColoresSemanticos.kt.
+ *
+ * Para cambiar el color de un estado, edita ese archivo y el cambio se refleja
+ * en todas las pantallas a la vez.
+ */
 @Composable
 fun Etiqueta(texto: String, color: Color, modifier: Modifier = Modifier) {
     Text(

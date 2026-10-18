@@ -15,6 +15,17 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/*
+ * VIEWMODEL DE INICIO DE SESIÓN
+ *
+ * Patrón que se repite en todos los ViewModel de la aplicación:
+ *  1. una data class UiState con TODO lo que la pantalla necesita dibujar,
+ *  2. un MutableStateFlow privado que solo el ViewModel modifica,
+ *  3. un StateFlow público de solo lectura que la pantalla observa,
+ *  4. funciones públicas que la pantalla llama cuando el usuario hace algo.
+ *
+ * La pantalla nunca decide nada: solo dibuja el estado y avisa eventos.
+ */
 data class LoginUiState(
     val usuario: String = "",
     val clave: String = "",
