@@ -19,6 +19,9 @@ interface ContactoDao {
     @Query("SELECT * FROM contacto WHERE id = :id")
     fun observarPorId(id: Long): Flow<Contacto?>
 
+    @Query("SELECT * FROM contacto WHERE id = :id")
+    suspend fun porId(id: Long): Contacto?
+
     @Insert
     suspend fun insertar(contacto: Contacto): Long
 

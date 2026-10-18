@@ -42,6 +42,10 @@ import cl.duoc.atenas.ui.login.LoginScreen
 import cl.duoc.atenas.ui.oportunidades.DetalleOportunidadScreen
 import cl.duoc.atenas.ui.oportunidades.FormularioOportunidadScreen
 import cl.duoc.atenas.ui.oportunidades.ListaOportunidadesScreen
+import cl.duoc.atenas.ui.organizaciones.DetalleOrganizacionScreen
+import cl.duoc.atenas.ui.organizaciones.FormularioContactoScreen
+import cl.duoc.atenas.ui.organizaciones.FormularioOrganizacionScreen
+import cl.duoc.atenas.ui.organizaciones.ListaOrganizacionesScreen
 import cl.duoc.atenas.ui.perfil.PerfilScreen
 import cl.duoc.atenas.ui.supervisor.PanelSupervisorScreen
 import kotlinx.coroutines.launch
@@ -132,10 +136,19 @@ private fun ContenedorPrincipal(usuario: Usuario) {
             )
         },
         floatingActionButton = {
-            // El botón de crear solo tiene sentido sobre el listado.
-            if (rutaActual == Rutas.OPORTUNIDADES && Permisos.puedeCrearOportunidad(usuario.rol)) {
-                ExtendedFloatingActionButton(
-                    onClick = { navController.navigate(Rutas.formularioOportunidad()) },
+            // El botón de crear cambia de destino según la pestaña activa,
+            // y no aparece en las pantallas donde no tendría sentido.
+            when (rutaActual) {
+                Rutas.OPORTUNIDADES -> if (Permisos.puedeCrearOportunidad(usuario.rol)) {
+                    ExtendedFloatingActionButton(
+                        onClick = { navController.navigate(Rutas.formularioOportunidad()) },
+                        icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                        text = { Text("Nueva") }
+                    )
+                }
+
+                Rutas.ORGANIZACIONES -> ExtendedFloatingActionButton(
+                    onClick = { navController.navigate(Rutas.formularioOrganizacion()) },
                     icon = { Icon(Icons.Default.Add, contentDescription = null) },
                     text = { Text("Nueva") }
                 )
@@ -213,6 +226,67 @@ private fun ContenedorPrincipal(usuario: Usuario) {
                 )
             ) {
                 FormularioOportunidadScreen(
+                    alTerminar = { navController.popBackStack() },
+                    mostrarMensaje = mostrarMensaje
+                )
+            }
+
+            // ----- Organizaciones y contactos -----
+
+            composable(Rutas.ORGANIZACIONES) {
+                ListaOrganizacionesScreen(
+                    alAbrirDetalle = { id -> navController.navigate(Rutas.detalleOrganizacion(id)) }
+                )
+            }
+
+            composable(
+                route = Rutas.DETALLE_ORGANIZACION,
+                arguments = listOf(
+                    navArgument(Rutas.ARG_ORGANIZACION) { type = NavType.LongType }
+                )
+            ) {
+                DetalleOrganizacionScreen(
+                    alEditarOrganizacion = { id ->
+                        navController.navigate(Rutas.formularioOrganizacion(id))
+                    },
+                    alAgregarContacto = { organizacionId ->
+                        navController.navigate(Rutas.formularioContacto(organizacionId))
+                    },
+                    alEditarContacto = { organizacionId, contactoId ->
+                        navController.navigate(Rutas.formularioContacto(organizacionId, contactoId))
+                    },
+                    alAbrirOportunidad = { id ->
+                        navController.navigate(Rutas.detalleOportunidad(id))
+                    }
+                )
+            }
+
+            composable(
+                route = Rutas.FORMULARIO_ORGANIZACION,
+                arguments = listOf(
+                    navArgument(Rutas.ARG_ORGANIZACION) {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    }
+                )
+            ) {
+                FormularioOrganizacionScreen(
+                    alTerminar = { navController.popBackStack() },
+                    mostrarMensaje = mostrarMensaje
+                )
+            }
+
+            composable(
+                route = Rutas.FORMULARIO_CONTACTO,
+                arguments = listOf(
+                    navArgument(Rutas.ARG_ORGANIZACION) { type = NavType.LongType },
+                    navArgument(Rutas.ARG_CONTACTO) {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    }
+                )
+            ) {
+                FormularioContactoScreen(
                     alTerminar = { navController.popBackStack() },
                     mostrarMensaje = mostrarMensaje
                 )

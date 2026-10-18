@@ -54,6 +54,9 @@ class OportunidadRepository(private val dao: OportunidadDao) {
         tipo = tipo?.name
     )
 
+    fun observarPorOrganizacion(organizacionId: Long): Flow<List<OportunidadResumen>> =
+        dao.observarPorOrganizacion(organizacionId)
+
     fun observarDetalle(id: Long): Flow<OportunidadDetalle?> = dao.observarDetalle(id)
 
     fun observarPorId(id: Long): Flow<Oportunidad?> = dao.observarPorId(id)

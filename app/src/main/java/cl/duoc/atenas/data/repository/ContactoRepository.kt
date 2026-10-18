@@ -13,6 +13,8 @@ class ContactoRepository(private val dao: ContactoDao) {
 
     fun observarPorId(id: Long): Flow<Contacto?> = dao.observarPorId(id)
 
+    suspend fun porId(id: Long): Contacto? = dao.porId(id)
+
     suspend fun crear(contacto: Contacto): Long = dao.insertar(contacto)
 
     suspend fun actualizar(contacto: Contacto) = dao.actualizar(contacto)

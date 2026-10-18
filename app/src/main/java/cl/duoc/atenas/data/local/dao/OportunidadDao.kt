@@ -216,6 +216,29 @@ interface OportunidadDao {
     )
     fun observarProximas(desde: Long, hasta: Long, responsableId: Long?): Flow<List<OportunidadResumen>>
 
+    /** Oportunidades asociadas a una organización, para su ficha. */
+    @Query(
+        """
+        SELECT o.id AS id,
+               o.nombre AS nombre,
+               o.tipo AS tipo,
+               o.estado AS estado,
+               o.prioridad AS prioridad,
+               o.fechaInicioEvento AS fechaInicioEvento,
+               o.publicoEsperado AS publicoEsperado,
+               org.nombre AS organizacionNombre,
+               c.nombre AS comunaNombre,
+               u.nombreCompleto AS responsableNombre
+        FROM oportunidad o
+        INNER JOIN organizacion org ON org.id = o.organizacionId
+        INNER JOIN comuna c ON c.id = o.comunaId
+        LEFT JOIN usuario u ON u.id = o.responsableId
+        WHERE o.organizacionId = :organizacionId
+        ORDER BY o.fechaInicioEvento DESC
+        """
+    )
+    fun observarPorOrganizacion(organizacionId: Long): Flow<List<OportunidadResumen>>
+
     @Query("SELECT * FROM oportunidad WHERE id = :id")
     fun observarPorId(id: Long): Flow<Oportunidad?>
 
