@@ -23,8 +23,10 @@ app/src/main/
     │   ├── Fechas.kt         Fechas y horas (Calendar, no java.time)
     │   ├── Seguridad.kt      Hash SHA-256 de las claves
     │   ├── SesionManager.kt  Usuario autenticado actual (StateFlow)
-    │   ├── ArchivosImagen.kt Archivos de las fotos y sus URI
-    │   └── CalendarioApp.kt  Intents hacia el calendario del dispositivo
+    │   ├── ArchivosImagen.kt Archivos de las fotos, sus URI y la copia
+    │   │                     de las imágenes traídas desde la galería
+    │   ├── CalendarioApp.kt  Intents hacia el calendario del dispositivo
+    │   └── PreferenciasApp.kt Preferencia de tema (SharedPreferences)
     │
     ├── domain/               Reglas de negocio, sin nada de Android
     │   ├── model/Enums.kt              Roles, estados, prioridades, tipos
@@ -59,7 +61,7 @@ app/src/main/
 app/src/test/java/cl/duoc/atenas/domain/   Pruebas unitarias
 ```
 
-**13 pantallas · 14 ViewModels · 8 entidades · 7 DAOs · 7 repositorios**
+**13 pantallas · 14 ViewModels · 8 entidades · 7 DAOs · 7 repositorios · 39 pruebas unitarias**
 
 ---
 
@@ -93,6 +95,9 @@ el ViewModel, y toda la regla de negocio en `domain/`.
 | Búsqueda y filtros | `data/local/dao/OportunidadDao.kt` (consulta `buscar`) |
 | Validaciones | `domain/validation/Validadores.kt` y el `validar()` de cada ViewModel |
 | Estados y transiciones | `domain/rules/TransicionesEstado.kt` |
+| Retroceso de etapa | `TransicionesEstado.anterioresPosibles()` + `Permisos.puedeRetrocederEstado()` |
+| Galería | `core/ArchivosImagen.kt` (`copiarDesdeGaleria`), `ui/evidencias/` |
+| Tema claro/oscuro | `core/PreferenciasApp.kt`, `MainActivity.kt`, `ui/perfil/` |
 | Asignar responsable | `ui/oportunidades/DetalleOportunidadViewModel.kt` |
 | Cámara y fotos | `core/ArchivosImagen.kt`, `ui/evidencias/`, manifest y `rutas_archivos.xml` |
 | Calendario | `core/CalendarioApp.kt`, botones en `DetalleOportunidadScreen.kt` |
@@ -160,6 +165,21 @@ el `validar()` del ViewModel correspondiente.
 1. `domain/model/Enums.kt` → agrégalo a `EstadoOportunidad` con su etiqueta y orden
 2. `domain/rules/TransicionesEstado.kt` → declara desde dónde se llega a él
 3. `ui/theme/ColoresSemanticos.kt` → asígnale un color en el `when`
+
+### Cambiar el tema que se aplica al abrir la aplicación
+
+`core/PreferenciasApp.kt` → el valor por omisión de `leerModoTema()`
+(`ModoTema.SISTEMA`). `MainActivity.kt` observa ese `StateFlow` y decide si pasa
+`darkTheme = true` o `false` al tema; el selector del perfil llama a
+`cambiarModoTema()`.
+
+### Agregar una preferencia nueva
+
+1. `core/PreferenciasApp.kt` → una clave, un `MutableStateFlow`, su lectura
+   inicial y un `cambiar...()` que escribe en `SharedPreferences` y actualiza el
+   flow
+2. `ui/perfil/PerfilViewModel.kt` → expónla en el `UiState`
+3. `ui/perfil/PerfilScreen.kt` → el control que la cambia
 
 ### Cambiar espaciado, tipografía o esquinas
 
@@ -251,7 +271,43 @@ Cinco mecanismos distintos:
 - `animateContentSize` en las secciones plegables del detalle
 - `scaleIn` en la aparición de las miniaturas de evidencia
 
+**¿Por qué la imagen de la galería se copia en vez de guardar su URI?**
+Porque la URI que entrega el selector es un préstamo: el permiso de lectura se
+pierde al reiniciar la aplicación y el usuario puede borrar la foto original.
+`copiarDesdeGaleria()` abre el `InputStream` y escribe una copia en el
+almacenamiento privado, igual que las fotos de cámara. Así una evidencia nunca
+queda apuntando a un archivo que ya no existe.
+
+**¿Por qué la preferencia de tema usa SharedPreferences y no Room ni DataStore?**
+Es un solo valor, de un solo usuario del teléfono, que hay que leer una vez al
+arrancar y antes de dibujar la primera pantalla. Room implicaría una tabla, un
+DAO y una consulta asíncrona para un `String`; DataStore sería una dependencia
+nueva por el mismo dato. `SharedPreferences` lo lee sincrónicamente y se expone
+como `StateFlow`, que es lo que Compose necesita para recomponer.
+
+**¿Por qué solo el supervisor puede devolver una oportunidad a una etapa anterior?**
+Porque retroceder reescribe el embudo, y el embudo es lo que mide el desempeño
+del propio ejecutivo. Si el ejecutivo pudiera retroceder, podría deshacer sus
+propios registros. El supervisor sí, porque su trabajo es corregir la cartera.
+Está en `Permisos.puedeRetrocederEstado()`, y `TransicionesEstado` devuelve
+lista vacía para el ejecutivo, con pruebas unitarias para ambos casos.
+
+**¿Por qué una oportunidad cerrada no se puede reabrir?**
+`anterioresPosibles(CERRADA, …)` devuelve lista vacía a propósito: el cierre es
+el único estado terminal del embudo. `DESCARTADA` sí se puede reabrir, porque un
+descarte suele ser una decisión de la contraparte que cambia, y una
+`ACTIVACION_REALIZADA` marcada por error vuelve a `CONFIRMADA`.
+
+**¿Por qué al cerrar una gestión no se pide próxima acción?**
+Porque la próxima acción es lo que alimenta el panel de gestiones atrasadas. Si
+se exigiera al cerrar, cada oportunidad terminada dejaría una gestión pendiente
+que aparecería vencida para siempre. `TransicionesEstado.esEstadoDeCierre()`
+identifica los tres estados de cierre, el ViewModel salta esas dos validaciones
+y guarda `null`.
+
 **¿Cómo se prueban las reglas de negocio?**
-`app/src/test/java/cl/duoc/atenas/domain/` tiene `ValidadoresTest` y
-`TransicionesEstadoTest`. Corren sin emulador porque ninguna de esas clases
-depende de Android: esa es la razón de haberlas dejado en `domain/`.
+`app/src/test/java/cl/duoc/atenas/domain/` tiene 39 pruebas: `ValidadoresTest`
+(21) y `TransicionesEstadoTest` (18). Corren sin emulador porque ninguna de esas
+clases depende de Android: esa es la razón de haberlas dejado en `domain/`.
+Se ejecutan con `./gradlew testDebugUnitTest`, o con clic derecho sobre la
+carpeta `test` → *Run tests*.

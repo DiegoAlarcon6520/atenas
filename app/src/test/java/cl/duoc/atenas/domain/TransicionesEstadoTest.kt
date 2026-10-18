@@ -3,6 +3,7 @@ package cl.duoc.atenas.domain
 import cl.duoc.atenas.domain.model.EstadoOportunidad
 import cl.duoc.atenas.domain.model.RolUsuario
 import cl.duoc.atenas.domain.rules.TransicionesEstado
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -101,5 +102,98 @@ class TransicionesEstadoTest {
     @Test
     fun `al supervisor no se le muestra ninguna restriccion`() {
         assertTrue(TransicionesEstado.mensajeRestriccion(RolUsuario.SUPERVISOR) == null)
+    }
+
+    // ---------------------------------------------------------------
+    // Retroceso de etapa: corregir el embudo es tarea de la supervisión.
+    // ---------------------------------------------------------------
+
+    @Test
+    fun `el ejecutivo no puede devolver una oportunidad a una etapa anterior`() {
+        val anteriores = TransicionesEstado.anterioresPosibles(
+            actual = EstadoOportunidad.PROPUESTA_ENVIADA,
+            rol = RolUsuario.EJECUTIVO
+        )
+        assertTrue(anteriores.isEmpty())
+    }
+
+    @Test
+    fun `el supervisor puede devolver una oportunidad a cualquier etapa previa`() {
+        val anteriores = TransicionesEstado.anterioresPosibles(
+            actual = EstadoOportunidad.PROPUESTA_ENVIADA,
+            rol = RolUsuario.SUPERVISOR
+        )
+        assertTrue(anteriores.contains(EstadoOportunidad.CONTACTO_REALIZADO))
+        assertTrue(anteriores.contains(EstadoOportunidad.IDENTIFICADA))
+        // No puede "retroceder" a una etapa que todavía no alcanzó.
+        assertFalse(anteriores.contains(EstadoOportunidad.CONFIRMADA))
+    }
+
+    @Test
+    fun `una oportunidad descartada puede reabrirse`() {
+        val anteriores = TransicionesEstado.anterioresPosibles(
+            actual = EstadoOportunidad.DESCARTADA,
+            rol = RolUsuario.SUPERVISOR
+        )
+        assertTrue(anteriores.contains(EstadoOportunidad.IDENTIFICADA))
+    }
+
+    @Test
+    fun `una oportunidad cerrada no se puede reabrir`() {
+        val anteriores = TransicionesEstado.anterioresPosibles(
+            actual = EstadoOportunidad.CERRADA,
+            rol = RolUsuario.SUPERVISOR
+        )
+        assertTrue(anteriores.isEmpty())
+    }
+
+    @Test
+    fun `una activacion marcada por error vuelve a estar solo confirmada`() {
+        val anteriores = TransicionesEstado.anterioresPosibles(
+            actual = EstadoOportunidad.ACTIVACION_REALIZADA,
+            rol = RolUsuario.SUPERVISOR
+        )
+        assertEquals(listOf(EstadoOportunidad.CONFIRMADA), anteriores)
+    }
+
+    @Test
+    fun `retroceder es una transicion valida para el supervisor`() {
+        assertTrue(
+            TransicionesEstado.esValida(
+                desde = EstadoOportunidad.EN_ESPERA_RESPUESTA,
+                hacia = EstadoOportunidad.CONTACTO_REALIZADO,
+                rol = RolUsuario.SUPERVISOR
+            )
+        )
+    }
+
+    @Test
+    fun `retroceder no es una transicion valida para el ejecutivo`() {
+        assertFalse(
+            TransicionesEstado.esValida(
+                desde = EstadoOportunidad.EN_ESPERA_RESPUESTA,
+                hacia = EstadoOportunidad.CONTACTO_REALIZADO,
+                rol = RolUsuario.EJECUTIVO
+            )
+        )
+    }
+
+    // ---------------------------------------------------------------
+    // Estados de cierre: en ellos no se pide próxima acción, porque una
+    // gestión pendiente sobre algo cerrado reaparecería como atrasada.
+    // ---------------------------------------------------------------
+
+    @Test
+    fun `descartada activacion realizada y cerrada son estados de cierre`() {
+        assertTrue(TransicionesEstado.esEstadoDeCierre(EstadoOportunidad.DESCARTADA))
+        assertTrue(TransicionesEstado.esEstadoDeCierre(EstadoOportunidad.ACTIVACION_REALIZADA))
+        assertTrue(TransicionesEstado.esEstadoDeCierre(EstadoOportunidad.CERRADA))
+    }
+
+    @Test
+    fun `las etapas de avance no son estados de cierre`() {
+        assertFalse(TransicionesEstado.esEstadoDeCierre(EstadoOportunidad.IDENTIFICADA))
+        assertFalse(TransicionesEstado.esEstadoDeCierre(EstadoOportunidad.PROPUESTA_ENVIADA))
+        assertFalse(TransicionesEstado.esEstadoDeCierre(EstadoOportunidad.CONFIRMADA))
     }
 }

@@ -42,6 +42,8 @@ Toda la información de organizaciones, contactos, usuarios y eventos es
 - Ficha de detalle con todos los antecedentes y el historial de gestiones
 - Formulario de creación y edición con validaciones y reglas de negocio
 - Asignación y reasignación de responsables, exclusiva del supervisor
+- Leyendas explicativas en cada indicador de los tableros, para que el número
+  deje claro qué está contando
 
 **Organizaciones y contactos**
 - Catálogo de organizaciones con búsqueda y filtro por tipo
@@ -50,11 +52,23 @@ Toda la información de organizaciones, contactos, usuarios y eventos es
 
 **Seguimiento**
 - Registro de gestiones con tipo de acción, resultado y próxima acción
-- Cambios de estado sujetos al perfil del usuario
+- Cambios de estado sujetos al perfil del usuario: el ejecutivo solo avanza en
+  el embudo, y únicamente el supervisor puede devolver una oportunidad a una
+  etapa anterior cuando se registró por error
+- Autorrelleno del formulario con los datos de la gestión anterior, para las
+  gestiones de seguimiento que repiten tipo de acción y contraparte
+- Al cerrar una oportunidad no se exige próxima acción ni fecha de seguimiento:
+  una gestión pendiente sobre algo cerrado reaparecería como atrasada
 - Historial completo con la trazabilidad de cada cambio
+
+**Preferencias**
+- Selector de tema claro, oscuro o según el sistema, desde el perfil del usuario
+- La preferencia se conserva entre ejecuciones de la aplicación
 
 **Recursos del dispositivo**
 - Captura de evidencias fotográficas con la cámara, mediante FileProvider
+- Carga de evidencias desde la galería del dispositivo, copiando el archivo al
+  almacenamiento privado de la aplicación
 - Vista previa de las fotografías asociadas a cada oportunidad
 - Agenda de eventos y recordatorios en el calendario del dispositivo
 
@@ -74,7 +88,8 @@ ninguna dependencia de Android, lo que permite probarlas con tests unitarios.
 app/src/main/java/cl/duoc/atenas/
 ├── AtenasApp.kt          Application: construye el contenedor y siembra la base
 ├── MainActivity.kt       Única Activity del proyecto
-├── core/                 Fechas, seguridad, sesión, archivos y calendario
+├── core/                 Fechas, seguridad, sesión, archivos, calendario
+│                         y preferencias de la aplicación
 ├── domain/
 │   ├── model/            Enums del dominio
 │   ├── rules/            Permisos por rol y máquina de estados
@@ -138,6 +153,8 @@ gestiones asociadas.
 
 Dependencias principales: Jetpack Compose con Material 3, Navigation Compose,
 Room 2.8.5 con KSP, Lifecycle ViewModel y Coil para la vista previa de imágenes.
+La preferencia de tema se guarda con `SharedPreferences`, sin dependencias
+adicionales.
 
 ## Cómo ejecutar
 
@@ -150,7 +167,8 @@ Room 2.8.5 con KSP, Lifecycle ViewModel y Coil para la vista previa de imágenes
 6. Iniciar sesión con cualquiera de las cuentas de prueba.
 
 Para probar la captura de evidencias se requiere un dispositivo o emulador con
-cámara, y conceder el permiso cuando la aplicación lo solicite.
+cámara, y conceder el permiso cuando la aplicación lo solicite. La carga desde
+la galería funciona también sin cámara.
 
 ### Restablecer los datos de prueba
 
@@ -165,8 +183,11 @@ Al volver a abrir la aplicación la base se siembra nuevamente desde cero.
 El proyecto incluye pruebas de las reglas de negocio, en
 `app/src/test/java/cl/duoc/atenas/domain/`:
 
-- `ValidadoresTest` — validaciones de formulario y reglas de coherencia
-- `TransicionesEstadoTest` — permisos de cambio de estado según el perfil
+- `ValidadoresTest` — 21 pruebas de las validaciones de formulario y de las
+  reglas de coherencia entre campos
+- `TransicionesEstadoTest` — 18 pruebas de la máquina de estados: qué avances
+  habilita cada perfil, qué retrocesos permite el supervisor, qué oportunidades
+  ya no se pueden reabrir y cuáles son los estados de cierre
 
 Se ejecutan sin emulador, porque ninguna de esas clases depende de Android.
 
