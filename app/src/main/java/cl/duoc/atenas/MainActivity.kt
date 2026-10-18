@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import cl.duoc.atenas.ui.demo.PanelDemoScreen
+import cl.duoc.atenas.ui.navigation.NavegacionRaiz
 import cl.duoc.atenas.ui.theme.AtenasTheme
 
 class MainActivity : ComponentActivity() {
@@ -18,7 +18,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             AtenasTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    PanelDemoScreen(modifier = Modifier.padding(innerPadding))
+                    NavegacionRaiz(modifier = Modifier.padding(innerPadding))
                 }
             }
         }

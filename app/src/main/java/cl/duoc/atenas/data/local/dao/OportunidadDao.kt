@@ -28,8 +28,47 @@ data class OportunidadResumen(
     val responsableNombre: String?
 )
 
+/** Cantidad de oportunidades agrupadas por estado, para los tableros. */
+data class ConteoPorEstado(
+    val estado: EstadoOportunidad,
+    val total: Int
+)
+
 @Dao
 interface OportunidadDao {
+
+    @Query(
+        """
+        SELECT o.estado AS estado, COUNT(*) AS total
+        FROM oportunidad o
+        WHERE (:responsableId IS NULL OR o.responsableId = :responsableId)
+        GROUP BY o.estado
+        """
+    )
+    fun observarConteoPorEstado(responsableId: Long?): Flow<List<ConteoPorEstado>>
+
+    @Query(
+        """
+        SELECT o.id AS id,
+               o.nombre AS nombre,
+               o.tipo AS tipo,
+               o.estado AS estado,
+               o.prioridad AS prioridad,
+               o.fechaInicioEvento AS fechaInicioEvento,
+               o.publicoEsperado AS publicoEsperado,
+               org.nombre AS organizacionNombre,
+               c.nombre AS comunaNombre,
+               u.nombreCompleto AS responsableNombre
+        FROM oportunidad o
+        INNER JOIN organizacion org ON org.id = o.organizacionId
+        INNER JOIN comuna c ON c.id = o.comunaId
+        LEFT JOIN usuario u ON u.id = o.responsableId
+        WHERE o.responsableId IS NULL
+          AND o.estado NOT IN ('DESCARTADA', 'CERRADA')
+        ORDER BY o.fechaInicioEvento ASC
+        """
+    )
+    fun observarSinResponsable(): Flow<List<OportunidadResumen>>
 
     @Query(
         """

@@ -1,0 +1,44 @@
+package cl.duoc.atenas.ui.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import cl.duoc.atenas.domain.model.EstadoOportunidad
+import cl.duoc.atenas.domain.model.Prioridad
+import cl.duoc.atenas.ui.theme.Espaciado
+import cl.duoc.atenas.ui.theme.colorDeEstado
+import cl.duoc.atenas.ui.theme.colorDePrioridad
+
+@Composable
+fun Etiqueta(texto: String, color: Color, modifier: Modifier = Modifier) {
+    Text(
+        text = texto,
+        style = MaterialTheme.typography.labelMedium,
+        color = color,
+        modifier = modifier
+            .clip(RoundedCornerShape(50))
+            .background(color.copy(alpha = 0.14f))
+            .padding(horizontal = Espaciado.sm, vertical = 2.dp)
+    )
+}
+
+@Composable
+fun EtiquetaEstado(estado: EstadoOportunidad, modifier: Modifier = Modifier) {
+    Etiqueta(texto = estado.etiqueta, color = colorDeEstado(estado), modifier = modifier)
+}
+
+@Composable
+fun EtiquetaPrioridad(prioridad: Prioridad, modifier: Modifier = Modifier) {
+    Etiqueta(
+        texto = "Prioridad ${prioridad.etiqueta.lowercase()}",
+        color = colorDePrioridad(prioridad),
+        modifier = modifier
+    )
+}

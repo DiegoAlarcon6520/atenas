@@ -1,6 +1,7 @@
 package cl.duoc.atenas.di
 
 import android.content.Context
+import cl.duoc.atenas.core.SesionManager
 import cl.duoc.atenas.data.local.AtenasDatabase
 import cl.duoc.atenas.data.local.seed.DatosIniciales
 import cl.duoc.atenas.data.repository.CatalogoRepository
@@ -18,6 +19,8 @@ import cl.duoc.atenas.data.repository.UsuarioRepository
 class AppContainer(context: Context) {
 
     private val db = AtenasDatabase.obtener(context)
+
+    val sesion = SesionManager()
 
     val usuarios = UsuarioRepository(db.usuarioDao())
     val catalogo = CatalogoRepository(db.catalogoDao())

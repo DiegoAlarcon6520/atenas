@@ -11,7 +11,7 @@ import java.util.Locale
  */
 object Fechas {
 
-    private val localeCL = Locale("es", "CL")
+    private val localeCL: Locale = Locale.forLanguageTag("es-CL")
 
     fun aTexto(millis: Long): String =
         SimpleDateFormat("dd/MM/yyyy", localeCL).format(Date(millis))

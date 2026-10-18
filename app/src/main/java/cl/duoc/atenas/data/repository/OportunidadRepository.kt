@@ -1,6 +1,7 @@
 package cl.duoc.atenas.data.repository
 
 import cl.duoc.atenas.core.Fechas
+import cl.duoc.atenas.data.local.dao.ConteoPorEstado
 import cl.duoc.atenas.data.local.dao.OportunidadDao
 import cl.duoc.atenas.data.local.dao.OportunidadResumen
 import cl.duoc.atenas.data.local.entity.Oportunidad
@@ -17,6 +18,11 @@ class OportunidadRepository(private val dao: OportunidadDao) {
         val desde = Fechas.hoy()
         return dao.observarProximas(desde, Fechas.masDias(desde, dias), responsableId)
     }
+
+    fun observarConteoPorEstado(responsableId: Long?): Flow<List<ConteoPorEstado>> =
+        dao.observarConteoPorEstado(responsableId)
+
+    fun observarSinResponsable(): Flow<List<OportunidadResumen>> = dao.observarSinResponsable()
 
     fun observarPorId(id: Long): Flow<Oportunidad?> = dao.observarPorId(id)
 
