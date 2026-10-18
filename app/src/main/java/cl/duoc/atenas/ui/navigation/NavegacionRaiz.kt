@@ -130,10 +130,14 @@ private fun ContenedorPrincipal(usuario: Usuario) {
                         }
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                // Barra sobre la superficie de la aplicación, con el título
+                // en el color de marca. Un bloque de color saturado arriba
+                // compite con los colores semánticos de los estados, que son
+                // los que tienen que destacar.
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.primary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.primary
                 )
             )
         },

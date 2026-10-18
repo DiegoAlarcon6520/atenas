@@ -18,7 +18,7 @@ import androidx.compose.material.icons.filled.AssignmentInd
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.NoteAdd
+import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Button
@@ -109,7 +109,7 @@ fun DetalleOportunidadScreen(
                     onClick = { alRegistrarGestion(oportunidad.id) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(Icons.Default.NoteAdd, contentDescription = null)
+                    Icon(Icons.AutoMirrored.Filled.NoteAdd, contentDescription = null)
                     Text(
                         text = "Registrar gestión",
                         modifier = Modifier.padding(start = Espaciado.sm)

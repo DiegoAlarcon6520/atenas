@@ -25,11 +25,28 @@ val RojoError = Color(0xFFBA1A1A)
 val SobreRojoError = Color(0xFFFFFFFF)
 val ContenedorError = Color(0xFFFFDAD6)
 val SobreContenedorError = Color(0xFF410002)
-val FondoClaro = Color(0xFFF7F9FC)
-val SobreFondoClaro = Color(0xFF191C1E)
+val FondoClaro = Color(0xFFF2F5FA)
+val SobreFondoClaro = Color(0xFF161A1D)
 val VarianteSuperficieClara = Color(0xFFDDE3EA)
-val SobreVarianteSuperficieClara = Color(0xFF41484D)
-val ContornoClaro = Color(0xFF71787E)
+val SobreVarianteSuperficieClara = Color(0xFF444B51)
+val ContornoClaro = Color(0xFF6E767D)
+val ContornoVarianteClaro = Color(0xFFD3DAE2)
+
+/*
+ * Roles de contenedor de superficie.
+ *
+ * Material 3 los usa para decidir el color de fondo de tarjetas, barras y
+ * menús. Si no se declaran, Compose los deriva de su paleta por defecto y
+ * todo queda con el tinte lila genérico de Material.
+ *
+ * Acá las tarjetas quedan blancas sobre un lienzo levemente azulado, que es
+ * lo que da la sensación de limpieza y separación entre elementos.
+ */
+val SuperficieMinimaClara = Color(0xFFFFFFFF)
+val SuperficieBajaClara = Color(0xFFFBFCFE)
+val SuperficieMediaClara = Color(0xFFF4F7FB)
+val SuperficieAltaClara = Color(0xFFEDF1F7)
+val SuperficieMaximaClara = Color(0xFFFFFFFF)
 
 // ---- Esquema oscuro ----
 val AzulPrimarioOscuro = Color(0xFF94CCF4)
@@ -48,11 +65,18 @@ val RojoErrorOscuro = Color(0xFFFFB4AB)
 val SobreRojoErrorOscuro = Color(0xFF690005)
 val ContenedorErrorOscuro = Color(0xFF93000A)
 val SobreContenedorErrorOscuro = Color(0xFFFFDAD6)
-val FondoOscuro = Color(0xFF101416)
-val SobreFondoOscuro = Color(0xFFE1E2E5)
+val FondoOscuro = Color(0xFF0E1214)
+val SobreFondoOscuro = Color(0xFFE2E4E7)
 val VarianteSuperficieOscura = Color(0xFF41484D)
 val SobreVarianteSuperficieOscura = Color(0xFFC1C7CE)
 val ContornoOscuro = Color(0xFF8B9198)
+val ContornoVarianteOscuro = Color(0xFF353B40)
+
+val SuperficieMinimaOscura = Color(0xFF090C0E)
+val SuperficieBajaOscura = Color(0xFF161A1D)
+val SuperficieMediaOscura = Color(0xFF1A1F22)
+val SuperficieAltaOscura = Color(0xFF242A2E)
+val SuperficieMaximaOscura = Color(0xFF1E2427)
 
 // ---- Colores semánticos (estados de la gestión) ----
 val ExitoClaro = Color(0xFF2E6B3E)

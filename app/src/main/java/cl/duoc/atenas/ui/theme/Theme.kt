@@ -29,7 +29,13 @@ private val EsquemaClaro = lightColorScheme(
     onSurface = SobreFondoClaro,
     surfaceVariant = VarianteSuperficieClara,
     onSurfaceVariant = SobreVarianteSuperficieClara,
-    outline = ContornoClaro
+    outline = ContornoClaro,
+    outlineVariant = ContornoVarianteClaro,
+    surfaceContainerLowest = SuperficieMinimaClara,
+    surfaceContainerLow = SuperficieBajaClara,
+    surfaceContainer = SuperficieMediaClara,
+    surfaceContainerHigh = SuperficieAltaClara,
+    surfaceContainerHighest = SuperficieMaximaClara
 )
 
 private val EsquemaOscuro = darkColorScheme(
@@ -55,7 +61,13 @@ private val EsquemaOscuro = darkColorScheme(
     onSurface = SobreFondoOscuro,
     surfaceVariant = VarianteSuperficieOscura,
     onSurfaceVariant = SobreVarianteSuperficieOscura,
-    outline = ContornoOscuro
+    outline = ContornoOscuro,
+    outlineVariant = ContornoVarianteOscuro,
+    surfaceContainerLowest = SuperficieMinimaOscura,
+    surfaceContainerLow = SuperficieBajaOscura,
+    surfaceContainer = SuperficieMediaOscura,
+    surfaceContainerHigh = SuperficieAltaOscura,
+    surfaceContainerHighest = SuperficieMaximaOscura
 )
 
 /**

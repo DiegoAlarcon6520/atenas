@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import cl.duoc.atenas.ui.theme.Espaciado
 
 /** Indicador numérico usado en los tableros. */
@@ -42,9 +43,17 @@ fun TarjetaMetrica(
                 .padding(Espaciado.md),
             verticalArrangement = Arrangement.spacedBy(Espaciado.xs)
         ) {
-            Text(valor, style = MaterialTheme.typography.headlineSmall)
+            Text(
+                text = valor,
+                style = MaterialTheme.typography.headlineSmall,
+                maxLines = 1
+            )
+            // Con tres tarjetas lado a lado el título puede no caber en
+            // pantallas angostas: dos líneas y, si aún no alcanza, se recorta.
             Text(
                 text = titulo,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.labelMedium,
                 color = if (destacada) {
                     MaterialTheme.colorScheme.onPrimaryContainer

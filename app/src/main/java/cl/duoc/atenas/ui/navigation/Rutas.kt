@@ -3,7 +3,7 @@ package cl.duoc.atenas.ui.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.EventNote
+import androidx.compose.material.icons.automirrored.filled.EventNote
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.ui.graphics.vector.ImageVector
 import cl.duoc.atenas.domain.model.RolUsuario
@@ -66,14 +66,14 @@ data class ItemNavegacion(
 fun itemsDeNavegacion(rol: RolUsuario): List<ItemNavegacion> = when (rol) {
     RolUsuario.EJECUTIVO -> listOf(
         ItemNavegacion(Rutas.INICIO, "Mi tablero", Icons.Default.Dashboard),
-        ItemNavegacion(Rutas.OPORTUNIDADES, "Oportunidades", Icons.Default.EventNote),
+        ItemNavegacion(Rutas.OPORTUNIDADES, "Oportunidades", Icons.AutoMirrored.Filled.EventNote),
         ItemNavegacion(Rutas.ORGANIZACIONES, "Organizaciones", Icons.Default.Business),
         ItemNavegacion(Rutas.PERFIL, "Perfil", Icons.Default.Person)
     )
 
     RolUsuario.SUPERVISOR -> listOf(
         ItemNavegacion(Rutas.INICIO, "Equipo", Icons.Default.Dashboard),
-        ItemNavegacion(Rutas.OPORTUNIDADES, "Cartera", Icons.Default.EventNote),
+        ItemNavegacion(Rutas.OPORTUNIDADES, "Cartera", Icons.AutoMirrored.Filled.EventNote),
         ItemNavegacion(Rutas.ORGANIZACIONES, "Organizaciones", Icons.Default.Business),
         ItemNavegacion(Rutas.PERFIL, "Perfil", Icons.Default.Person)
     )
