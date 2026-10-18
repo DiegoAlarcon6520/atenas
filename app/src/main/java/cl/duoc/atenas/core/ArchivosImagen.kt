@@ -47,6 +47,28 @@ object ArchivosImagen {
         )
 
     /**
+     * Copia a la carpeta de la aplicación una imagen elegida en la galería.
+     *
+     * Por qué se copia en vez de guardar la URI que entrega el selector:
+     *  - esa URI es prestada, con permiso temporal; al reiniciar la
+     *    aplicación deja de poder leerse,
+     *  - si el usuario borra la foto de su galería, la evidencia
+     *    desaparecería del registro comercial.
+     *
+     * Una evidencia tiene que ser una copia bajo nuestro control, no un
+     * enlace a un archivo ajeno.
+     *
+     * @return el archivo copiado, o null si la imagen no se pudo leer.
+     */
+    fun copiarDesdeGaleria(context: Context, origen: Uri): File? = runCatching {
+        val destino = File(carpetaEvidencias(context), "evidencia_${System.currentTimeMillis()}.jpg")
+        context.contentResolver.openInputStream(origen)?.use { entrada ->
+            destino.outputStream().use { salida -> entrada.copyTo(salida) }
+        } ?: return null
+        destino
+    }.getOrNull()
+
+    /**
      * Borra el archivo físico de una evidencia.
      * Se usa al cancelar una captura y al eliminar una evidencia guardada,
      * para que no queden fotos huérfanas ocupando espacio.

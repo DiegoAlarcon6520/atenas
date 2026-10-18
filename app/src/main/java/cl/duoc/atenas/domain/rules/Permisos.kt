@@ -22,6 +22,14 @@ object Permisos {
     fun puedeCambiarPrioridad(rol: RolUsuario): Boolean =
         rol == RolUsuario.SUPERVISOR
 
+    /**
+     * Devolver una oportunidad a una etapa anterior corrige el embudo, y
+     * corregir el embudo es responsabilidad de quien lo supervisa. El
+     * ejecutivo solo avanza.
+     */
+    fun puedeRetrocederEstado(rol: RolUsuario): Boolean =
+        rol == RolUsuario.SUPERVISOR
+
     fun puedeCrearOportunidad(rol: RolUsuario): Boolean = true
 
     fun puedeRegistrarSeguimiento(rol: RolUsuario): Boolean = true

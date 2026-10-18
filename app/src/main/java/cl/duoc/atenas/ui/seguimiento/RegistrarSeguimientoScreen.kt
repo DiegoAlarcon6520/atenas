@@ -28,6 +28,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -98,6 +101,21 @@ fun RegistrarSeguimientoScreen(
             EtiquetaEstado(estado.estadoActual)
         }
 
+        // Atajo: reutiliza los datos de la gestión anterior cuando el
+        // cambio es leve. Solo precarga el formulario; no guarda nada.
+        if (estado.hayGestionAnterior) {
+            OutlinedButton(
+                onClick = viewModel::autorrellenarConAnterior,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.ContentCopy, contentDescription = null)
+                Text(
+                    text = "Copiar datos de la gestión anterior",
+                    modifier = Modifier.padding(start = Espaciado.sm)
+                )
+            }
+        }
+
         AnimatedVisibility(
             visible = estado.errorGeneral != null,
             enter = fadeIn(tween(200)) + expandVertically(tween(200)),
@@ -144,21 +162,40 @@ fun RegistrarSeguimientoScreen(
             ayuda = "Qué pasó y qué dijo la contraparte"
         )
 
-        CampoTexto(
-            valor = estado.proximaAccion,
-            alCambiar = viewModel::alCambiarProximaAccion,
-            etiqueta = "Próxima acción",
-            icono = Icons.AutoMirrored.Filled.Assignment,
-            ayuda = "Opcional: qué hay que hacer después"
-        )
+        // Si el estado resultante cierra la oportunidad, no se pide próxima
+        // acción: no queda nada por hacer y dejarla comprometida haría que
+        // la oportunidad apareciera como atrasada más adelante.
+        if (estado.esCierre) {
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Esta gestión cierra la oportunidad, así que no se pide una próxima acción.",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(Espaciado.md)
+                )
+            }
+        } else {
+            CampoTexto(
+                valor = estado.proximaAccion,
+                alCambiar = viewModel::alCambiarProximaAccion,
+                etiqueta = "Próxima acción",
+                icono = Icons.AutoMirrored.Filled.Assignment,
+                ayuda = "Opcional: qué hay que hacer después"
+            )
 
-        SelectorFecha(
-            etiqueta = "Fecha del próximo seguimiento",
-            valor = estado.fechaProximoSeguimiento,
-            alSeleccionar = viewModel::alCambiarFechaProximoSeguimiento,
-            error = estado.errores.fechaProximoSeguimiento,
-            ayuda = "Si pasa esta fecha sin gestión, la oportunidad aparece como atrasada"
-        )
+            SelectorFecha(
+                etiqueta = "Fecha del próximo seguimiento",
+                valor = estado.fechaProximoSeguimiento,
+                alSeleccionar = viewModel::alCambiarFechaProximoSeguimiento,
+                error = estado.errores.fechaProximoSeguimiento,
+                ayuda = "Si pasa esta fecha sin gestión, la oportunidad aparece como atrasada"
+            )
+        }
 
         // ---------- Cambio de estado ----------
         Text(
@@ -187,6 +224,40 @@ fun RegistrarSeguimientoScreen(
                         selected = estado.nuevoEstado == posible,
                         onClick = { viewModel.alSeleccionarNuevoEstado(posible) },
                         label = { Text(posible.etiqueta) }
+                    )
+                }
+            }
+        }
+
+        // Retroceso: solo lo ve el supervisor, y se separa visualmente del
+        // avance para que no se confunda con el flujo normal del embudo.
+        if (estado.estadosAnteriores.isNotEmpty()) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(Espaciado.xs),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Undo,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "Devolver a una etapa anterior",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Text(
+                text = "Úsalo cuando la gestión se reabre o hubo un error de registro.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(Espaciado.sm)) {
+                estado.estadosAnteriores.forEach { anterior ->
+                    FilterChip(
+                        selected = estado.nuevoEstado == anterior,
+                        onClick = { viewModel.alSeleccionarNuevoEstado(anterior) },
+                        label = { Text(anterior.etiqueta) }
                     )
                 }
             }

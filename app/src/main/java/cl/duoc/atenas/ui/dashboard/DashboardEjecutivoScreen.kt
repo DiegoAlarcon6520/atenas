@@ -83,6 +83,38 @@ fun DashboardEjecutivoScreen(
             }
         }
 
+
+        // Los números por sí solos no dicen qué están contando. Esta leyenda
+        // define cada indicador para que nadie tenga que suponerlo.
+        item {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(Espaciado.md),
+                    verticalArrangement = Arrangement.spacedBy(Espaciado.xs)
+                ) {
+                    Text(
+                        text = "Qué miden estos números",
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                    Text(
+                        text = "En gestión · oportunidades asignadas a ti que siguen activas, sin contar las descartadas ni las cerradas.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Próximos 30 días · eventos que ocurren dentro del próximo mes y todavía están en juego.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Atrasadas · gestiones cuya fecha de próxima acción ya venció y nadie retomó.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
         if (estado.atrasadas.isNotEmpty()) {
             item { TituloSeccion("Gestiones atrasadas") }
             items(estado.atrasadas, key = { "atraso-${it.id}" }) { gestion ->

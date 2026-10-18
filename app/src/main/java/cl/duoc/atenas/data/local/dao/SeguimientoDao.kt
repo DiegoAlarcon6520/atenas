@@ -59,6 +59,17 @@ interface SeguimientoDao {
     )
     fun observarAtrasados(ahora: Long, responsableId: Long?): Flow<List<Seguimiento>>
 
+    /** Última gestión registrada, para poder reutilizar sus datos. */
+    @Query(
+        """
+        SELECT * FROM seguimiento
+        WHERE oportunidadId = :oportunidadId
+        ORDER BY fechaAccion DESC, id DESC
+        LIMIT 1
+        """
+    )
+    suspend fun ultima(oportunidadId: Long): Seguimiento?
+
     @Insert
     suspend fun insertar(seguimiento: Seguimiento): Long
 

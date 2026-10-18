@@ -77,6 +77,38 @@ fun PanelSupervisorScreen(
             }
         }
 
+
+        // Los números por sí solos no dicen qué están contando. Esta leyenda
+        // define cada indicador para que nadie tenga que suponerlo.
+        item {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(Espaciado.md),
+                    verticalArrangement = Arrangement.spacedBy(Espaciado.xs)
+                ) {
+                    Text(
+                        text = "Qué miden estos números",
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                    Text(
+                        text = "En gestión · oportunidades activas de todo el equipo, sin contar las descartadas ni las cerradas.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Sin asignar · todavía no tienen un ejecutivo a cargo que las trabaje.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Confirmadas · la agencia ya comprometió su participación, incluidas las activaciones ya realizadas.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
         item { TituloSeccion("Carga por ejecutivo") }
         item {
             Card(modifier = Modifier.fillMaxWidth()) {

@@ -41,6 +41,15 @@ data class RegistrarSeguimientoUiState(
     val estadoActual: EstadoOportunidad = EstadoOportunidad.IDENTIFICADA,
     /** Estados a los que este usuario puede mover la oportunidad. */
     val estadosDisponibles: List<EstadoOportunidad> = emptyList(),
+    /** Etapas anteriores a las que el supervisor puede devolverla. */
+    val estadosAnteriores: List<EstadoOportunidad> = emptyList(),
+    /** Si existe una gestión previa cuyos datos se puedan reutilizar. */
+    val hayGestionAnterior: Boolean = false,
+    /**
+     * True cuando el estado resultante cierra la gestión. En ese caso no se
+     * pide próxima acción: no hay nada más que hacer con esta oportunidad.
+     */
+    val esCierre: Boolean = false,
     /** Aviso para el ejecutivo sobre lo que no puede hacer. */
     val mensajeRestriccion: String? = null,
 
@@ -93,12 +102,19 @@ class RegistrarSeguimientoViewModel(
                 return@launch
             }
 
+            // Se consulta si existe una gestión previa para habilitar el
+            // botón de reutilizar sus datos.
+            val anterior = seguimientos.ultima(oportunidadId)
+
             _estado.update {
                 it.copy(
                     cargando = false,
                     nombreOportunidad = oportunidad.nombre,
                     estadoActual = oportunidad.estado,
                     estadosDisponibles = TransicionesEstado.siguientesPosibles(oportunidad.estado, rol),
+                    estadosAnteriores = TransicionesEstado.anterioresPosibles(oportunidad.estado, rol),
+                    hayGestionAnterior = anterior != null,
+                    esCierre = TransicionesEstado.esEstadoDeCierre(oportunidad.estado),
                     mensajeRestriccion = TransicionesEstado.mensajeRestriccion(rol)
                 )
             }
@@ -124,9 +140,47 @@ class RegistrarSeguimientoViewModel(
         )
     }
 
-    /** Tocar el estado ya elegido lo deselecciona: vuelve a "no cambiar". */
-    fun alSeleccionarNuevoEstado(valor: EstadoOportunidad) = _estado.update {
-        it.copy(nuevoEstado = if (it.nuevoEstado == valor) null else valor)
+    /**
+     * Tocar el estado ya elegido lo deselecciona: vuelve a "no cambiar".
+     *
+     * Si el estado resultante cierra la gestión, se borra la próxima acción
+     * y su fecha: comprometer un seguimiento futuro sobre algo que acaba de
+     * cerrarse no tiene sentido, y dejarlo cargado haría que la oportunidad
+     * apareciera como atrasada más adelante.
+     */
+    fun alSeleccionarNuevoEstado(valor: EstadoOportunidad) = _estado.update { actual ->
+        val elegido = if (actual.nuevoEstado == valor) null else valor
+        val resultante = elegido ?: actual.estadoActual
+        val cierra = TransicionesEstado.esEstadoDeCierre(resultante)
+        actual.copy(
+            nuevoEstado = elegido,
+            esCierre = cierra,
+            proximaAccion = if (cierra) "" else actual.proximaAccion,
+            fechaProximoSeguimiento = if (cierra) null else actual.fechaProximoSeguimiento,
+            errores = actual.errores.copy(fechaProximoSeguimiento = null)
+        )
+    }
+
+    /**
+     * Copia los datos de la última gestión al formulario.
+     *
+     * No guarda nada: solo precarga para que el usuario ajuste lo que cambió.
+     * La fecha de la acción queda en hoy, porque esta gestión es nueva, y la
+     * próxima acción se copia solo si todavía tiene sentido comprometerla.
+     */
+    fun autorrellenarConAnterior() {
+        viewModelScope.launch {
+            val anterior = seguimientos.ultima(oportunidadId) ?: return@launch
+            _estado.update { actual ->
+                actual.copy(
+                    tipoAccion = anterior.tipoAccion,
+                    resultado = anterior.resultado,
+                    proximaAccion = if (actual.esCierre) "" else anterior.proximaAccion.orEmpty(),
+                    observaciones = anterior.observaciones.orEmpty(),
+                    errores = ErroresSeguimiento()
+                )
+            }
+        }
     }
 
     fun alCambiarObservaciones(valor: String) = _estado.update { it.copy(observaciones = valor) }
@@ -143,8 +197,12 @@ class RegistrarSeguimientoViewModel(
                 anterior = actual.fechaAccion,
                 mensaje = "La fecha de la gestión no puede ser futura"
             ),
-            // Si el usuario define una próxima acción, tiene que decir cuándo.
+            // Si el usuario define una próxima acción, tiene que decir
+            // cuándo. Salvo que la gestión cierre la oportunidad: ahí no se
+            // pide próxima acción en absoluto.
             fechaProximoSeguimiento = when {
+                actual.esCierre -> null
+
                 actual.proximaAccion.isNotBlank() && actual.fechaProximoSeguimiento == null ->
                     "Indica cuándo harás la próxima acción"
 
@@ -188,8 +246,10 @@ class RegistrarSeguimientoViewModel(
                         tipoAccion = actual.tipoAccion,
                         fechaAccion = actual.fechaAccion,
                         resultado = actual.resultado.trim(),
-                        proximaAccion = actual.proximaAccion.ifBlank { null },
-                        fechaProximoSeguimiento = actual.fechaProximoSeguimiento,
+                        // Una gestión de cierre nunca deja un seguimiento
+                        // pendiente colgando.
+                        proximaAccion = if (actual.esCierre) null else actual.proximaAccion.ifBlank { null },
+                        fechaProximoSeguimiento = if (actual.esCierre) null else actual.fechaProximoSeguimiento,
                         estadoAnterior = actual.estadoActual,
                         estadoNuevo = estadoDestino,
                         observaciones = actual.observaciones.ifBlank { null }

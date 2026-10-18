@@ -17,5 +17,7 @@ class SeguimientoRepository(private val dao: SeguimientoDao) {
     fun observarGestionesAtrasadas(responsableId: Long?): Flow<List<GestionPendiente>> =
         dao.observarGestionesAtrasadas(Fechas.ahora(), responsableId)
 
+    suspend fun ultima(oportunidadId: Long): Seguimiento? = dao.ultima(oportunidadId)
+
     suspend fun registrar(seguimiento: Seguimiento): Long = dao.insertar(seguimiento)
 }

@@ -3,6 +3,7 @@ package cl.duoc.atenas.ui.evidencias
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -10,6 +11,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -24,11 +26,13 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -120,6 +124,32 @@ fun EvidenciasScreen(
         }
     }
 
+    /*
+     * Lanzador del selector de fotos del sistema.
+     *
+     * PickVisualMedia abre el selector propio de Android: el usuario elige
+     * una imagen y la aplicación recibe solo esa. No requiere ningún permiso
+     * de almacenamiento, porque nunca se accede a la galería completa.
+     *
+     * La imagen elegida se copia a la carpeta de la aplicación antes de
+     * registrarla, por las razones explicadas en ArchivosImagen.
+     */
+    val lanzadorGaleria = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uriElegida ->
+        if (uriElegida == null) return@rememberLauncherForActivityResult
+        val copia = ArchivosImagen.copiarDesdeGaleria(contexto, uriElegida)
+        if (copia == null) {
+            mostrarMensaje("No se pudo leer la imagen seleccionada")
+        } else {
+            viewModel.agregarEvidencia(
+                uri = ArchivosImagen.uriPara(contexto, copia).toString(),
+                descripcion = null
+            )
+            mostrarMensaje("Evidencia agregada desde la galería")
+        }
+    }
+
     if (estado.cargando) {
         IndicadorCarga(modifier)
         return
@@ -150,26 +180,47 @@ fun EvidenciasScreen(
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
-            Button(
-                onClick = {
-                    // Si el permiso ya está concedido se abre directo; si no,
-                    // se pide primero. Volver a pedirlo cuando ya se tiene
-                    // molesta al usuario sin necesidad.
-                    val concedido = ContextCompat.checkSelfPermission(
-                        contexto,
-                        Manifest.permission.CAMERA
-                    ) == PackageManager.PERMISSION_GRANTED
-
-                    if (concedido) {
-                        abrirCamara()
-                    } else {
-                        lanzadorPermiso.launch(Manifest.permission.CAMERA)
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
+            // Dos vías para registrar evidencia: capturar en el momento o
+            // subir una foto que ya se tomó durante el evento. La segunda es
+            // la realista: en terreno se fotografía con la cámara del
+            // teléfono y se sube después.
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Espaciado.sm)
             ) {
-                Icon(Icons.Default.PhotoCamera, contentDescription = null)
-                Text("Tomar fotografía", modifier = Modifier.padding(start = Espaciado.sm))
+                Button(
+                    onClick = {
+                        // Si el permiso ya está concedido se abre directo; si
+                        // no, se pide primero. Volver a pedirlo cuando ya se
+                        // tiene molesta al usuario sin necesidad.
+                        val concedido = ContextCompat.checkSelfPermission(
+                            contexto,
+                            Manifest.permission.CAMERA
+                        ) == PackageManager.PERMISSION_GRANTED
+
+                        if (concedido) {
+                            abrirCamara()
+                        } else {
+                            lanzadorPermiso.launch(Manifest.permission.CAMERA)
+                        }
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.PhotoCamera, contentDescription = null)
+                    Text("Cámara", modifier = Modifier.padding(start = Espaciado.xs))
+                }
+
+                OutlinedButton(
+                    onClick = {
+                        lanzadorGaleria.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.PhotoLibrary, contentDescription = null)
+                    Text("Galería", modifier = Modifier.padding(start = Espaciado.xs))
+                }
             }
         }
 
