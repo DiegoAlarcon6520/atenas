@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
@@ -40,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -123,59 +125,71 @@ fun EvidenciasScreen(
         return
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(Espaciado.md)
+    // GridCells.Adaptive en vez de Fixed(2): la cantidad de columnas se
+    // calcula según el ancho disponible, así que en horizontal o en una
+    // tablet caben más miniaturas en lugar de estirarse.
+    // El encabezado va dentro de la grilla ocupando toda la línea, para que
+    // se desplace con el contenido y no bloquee la vista en horizontal.
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(minSize = 150.dp),
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(Espaciado.md),
+        horizontalArrangement = Arrangement.spacedBy(Espaciado.sm),
+        verticalArrangement = Arrangement.spacedBy(Espaciado.sm)
     ) {
-        Text("Evidencias", style = MaterialTheme.typography.headlineSmall)
-        Text(
-            text = estado.nombreOportunidad,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
 
-        Button(
-            onClick = {
-                // Si el permiso ya está concedido se abre directo; si no, se
-                // pide primero. Volver a pedirlo cuando ya se tiene molesta
-                // al usuario sin necesidad.
-                val concedido = ContextCompat.checkSelfPermission(
-                    contexto,
-                    Manifest.permission.CAMERA
-                ) == PackageManager.PERMISSION_GRANTED
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            Column {
+                Text("Evidencias", style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    text = estado.nombreOportunidad,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
 
-                if (concedido) abrirCamara() else lanzadorPermiso.launch(Manifest.permission.CAMERA)
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = Espaciado.md)
-        ) {
-            Icon(Icons.Default.PhotoCamera, contentDescription = null)
-            Text("Tomar fotografía", modifier = Modifier.padding(start = Espaciado.sm))
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            Button(
+                onClick = {
+                    // Si el permiso ya está concedido se abre directo; si no,
+                    // se pide primero. Volver a pedirlo cuando ya se tiene
+                    // molesta al usuario sin necesidad.
+                    val concedido = ContextCompat.checkSelfPermission(
+                        contexto,
+                        Manifest.permission.CAMERA
+                    ) == PackageManager.PERMISSION_GRANTED
+
+                    if (concedido) {
+                        abrirCamara()
+                    } else {
+                        lanzadorPermiso.launch(Manifest.permission.CAMERA)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.PhotoCamera, contentDescription = null)
+                Text("Tomar fotografía", modifier = Modifier.padding(start = Espaciado.sm))
+            }
         }
 
         if (estado.evidencias.isEmpty()) {
-            EstadoVacio("Todavía no hay fotografías de esta oportunidad.")
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                EstadoVacio("Todavía no hay fotografías de esta oportunidad.")
+            }
         } else {
-            Text(
-                text = "${estado.evidencias.size} fotografías",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(vertical = Espaciado.sm),
-                horizontalArrangement = Arrangement.spacedBy(Espaciado.sm),
-                verticalArrangement = Arrangement.spacedBy(Espaciado.sm),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(estado.evidencias, key = { it.id }) { evidencia ->
-                    TarjetaEvidencia(
-                        evidencia = evidencia,
-                        alEliminar = { evidenciaAEliminar = evidencia }
-                    )
-                }
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Text(
+                    text = "${estado.evidencias.size} fotografías",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            items(estado.evidencias, key = { it.id }) { evidencia ->
+                TarjetaEvidencia(
+                    evidencia = evidencia,
+                    alEliminar = { evidenciaAEliminar = evidencia }
+                )
             }
         }
     }

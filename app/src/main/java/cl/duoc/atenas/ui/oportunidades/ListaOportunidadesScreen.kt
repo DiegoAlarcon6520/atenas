@@ -44,6 +44,17 @@ import cl.duoc.atenas.ui.components.IndicadorCarga
 import cl.duoc.atenas.ui.components.TarjetaOportunidad
 import cl.duoc.atenas.ui.theme.Espaciado
 
+/**
+ * LISTADO DE OPORTUNIDADES
+ *
+ * Toda la pantalla es una sola LazyColumn: el buscador, el panel de filtros y
+ * el contador son elementos de la lista, no un encabezado fijo encima de ella.
+ *
+ * Por qué importa: con el teléfono en horizontal un encabezado fijo se come
+ * casi toda la altura disponible y las tarjetas quedan tapadas por las barras.
+ * Al formar parte del scroll, el contenido completo sigue siendo alcanzable en
+ * cualquier orientación y en cualquier tamaño de pantalla.
+ */
 @Composable
 fun ListaOportunidadesScreen(
     alAbrirDetalle: (Long) -> Unit,
@@ -57,132 +68,144 @@ fun ListaOportunidadesScreen(
         return
     }
 
-    Column(modifier = modifier.fillMaxSize()) {
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        // El espacio inferior extra deja leer la última tarjeta por encima
+        // del botón flotante.
+        contentPadding = PaddingValues(
+            start = Espaciado.md,
+            end = Espaciado.md,
+            top = Espaciado.sm,
+            bottom = Espaciado.xl * 3
+        ),
+        verticalArrangement = Arrangement.spacedBy(Espaciado.sm)
+    ) {
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Espaciado.md, vertical = Espaciado.sm),
-            horizontalArrangement = Arrangement.spacedBy(Espaciado.sm),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = estado.filtros.texto,
-                onValueChange = viewModel::alBuscar,
-                placeholder = { Text("Buscar por evento, organización o comuna") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                trailingIcon = {
-                    if (estado.filtros.texto.isNotEmpty()) {
-                        IconButton(onClick = { viewModel.alBuscar("") }) {
-                            Icon(Icons.Default.Close, contentDescription = "Limpiar búsqueda")
+        // ---------- Buscador ----------
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Espaciado.sm),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = estado.filtros.texto,
+                    onValueChange = viewModel::alBuscar,
+                    placeholder = { Text("Buscar por evento, organización o comuna") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    trailingIcon = {
+                        if (estado.filtros.texto.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.alBuscar("") }) {
+                                Icon(Icons.Default.Close, contentDescription = "Limpiar búsqueda")
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f)
+                )
+
+                BadgedBox(
+                    badge = {
+                        if (estado.filtros.cantidadActivos > 0) {
+                            Badge { Text(estado.filtros.cantidadActivos.toString()) }
                         }
                     }
-                },
-                singleLine = true,
-                modifier = Modifier.weight(1f)
-            )
-
-            BadgedBox(
-                badge = {
-                    if (estado.filtros.cantidadActivos > 0) {
-                        Badge { Text(estado.filtros.cantidadActivos.toString()) }
-                    }
-                }
-            ) {
-                IconButton(onClick = viewModel::alternarPanelFiltros) {
-                    Icon(Icons.Default.FilterList, contentDescription = "Filtros")
-                }
-            }
-        }
-
-        AnimatedVisibility(
-            visible = estado.mostrarFiltros,
-            enter = fadeIn(tween(200)) + expandVertically(tween(200)),
-            exit = fadeOut(tween(150)) + shrinkVertically(tween(150))
-        ) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Espaciado.md)
-            ) {
-                Column(
-                    modifier = Modifier.padding(vertical = Espaciado.sm),
-                    verticalArrangement = Arrangement.spacedBy(Espaciado.xs)
                 ) {
-                    GrupoFiltros(
-                        titulo = "Estado",
-                        opciones = EstadoOportunidad.entries,
-                        etiqueta = { it.etiqueta },
-                        seleccionada = estado.filtros.estado,
-                        alSeleccionar = viewModel::alSeleccionarEstado
-                    )
-                    GrupoFiltros(
-                        titulo = "Prioridad",
-                        opciones = Prioridad.entries,
-                        etiqueta = { it.etiqueta },
-                        seleccionada = estado.filtros.prioridad,
-                        alSeleccionar = viewModel::alSeleccionarPrioridad
-                    )
-                    GrupoFiltros(
-                        titulo = "Tipo de evento",
-                        opciones = TipoOportunidad.entries,
-                        etiqueta = { it.etiqueta },
-                        seleccionada = estado.filtros.tipo,
-                        alSeleccionar = viewModel::alSeleccionarTipo
-                    )
-                    if (estado.filtros.hayAlguno) {
-                        TextButton(
-                            onClick = viewModel::limpiarFiltros,
-                            modifier = Modifier.padding(start = Espaciado.sm)
-                        ) {
-                            Text("Limpiar filtros")
+                    IconButton(onClick = viewModel::alternarPanelFiltros) {
+                        Icon(Icons.Default.FilterList, contentDescription = "Filtros")
+                    }
+                }
+            }
+        }
+
+        // ---------- Panel de filtros ----------
+        item {
+            AnimatedVisibility(
+                visible = estado.mostrarFiltros,
+                enter = fadeIn(tween(200)) + expandVertically(tween(200)),
+                exit = fadeOut(tween(150)) + shrinkVertically(tween(150))
+            ) {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier.padding(vertical = Espaciado.sm),
+                        verticalArrangement = Arrangement.spacedBy(Espaciado.xs)
+                    ) {
+                        GrupoFiltros(
+                            titulo = "Estado",
+                            opciones = EstadoOportunidad.entries,
+                            etiqueta = { it.etiqueta },
+                            seleccionada = estado.filtros.estado,
+                            alSeleccionar = viewModel::alSeleccionarEstado
+                        )
+                        GrupoFiltros(
+                            titulo = "Prioridad",
+                            opciones = Prioridad.entries,
+                            etiqueta = { it.etiqueta },
+                            seleccionada = estado.filtros.prioridad,
+                            alSeleccionar = viewModel::alSeleccionarPrioridad
+                        )
+                        GrupoFiltros(
+                            titulo = "Tipo de evento",
+                            opciones = TipoOportunidad.entries,
+                            etiqueta = { it.etiqueta },
+                            seleccionada = estado.filtros.tipo,
+                            alSeleccionar = viewModel::alSeleccionarTipo
+                        )
+                        if (estado.filtros.hayAlguno) {
+                            TextButton(
+                                onClick = viewModel::limpiarFiltros,
+                                modifier = Modifier.padding(start = Espaciado.sm)
+                            ) {
+                                Text("Limpiar filtros")
+                            }
                         }
                     }
                 }
             }
         }
 
-        Text(
-            text = buildString {
-                append(estado.oportunidades.size)
-                append(if (estado.oportunidades.size == 1) " oportunidad" else " oportunidades")
-                if (!estado.esSupervisor) append(" asignadas a ti")
-            },
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = Espaciado.md, vertical = Espaciado.sm)
-        )
-
-        if (estado.oportunidades.isEmpty()) {
-            EstadoVacio(
-                mensaje = if (estado.filtros.hayAlguno) {
-                    "Ninguna oportunidad coincide con la búsqueda. Prueba ajustando los filtros."
-                } else {
-                    "Todavía no hay oportunidades registradas."
-                }
+        // ---------- Contador de resultados ----------
+        item {
+            Text(
+                text = buildString {
+                    append(estado.oportunidades.size)
+                    append(if (estado.oportunidades.size == 1) " oportunidad" else " oportunidades")
+                    if (!estado.esSupervisor) append(" asignadas a ti")
+                },
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+
+        // ---------- Resultados ----------
+        if (estado.oportunidades.isEmpty()) {
+            item {
+                EstadoVacio(
+                    mensaje = if (estado.filtros.hayAlguno) {
+                        "Ninguna oportunidad coincide con la búsqueda. Prueba ajustando los filtros."
+                    } else {
+                        "Todavía no hay oportunidades registradas."
+                    }
+                )
+            }
         } else {
-            LazyColumn(
-                // El espacio inferior extra deja que la última tarjeta se
-                // pueda leer completa por encima del botón flotante.
-                contentPadding = PaddingValues(
-                    start = Espaciado.md,
-                    end = Espaciado.md,
-                    bottom = Espaciado.xl * 3
-                ),
-                verticalArrangement = Arrangement.spacedBy(Espaciado.sm)
-            ) {
-                items(estado.oportunidades, key = { it.id }) { oportunidad ->
-                    TarjetaOportunidad(
-                        oportunidad = oportunidad,
-                        onClick = { alAbrirDetalle(oportunidad.id) }
-                    )
-                }
+            items(estado.oportunidades, key = { it.id }) { oportunidad ->
+                TarjetaOportunidad(
+                    oportunidad = oportunidad,
+                    onClick = { alAbrirDetalle(oportunidad.id) }
+                )
             }
         }
     }
 }
 
+/**
+ * Grupo de chips de un filtro.
+ *
+ * Es genérico para servir a estados, prioridades y tipos con el mismo código.
+ * La fila es horizontalmente desplazable, así que la cantidad de opciones no
+ * depende del ancho del dispositivo.
+ */
 @Composable
 private fun <T> GrupoFiltros(
     titulo: String,

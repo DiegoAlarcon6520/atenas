@@ -1,9 +1,9 @@
 package cl.duoc.atenas.ui.organizaciones
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,7 +36,13 @@ import cl.duoc.atenas.ui.components.Etiqueta
 import cl.duoc.atenas.ui.components.IndicadorCarga
 import cl.duoc.atenas.ui.theme.Espaciado
 
-/** Listado de organizaciones con búsqueda y filtro por tipo. */
+/**
+ * LISTADO DE ORGANIZACIONES
+ *
+ * Igual que el listado de oportunidades: buscador, chips y contador son
+ * elementos de la propia lista, para que todo el contenido siga siendo
+ * alcanzable con el teléfono en horizontal.
+ */
 @Composable
 fun ListaOrganizacionesScreen(
     alAbrirDetalle: (Long) -> Unit,
@@ -50,80 +56,79 @@ fun ListaOrganizacionesScreen(
         return
     }
 
-    Column(modifier = modifier.fillMaxSize()) {
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            start = Espaciado.md,
+            end = Espaciado.md,
+            top = Espaciado.sm,
+            bottom = Espaciado.xl * 3
+        ),
+        verticalArrangement = Arrangement.spacedBy(Espaciado.sm)
+    ) {
 
-        OutlinedTextField(
-            value = estado.filtros.texto,
-            onValueChange = viewModel::alBuscar,
-            placeholder = { Text("Buscar por nombre, rubro o comuna") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-            trailingIcon = {
-                if (estado.filtros.texto.isNotEmpty()) {
-                    IconButton(onClick = { viewModel.alBuscar("") }) {
-                        Icon(Icons.Default.Close, contentDescription = "Limpiar búsqueda")
+        item {
+            OutlinedTextField(
+                value = estado.filtros.texto,
+                onValueChange = viewModel::alBuscar,
+                placeholder = { Text("Buscar por nombre, rubro o comuna") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                trailingIcon = {
+                    if (estado.filtros.texto.isNotEmpty()) {
+                        IconButton(onClick = { viewModel.alBuscar("") }) {
+                            Icon(Icons.Default.Close, contentDescription = "Limpiar búsqueda")
+                        }
                     }
-                }
-            },
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Espaciado.md, vertical = Espaciado.sm)
-        )
+                },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
 
-        // Los tipos de organización son pocos, así que se muestran siempre
-        // visibles en una fila horizontal en vez de esconderse en un panel.
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = Espaciado.md),
-            horizontalArrangement = Arrangement.spacedBy(Espaciado.sm)
-        ) {
-            items(TipoOrganizacion.entries) { tipo ->
-                FilterChip(
-                    selected = estado.filtros.tipo == tipo,
-                    onClick = { viewModel.alSeleccionarTipo(tipo) },
-                    label = { Text(tipo.etiqueta) }
-                )
+        // Los tipos son pocos: se muestran siempre visibles en una fila
+        // desplazable, sin esconderlos tras un panel.
+        item {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(Espaciado.sm)) {
+                items(TipoOrganizacion.entries) { tipo ->
+                    FilterChip(
+                        selected = estado.filtros.tipo == tipo,
+                        onClick = { viewModel.alSeleccionarTipo(tipo) },
+                        label = { Text(tipo.etiqueta) }
+                    )
+                }
             }
         }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Espaciado.md, vertical = Espaciado.sm),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "${estado.organizaciones.size} organizaciones",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            if (estado.filtros.hayAlguno) {
-                TextButton(onClick = viewModel::limpiarFiltros) { Text("Limpiar") }
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${estado.organizaciones.size} organizaciones",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (estado.filtros.hayAlguno) {
+                    TextButton(onClick = viewModel::limpiarFiltros) { Text("Limpiar") }
+                }
             }
         }
 
         if (estado.organizaciones.isEmpty()) {
-            EstadoVacio(
-                mensaje = if (estado.filtros.hayAlguno) {
-                    "Ninguna organización coincide con la búsqueda."
-                } else {
-                    "Todavía no hay organizaciones registradas."
-                }
-            )
+            item {
+                EstadoVacio(
+                    mensaje = if (estado.filtros.hayAlguno) {
+                        "Ninguna organización coincide con la búsqueda."
+                    } else {
+                        "Todavía no hay organizaciones registradas."
+                    }
+                )
+            }
         } else {
-            LazyColumn(
-                // El espacio inferior extra deja que la última tarjeta se
-                // pueda leer completa por encima del botón flotante.
-                contentPadding = PaddingValues(
-                    start = Espaciado.md,
-                    end = Espaciado.md,
-                    bottom = Espaciado.xl * 3
-                ),
-                verticalArrangement = Arrangement.spacedBy(Espaciado.sm)
-            ) {
-                items(estado.organizaciones, key = { it.id }) { organizacion ->
-                    TarjetaOrganizacion(organizacion) { alAbrirDetalle(organizacion.id) }
-                }
+            items(estado.organizaciones, key = { it.id }) { organizacion ->
+                TarjetaOrganizacion(organizacion) { alAbrirDetalle(organizacion.id) }
             }
         }
     }
