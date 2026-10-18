@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cl.duoc.atenas.domain.model.EstadoOportunidad
 import cl.duoc.atenas.domain.model.Prioridad
@@ -32,6 +33,10 @@ fun Etiqueta(texto: String, color: Color, modifier: Modifier = Modifier) {
         text = texto,
         style = MaterialTheme.typography.labelMedium,
         color = color,
+        // Una pastilla con el texto partido en dos líneas se ve rota.
+        // Si no cabe, se recorta con puntos suspensivos.
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
         modifier = modifier
             .clip(RoundedCornerShape(50))
             .background(color.copy(alpha = 0.14f))

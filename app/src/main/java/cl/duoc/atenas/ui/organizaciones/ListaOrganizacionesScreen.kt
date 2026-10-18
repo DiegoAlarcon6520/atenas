@@ -1,6 +1,8 @@
 package cl.duoc.atenas.ui.organizaciones
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -110,10 +112,12 @@ fun ListaOrganizacionesScreen(
             )
         } else {
             LazyColumn(
+                // El espacio inferior extra deja que la última tarjeta se
+                // pueda leer completa por encima del botón flotante.
                 contentPadding = PaddingValues(
                     start = Espaciado.md,
                     end = Espaciado.md,
-                    bottom = Espaciado.md
+                    bottom = Espaciado.xl * 3
                 ),
                 verticalArrangement = Arrangement.spacedBy(Espaciado.sm)
             ) {
@@ -125,6 +129,12 @@ fun ListaOrganizacionesScreen(
     }
 }
 
+/**
+ * Las tres etiquetas no caben en una fila en pantallas angostas, así que se
+ * usa FlowRow: cuando no hay espacio, las que sobran bajan a la línea
+ * siguiente en vez de comprimirse o desbordarse.
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TarjetaOrganizacion(organizacion: OrganizacionResumen, onClick: () -> Unit) {
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
@@ -138,7 +148,10 @@ private fun TarjetaOrganizacion(organizacion: OrganizacionResumen, onClick: () -
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(Espaciado.sm)) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(Espaciado.sm),
+                verticalArrangement = Arrangement.spacedBy(Espaciado.xs)
+            ) {
                 Etiqueta(
                     texto = organizacion.tipo.etiqueta,
                     color = MaterialTheme.colorScheme.primary

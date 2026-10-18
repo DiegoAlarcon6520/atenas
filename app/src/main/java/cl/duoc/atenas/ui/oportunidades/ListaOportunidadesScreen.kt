@@ -163,10 +163,12 @@ fun ListaOportunidadesScreen(
             )
         } else {
             LazyColumn(
+                // El espacio inferior extra deja que la última tarjeta se
+                // pueda leer completa por encima del botón flotante.
                 contentPadding = PaddingValues(
                     start = Espaciado.md,
                     end = Espaciado.md,
-                    bottom = Espaciado.md
+                    bottom = Espaciado.xl * 3
                 ),
                 verticalArrangement = Arrangement.spacedBy(Espaciado.sm)
             ) {
