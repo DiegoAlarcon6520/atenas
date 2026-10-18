@@ -1,0 +1,34 @@
+package cl.duoc.atenas.data.repository
+
+import cl.duoc.atenas.core.Fechas
+import cl.duoc.atenas.data.local.dao.OportunidadDao
+import cl.duoc.atenas.data.local.dao.OportunidadResumen
+import cl.duoc.atenas.data.local.entity.Oportunidad
+import cl.duoc.atenas.domain.model.EstadoOportunidad
+import kotlinx.coroutines.flow.Flow
+
+class OportunidadRepository(private val dao: OportunidadDao) {
+
+    /** [responsableId] nulo trae todas: es la vista del supervisor. */
+    fun observarResumen(responsableId: Long?): Flow<List<OportunidadResumen>> =
+        dao.observarResumen(responsableId)
+
+    fun observarProximas(dias: Int, responsableId: Long?): Flow<List<OportunidadResumen>> {
+        val desde = Fechas.hoy()
+        return dao.observarProximas(desde, Fechas.masDias(desde, dias), responsableId)
+    }
+
+    fun observarPorId(id: Long): Flow<Oportunidad?> = dao.observarPorId(id)
+
+    suspend fun porId(id: Long): Oportunidad? = dao.porId(id)
+
+    suspend fun crear(oportunidad: Oportunidad): Long = dao.insertar(oportunidad)
+
+    suspend fun actualizar(oportunidad: Oportunidad) = dao.actualizar(oportunidad)
+
+    suspend fun cambiarEstado(id: Long, estado: EstadoOportunidad) =
+        dao.actualizarEstado(id, estado, Fechas.ahora())
+
+    suspend fun asignarResponsable(id: Long, responsableId: Long?) =
+        dao.asignarResponsable(id, responsableId, Fechas.ahora())
+}
