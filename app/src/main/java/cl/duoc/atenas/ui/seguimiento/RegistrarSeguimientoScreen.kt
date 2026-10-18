@@ -19,10 +19,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Notes
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -148,7 +148,7 @@ fun RegistrarSeguimientoScreen(
             valor = estado.proximaAccion,
             alCambiar = viewModel::alCambiarProximaAccion,
             etiqueta = "Próxima acción",
-            icono = Icons.Default.Assignment,
+            icono = Icons.AutoMirrored.Filled.Assignment,
             ayuda = "Opcional: qué hay que hacer después"
         )
 
@@ -213,7 +213,7 @@ fun RegistrarSeguimientoScreen(
             valor = estado.observaciones,
             alCambiar = viewModel::alCambiarObservaciones,
             etiqueta = "Observaciones",
-            icono = Icons.Default.Notes,
+            icono = Icons.AutoMirrored.Filled.Notes,
             lineas = 2
         )
 

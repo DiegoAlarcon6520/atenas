@@ -19,9 +19,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Category
-import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Notes
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Button
@@ -155,7 +155,7 @@ fun FormularioContactoScreen(
 
         ListaDesplegable(
             etiqueta = "Medio de contacto preferente",
-            icono = Icons.Default.Chat,
+            icono = Icons.AutoMirrored.Filled.Chat,
             opciones = MedioContacto.entries,
             seleccionada = estado.medioPreferente,
             textoDe = { it.etiqueta },
@@ -182,7 +182,7 @@ fun FormularioContactoScreen(
             valor = estado.observaciones,
             alCambiar = viewModel::alCambiarObservaciones,
             etiqueta = "Observaciones",
-            icono = Icons.Default.Notes,
+            icono = Icons.AutoMirrored.Filled.Notes,
             lineas = 2
         )
 

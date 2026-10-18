@@ -18,7 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ErrorOutline
-import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Category
@@ -30,7 +30,7 @@ import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.Notes
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
@@ -328,7 +328,7 @@ fun FormularioOportunidadScreen(
             valor = estado.condiciones,
             alCambiar = viewModel::alCambiarCondiciones,
             etiqueta = "Condiciones de participación",
-            icono = Icons.Default.Assignment,
+            icono = Icons.AutoMirrored.Filled.Assignment,
             lineas = 2
         )
 
@@ -344,7 +344,7 @@ fun FormularioOportunidadScreen(
             valor = estado.observaciones,
             alCambiar = viewModel::alCambiarObservaciones,
             etiqueta = "Observaciones",
-            icono = Icons.Default.Notes,
+            icono = Icons.AutoMirrored.Filled.Notes,
             lineas = 2
         )
 

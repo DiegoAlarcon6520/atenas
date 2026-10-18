@@ -22,7 +22,7 @@ import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.Notes
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.WorkOutline
 import androidx.compose.material3.Button
@@ -168,7 +168,7 @@ fun FormularioOrganizacionScreen(
             valor = estado.observaciones,
             alCambiar = viewModel::alCambiarObservaciones,
             etiqueta = "Observaciones",
-            icono = Icons.Default.Notes,
+            icono = Icons.AutoMirrored.Filled.Notes,
             lineas = 2
         )
 
