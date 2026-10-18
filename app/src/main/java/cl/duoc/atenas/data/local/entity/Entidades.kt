@@ -168,7 +168,10 @@ data class Oportunidad(
     val fechaDeteccion: Long,
     val fechaInicioEvento: Long,
     val fechaTerminoEvento: Long?,
-    val horario: String,
+    /** Hora de inicio del evento, en minutos desde medianoche (600 = 10:00). */
+    val horaInicio: Int,
+    /** Hora de término del evento, en minutos desde medianoche. */
+    val horaTermino: Int,
     val direccion: String,
     val comunaId: Long,
     val organizacionId: Long,

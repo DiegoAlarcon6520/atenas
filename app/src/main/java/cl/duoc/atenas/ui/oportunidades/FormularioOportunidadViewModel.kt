@@ -84,7 +84,8 @@ data class FormularioOportunidadUiState(
     val fechaDeteccion: Long = Fechas.hoy(),
     val fechaInicioEvento: Long? = null,
     val fechaTerminoEvento: Long? = null,
-    val horario: String = "",
+    val horaInicio: Int = 9 * 60,
+    val horaTermino: Int = 18 * 60,
     val direccion: String = "",
     val regionId: Long? = null,
     val comunaId: Long? = null,
@@ -184,7 +185,8 @@ class FormularioOportunidadViewModel(
                 fechaDeteccion = existente.fechaDeteccion,
                 fechaInicioEvento = existente.fechaInicioEvento,
                 fechaTerminoEvento = existente.fechaTerminoEvento,
-                horario = existente.horario,
+                horaInicio = existente.horaInicio,
+                horaTermino = existente.horaTermino,
                 direccion = existente.direccion,
                 regionId = comuna?.regionId,
                 comunaId = existente.comunaId,
@@ -238,8 +240,12 @@ class FormularioOportunidadViewModel(
         it.copy(fechaTerminoEvento = valor, errores = it.errores.copy(fechaTerminoEvento = null))
     }
 
-    fun alCambiarHorario(valor: String) = _estado.update {
-        it.copy(horario = valor, errores = it.errores.copy(horario = null))
+    fun alCambiarHoraInicio(valor: Int) = _estado.update {
+        it.copy(horaInicio = valor, errores = it.errores.copy(horario = null))
+    }
+
+    fun alCambiarHoraTermino(valor: Int) = _estado.update {
+        it.copy(horaTermino = valor, errores = it.errores.copy(horario = null))
     }
 
     fun alCambiarDireccion(valor: String) = _estado.update {
@@ -317,7 +323,13 @@ class FormularioOportunidadViewModel(
             anterior = actual.fechaInicioEvento,
             mensaje = "La fecha de término no puede ser anterior al inicio"
         ),
-        horario = Validadores.obligatorio(actual.horario, "El horario"),
+        // Con selectores de reloj ya no puede haber formatos inválidos:
+        // lo único que queda por validar es la coherencia entre ambas horas.
+        horario = if (actual.horaTermino <= actual.horaInicio) {
+            "La hora de término debe ser posterior a la de inicio"
+        } else {
+            null
+        },
         direccion = Validadores.texto(actual.direccion, "La dirección", minimo = 5),
         comuna = Validadores.seleccionRequerida(actual.comunaId, "una comuna"),
         organizacion = Validadores.seleccionRequerida(actual.organizacionId, "una organización"),
@@ -366,7 +378,8 @@ class FormularioOportunidadViewModel(
                             fuenteInformacion = actual.fuenteInformacion.trim(),
                             fechaInicioEvento = actual.fechaInicioEvento!!,
                             fechaTerminoEvento = actual.fechaTerminoEvento,
-                            horario = actual.horario.trim(),
+                            horaInicio = actual.horaInicio,
+                            horaTermino = actual.horaTermino,
                             direccion = actual.direccion.trim(),
                             comunaId = actual.comunaId!!,
                             organizacionId = actual.organizacionId!!,
@@ -391,7 +404,8 @@ class FormularioOportunidadViewModel(
                             fechaDeteccion = actual.fechaDeteccion,
                             fechaInicioEvento = actual.fechaInicioEvento!!,
                             fechaTerminoEvento = actual.fechaTerminoEvento,
-                            horario = actual.horario.trim(),
+                            horaInicio = actual.horaInicio,
+                            horaTermino = actual.horaTermino,
                             direccion = actual.direccion.trim(),
                             comunaId = actual.comunaId!!,
                             organizacionId = actual.organizacionId!!,

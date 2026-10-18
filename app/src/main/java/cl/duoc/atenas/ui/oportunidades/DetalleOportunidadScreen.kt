@@ -13,14 +13,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AssignmentInd
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.NoteAdd
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,12 +42,14 @@ import cl.duoc.atenas.ui.components.EstadoVacio
 import cl.duoc.atenas.ui.components.EtiquetaEstado
 import cl.duoc.atenas.ui.components.EtiquetaPrioridad
 import cl.duoc.atenas.ui.components.IndicadorCarga
+import cl.duoc.atenas.ui.components.ListaDesplegable
 import cl.duoc.atenas.ui.theme.Espaciado
 import java.util.Locale
 
 @Composable
 fun DetalleOportunidadScreen(
     alEditar: (Long) -> Unit,
+    alRegistrarGestion: (Long) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: DetalleOportunidadViewModel = viewModel(factory = DetalleOportunidadViewModel.Factory)
 ) {
@@ -90,14 +96,69 @@ fun DetalleOportunidadScreen(
                 // los antecedentes; lo que cambia según el rol son los estados
                 // y la asignación, que se manejan aparte.
                 Button(
+                    onClick = { alRegistrarGestion(oportunidad.id) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.NoteAdd, contentDescription = null)
+                    Text(
+                        text = "Registrar gestión",
+                        modifier = Modifier.padding(start = Espaciado.sm)
+                    )
+                }
+                OutlinedButton(
                     onClick = { alEditar(oportunidad.id) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(Icons.Default.Edit, contentDescription = null)
                     Text(
-                        text = "Editar oportunidad",
+                        text = "Editar antecedentes",
                         modifier = Modifier.padding(start = Espaciado.sm)
                     )
+                }
+            }
+        }
+
+        // Asignación de responsable: solo la ve el supervisor.
+        if (estado.puedeAsignar) {
+            item {
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(Espaciado.md),
+                        verticalArrangement = Arrangement.spacedBy(Espaciado.sm)
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(Espaciado.sm),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.AssignmentInd, contentDescription = null)
+                            Text(
+                                text = "Asignación de responsable",
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                        }
+                        ListaDesplegable(
+                            etiqueta = "Ejecutivo a cargo",
+                            opciones = estado.ejecutivos,
+                            seleccionada = estado.ejecutivos.firstOrNull {
+                                it.id == oportunidad.responsableId
+                            },
+                            textoDe = { "${it.nombreCompleto} · ${it.zona}" },
+                            alSeleccionar = { viewModel.asignarResponsable(it.id) },
+                            textoVacio = "Sin asignar"
+                        )
+                        if (oportunidad.responsableId != null) {
+                            OutlinedButton(
+                                onClick = { viewModel.asignarResponsable(null) },
+                                modifier = Modifier.fillMaxWidth()
+                            ) { Text("Quitar asignación") }
+                        }
+                    }
                 }
             }
         }
@@ -110,7 +171,7 @@ fun DetalleOportunidadScreen(
                     "Fecha de inicio" to Fechas.aTexto(oportunidad.fechaInicioEvento),
                     "Fecha de término" to (oportunidad.fechaTerminoEvento
                         ?.let { Fechas.aTexto(it) } ?: "Un solo día"),
-                    "Horario" to oportunidad.horario,
+                    "Horario" to Fechas.rangoHorario(oportunidad.horaInicio, oportunidad.horaTermino),
                     "Dirección" to oportunidad.direccion,
                     "Comuna" to "${detalle.comunaNombre}, ${detalle.regionNombre}",
                     "Público objetivo" to oportunidad.publicoObjetivo,

@@ -40,6 +40,7 @@ import cl.duoc.atenas.domain.model.TipoOportunidad
 import cl.duoc.atenas.ui.components.CampoTexto
 import cl.duoc.atenas.ui.components.IndicadorCarga
 import cl.duoc.atenas.ui.components.ListaDesplegable
+import cl.duoc.atenas.ui.components.SelectorHora
 import cl.duoc.atenas.ui.components.SelectorFecha
 import cl.duoc.atenas.ui.theme.Espaciado
 
@@ -172,13 +173,34 @@ fun FormularioOportunidadScreen(
             ayuda = "Déjala vacía si el evento dura un solo día"
         )
 
-        CampoTexto(
-            valor = estado.horario,
-            alCambiar = viewModel::alCambiarHorario,
-            etiqueta = "Horario",
-            error = estado.errores.horario,
-            ayuda = "Por ejemplo: 10:00 - 18:00"
-        )
+        // Las dos horas van lado a lado: se leen como un rango, que es como
+        // el usuario piensa el horario del evento.
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Espaciado.sm)
+        ) {
+            SelectorHora(
+                etiqueta = "Hora de inicio",
+                minutosDelDia = estado.horaInicio,
+                alSeleccionar = viewModel::alCambiarHoraInicio,
+                modifier = Modifier.weight(1f)
+            )
+            SelectorHora(
+                etiqueta = "Hora de término",
+                minutosDelDia = estado.horaTermino,
+                alSeleccionar = viewModel::alCambiarHoraTermino,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        // El error del rango se muestra una sola vez bajo ambos campos.
+        estado.errores.horario?.let { mensaje ->
+            Text(
+                text = mensaje,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
 
         CampoTexto(
             valor = estado.direccion,

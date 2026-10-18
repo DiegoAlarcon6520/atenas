@@ -45,7 +45,7 @@ import cl.duoc.atenas.data.local.entity.Usuario
         Seguimiento::class,
         Evidencia::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(Convertidores::class)

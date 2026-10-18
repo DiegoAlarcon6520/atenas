@@ -47,6 +47,7 @@ import cl.duoc.atenas.ui.organizaciones.FormularioContactoScreen
 import cl.duoc.atenas.ui.organizaciones.FormularioOrganizacionScreen
 import cl.duoc.atenas.ui.organizaciones.ListaOrganizacionesScreen
 import cl.duoc.atenas.ui.perfil.PerfilScreen
+import cl.duoc.atenas.ui.seguimiento.RegistrarSeguimientoScreen
 import cl.duoc.atenas.ui.supervisor.PanelSupervisorScreen
 import kotlinx.coroutines.launch
 
@@ -210,7 +211,10 @@ private fun ContenedorPrincipal(usuario: Usuario) {
                 )
             ) {
                 DetalleOportunidadScreen(
-                    alEditar = { id -> navController.navigate(Rutas.formularioOportunidad(id)) }
+                    alEditar = { id -> navController.navigate(Rutas.formularioOportunidad(id)) },
+                    alRegistrarGestion = { id ->
+                        navController.navigate(Rutas.registrarSeguimiento(id))
+                    }
                 )
             }
 
@@ -226,6 +230,19 @@ private fun ContenedorPrincipal(usuario: Usuario) {
                 )
             ) {
                 FormularioOportunidadScreen(
+                    alTerminar = { navController.popBackStack() },
+                    mostrarMensaje = mostrarMensaje
+                )
+            }
+
+            // Registro de gestiones sobre una oportunidad.
+            composable(
+                route = Rutas.REGISTRAR_SEGUIMIENTO,
+                arguments = listOf(
+                    navArgument(Rutas.ARG_OPORTUNIDAD) { type = NavType.LongType }
+                )
+            ) {
+                RegistrarSeguimientoScreen(
                     alTerminar = { navController.popBackStack() },
                     mostrarMensaje = mostrarMensaje
                 )
