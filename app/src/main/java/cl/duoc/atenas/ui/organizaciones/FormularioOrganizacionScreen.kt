@@ -16,6 +16,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Notes
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.WorkOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -97,11 +105,13 @@ fun FormularioOrganizacionScreen(
             valor = estado.nombre,
             alCambiar = viewModel::alCambiarNombre,
             etiqueta = "Nombre de la organización",
+            icono = Icons.Default.Business,
             error = estado.errores.nombre
         )
 
         ListaDesplegable(
             etiqueta = "Tipo de organización",
+            icono = Icons.Default.Category,
             opciones = TipoOrganizacion.entries,
             seleccionada = estado.tipo,
             textoDe = { it.etiqueta },
@@ -112,12 +122,14 @@ fun FormularioOrganizacionScreen(
             valor = estado.rubro,
             alCambiar = viewModel::alCambiarRubro,
             etiqueta = "Rubro",
+            icono = Icons.Default.WorkOutline,
             error = estado.errores.rubro,
             ayuda = "Construcción, retail, gobierno local…"
         )
 
         ListaDesplegable(
             etiqueta = "Región",
+            icono = Icons.Default.Map,
             opciones = estado.regiones,
             seleccionada = estado.regiones.firstOrNull { it.id == estado.regionId },
             textoDe = { it.nombre },
@@ -126,6 +138,7 @@ fun FormularioOrganizacionScreen(
 
         ListaDesplegable(
             etiqueta = "Comuna",
+            icono = Icons.Default.Place,
             opciones = estado.comunasDisponibles,
             seleccionada = estado.comunasDisponibles.firstOrNull { it.id == estado.comunaId },
             textoDe = { it.nombre },
@@ -138,6 +151,7 @@ fun FormularioOrganizacionScreen(
             valor = estado.sitioWeb,
             alCambiar = viewModel::alCambiarSitioWeb,
             etiqueta = "Sitio web",
+            icono = Icons.Default.Language,
             ayuda = "Opcional"
         )
 
@@ -145,6 +159,7 @@ fun FormularioOrganizacionScreen(
             valor = estado.publicoAsociado,
             alCambiar = viewModel::alCambiarPublicoAsociado,
             etiqueta = "Público asociado",
+            icono = Icons.Default.Groups,
             ayuda = "Opcional: trabajadores, afiliados, vecinos…"
         )
 
@@ -152,6 +167,7 @@ fun FormularioOrganizacionScreen(
             valor = estado.observaciones,
             alCambiar = viewModel::alCambiarObservaciones,
             etiqueta = "Observaciones",
+            icono = Icons.Default.Notes,
             lineas = 2
         )
 

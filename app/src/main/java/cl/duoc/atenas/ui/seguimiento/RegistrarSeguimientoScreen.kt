@@ -18,6 +18,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -115,6 +119,7 @@ fun RegistrarSeguimientoScreen(
 
         ListaDesplegable(
             etiqueta = "Tipo de acción",
+            icono = Icons.Default.Category,
             opciones = TipoAccion.entries,
             seleccionada = estado.tipoAccion,
             textoDe = { it.etiqueta },
@@ -132,6 +137,7 @@ fun RegistrarSeguimientoScreen(
             valor = estado.resultado,
             alCambiar = viewModel::alCambiarResultado,
             etiqueta = "Resultado",
+            icono = Icons.Default.Description,
             error = estado.errores.resultado,
             lineas = 3,
             ayuda = "Qué pasó y qué dijo la contraparte"
@@ -141,6 +147,7 @@ fun RegistrarSeguimientoScreen(
             valor = estado.proximaAccion,
             alCambiar = viewModel::alCambiarProximaAccion,
             etiqueta = "Próxima acción",
+            icono = Icons.Default.Assignment,
             ayuda = "Opcional: qué hay que hacer después"
         )
 
@@ -205,6 +212,7 @@ fun RegistrarSeguimientoScreen(
             valor = estado.observaciones,
             alCambiar = viewModel::alCambiarObservaciones,
             etiqueta = "Observaciones",
+            icono = Icons.Default.Notes,
             lineas = 2
         )
 

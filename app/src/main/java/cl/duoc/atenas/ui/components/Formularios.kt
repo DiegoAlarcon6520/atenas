@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
@@ -28,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.KeyboardType
 import cl.duoc.atenas.core.Fechas
 
@@ -47,6 +49,7 @@ import cl.duoc.atenas.core.Fechas
  * Campo de texto estándar.
  *
  * @param error mensaje a mostrar bajo el campo, o null si el valor es válido.
+ * @param icono ícono que acompaña al campo y comunica de un vistazo qué se pide.
  * @param lineas cantidad de líneas visibles; más de 1 lo convierte en área de texto.
  * @param soloNumeros muestra el teclado numérico del teléfono.
  */
@@ -58,6 +61,7 @@ fun CampoTexto(
     modifier: Modifier = Modifier,
     error: String? = null,
     ayuda: String? = null,
+    icono: ImageVector? = null,
     lineas: Int = 1,
     soloNumeros: Boolean = false,
     prefijo: String? = null
@@ -66,6 +70,9 @@ fun CampoTexto(
         value = valor,
         onValueChange = alCambiar,
         label = { Text(etiqueta) },
+        // El ícono es opcional: cuando viene, se dibuja a la izquierda del
+        // campo y refuerza visualmente qué dato se está pidiendo.
+        leadingIcon = icono?.let { { Icon(it, contentDescription = null) } },
         isError = error != null,
         // Si hay error se muestra el error; si no, el texto de ayuda opcional.
         supportingText = when {
@@ -108,6 +115,7 @@ fun <T> ListaDesplegable(
     alSeleccionar: (T) -> Unit,
     modifier: Modifier = Modifier,
     error: String? = null,
+    icono: ImageVector? = null,
     textoVacio: String = "Selecciona una opción"
 ) {
     // Estado local: si el menú está abierto o cerrado. Es estado de UI puro,
@@ -125,6 +133,7 @@ fun <T> ListaDesplegable(
             readOnly = true,
             label = { Text(etiqueta) },
             placeholder = { Text(textoVacio) },
+            leadingIcon = icono?.let { { Icon(it, contentDescription = null) } },
             isError = error != null,
             supportingText = error?.let { { Text(it) } },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandido) },
@@ -177,6 +186,7 @@ fun SelectorFecha(
         readOnly = true,
         label = { Text(etiqueta) },
         placeholder = { Text("dd/mm/aaaa") },
+        leadingIcon = { Icon(Icons.Default.Event, contentDescription = null) },
         isError = error != null,
         supportingText = when {
             error != null -> {
@@ -242,6 +252,7 @@ fun SelectorHora(
         onValueChange = { },
         readOnly = true,
         label = { Text(etiqueta) },
+        leadingIcon = { Icon(Icons.Default.Schedule, contentDescription = null) },
         isError = error != null,
         supportingText = error?.let { { Text(it) } },
         trailingIcon = {

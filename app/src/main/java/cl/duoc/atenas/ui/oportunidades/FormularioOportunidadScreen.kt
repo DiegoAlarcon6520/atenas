@@ -18,6 +18,22 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.AssignmentTurnedIn
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Notes
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -128,6 +144,7 @@ fun FormularioOportunidadScreen(
             valor = estado.nombre,
             alCambiar = viewModel::alCambiarNombre,
             etiqueta = "Nombre del evento",
+            icono = Icons.Default.Event,
             error = estado.errores.nombre
         )
 
@@ -135,12 +152,14 @@ fun FormularioOportunidadScreen(
             valor = estado.descripcion,
             alCambiar = viewModel::alCambiarDescripcion,
             etiqueta = "Descripción",
+            icono = Icons.Default.Description,
             error = estado.errores.descripcion,
             lineas = 3
         )
 
         ListaDesplegable(
             etiqueta = "Tipo de evento",
+            icono = Icons.Default.Category,
             opciones = TipoOportunidad.entries,
             seleccionada = estado.tipo,
             textoDe = { it.etiqueta },
@@ -151,6 +170,7 @@ fun FormularioOportunidadScreen(
             valor = estado.fuenteInformacion,
             alCambiar = viewModel::alCambiarFuente,
             etiqueta = "Fuente de información",
+            icono = Icons.Default.Link,
             error = estado.errores.fuenteInformacion,
             ayuda = "Dónde se detectó: sitio web, redes sociales, contacto directo…"
         )
@@ -206,6 +226,7 @@ fun FormularioOportunidadScreen(
             valor = estado.direccion,
             alCambiar = viewModel::alCambiarDireccion,
             etiqueta = "Dirección o ubicación",
+            icono = Icons.Default.LocationOn,
             error = estado.errores.direccion
         )
 
@@ -213,6 +234,7 @@ fun FormularioOportunidadScreen(
         // las comunas disponibles. Así se respeta la normalización del modelo.
         ListaDesplegable(
             etiqueta = "Región",
+            icono = Icons.Default.Map,
             opciones = estado.regiones,
             seleccionada = estado.regiones.firstOrNull { it.id == estado.regionId },
             textoDe = { it.nombre },
@@ -221,6 +243,7 @@ fun FormularioOportunidadScreen(
 
         ListaDesplegable(
             etiqueta = "Comuna",
+            icono = Icons.Default.Place,
             opciones = estado.comunasDisponibles,
             seleccionada = estado.comunasDisponibles.firstOrNull { it.id == estado.comunaId },
             textoDe = { it.nombre },
@@ -234,6 +257,7 @@ fun FormularioOportunidadScreen(
 
         ListaDesplegable(
             etiqueta = "Organización",
+            icono = Icons.Default.Business,
             opciones = estado.organizaciones,
             seleccionada = estado.organizaciones.firstOrNull { it.id == estado.organizacionId },
             textoDe = { it.nombre },
@@ -243,6 +267,7 @@ fun FormularioOportunidadScreen(
 
         ListaDesplegable(
             etiqueta = "Contacto",
+            icono = Icons.Default.Person,
             opciones = estado.contactosDisponibles,
             seleccionada = estado.contactosDisponibles.firstOrNull { it.id == estado.contactoId },
             textoDe = { "${it.nombre} · ${it.cargo}" },
@@ -261,6 +286,7 @@ fun FormularioOportunidadScreen(
             valor = estado.publicoObjetivo,
             alCambiar = viewModel::alCambiarPublicoObjetivo,
             etiqueta = "Público objetivo",
+            icono = Icons.Default.Groups,
             error = estado.errores.publicoObjetivo,
             ayuda = "A quién apunta el evento: trabajadores, vecinos, afiliados…"
         )
@@ -269,6 +295,7 @@ fun FormularioOportunidadScreen(
             valor = estado.publicoEsperado,
             alCambiar = viewModel::alCambiarPublicoEsperado,
             etiqueta = "Público esperado",
+            icono = Icons.Default.People,
             error = estado.errores.publicoEsperado,
             soloNumeros = true,
             ayuda = "Cantidad estimada de asistentes"
@@ -276,6 +303,7 @@ fun FormularioOportunidadScreen(
 
         ListaDesplegable(
             etiqueta = "Prioridad",
+            icono = Icons.Default.Flag,
             opciones = Prioridad.entries,
             seleccionada = estado.prioridad,
             textoDe = { it.etiqueta },
@@ -286,6 +314,7 @@ fun FormularioOportunidadScreen(
             valor = estado.costoReferencial,
             alCambiar = viewModel::alCambiarCosto,
             etiqueta = "Costo referencial",
+            icono = Icons.Default.AttachMoney,
             error = estado.errores.costoReferencial,
             soloNumeros = true,
             prefijo = "$ ",
@@ -299,6 +328,7 @@ fun FormularioOportunidadScreen(
             valor = estado.condiciones,
             alCambiar = viewModel::alCambiarCondiciones,
             etiqueta = "Condiciones de participación",
+            icono = Icons.Default.Assignment,
             lineas = 2
         )
 
@@ -306,6 +336,7 @@ fun FormularioOportunidadScreen(
             valor = estado.requisitos,
             alCambiar = viewModel::alCambiarRequisitos,
             etiqueta = "Requisitos",
+            icono = Icons.Default.AssignmentTurnedIn,
             lineas = 2
         )
 
@@ -313,6 +344,7 @@ fun FormularioOportunidadScreen(
             valor = estado.observaciones,
             alCambiar = viewModel::alCambiarObservaciones,
             etiqueta = "Observaciones",
+            icono = Icons.Default.Notes,
             lineas = 2
         )
 

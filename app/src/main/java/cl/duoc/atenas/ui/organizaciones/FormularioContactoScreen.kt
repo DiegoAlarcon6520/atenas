@@ -16,6 +16,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Notes
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -106,6 +113,7 @@ fun FormularioContactoScreen(
             valor = estado.nombre,
             alCambiar = viewModel::alCambiarNombre,
             etiqueta = "Nombre completo",
+            icono = Icons.Default.Person,
             error = estado.errores.nombre
         )
 
@@ -113,12 +121,14 @@ fun FormularioContactoScreen(
             valor = estado.cargo,
             alCambiar = viewModel::alCambiarCargo,
             etiqueta = "Cargo",
+            icono = Icons.Default.Badge,
             error = estado.errores.cargo,
             ayuda = "Jefa de Bienestar, Coordinador de Eventos…"
         )
 
         ListaDesplegable(
             etiqueta = "Área",
+            icono = Icons.Default.Category,
             opciones = AreaContacto.entries,
             seleccionada = estado.area,
             textoDe = { it.etiqueta },
@@ -129,6 +139,7 @@ fun FormularioContactoScreen(
             valor = estado.correo,
             alCambiar = viewModel::alCambiarCorreo,
             etiqueta = "Correo",
+            icono = Icons.Default.Email,
             error = estado.errores.correo
         )
 
@@ -136,12 +147,14 @@ fun FormularioContactoScreen(
             valor = estado.telefono,
             alCambiar = viewModel::alCambiarTelefono,
             etiqueta = "Teléfono",
+            icono = Icons.Default.Phone,
             error = estado.errores.telefono,
             ayuda = "Formato: +56 9 1234 5678"
         )
 
         ListaDesplegable(
             etiqueta = "Medio de contacto preferente",
+            icono = Icons.Default.Chat,
             opciones = MedioContacto.entries,
             seleccionada = estado.medioPreferente,
             textoDe = { it.etiqueta },
@@ -168,6 +181,7 @@ fun FormularioContactoScreen(
             valor = estado.observaciones,
             alCambiar = viewModel::alCambiarObservaciones,
             etiqueta = "Observaciones",
+            icono = Icons.Default.Notes,
             lineas = 2
         )
 
