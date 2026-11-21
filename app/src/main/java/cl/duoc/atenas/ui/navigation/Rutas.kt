@@ -37,6 +37,9 @@ object Rutas {
 
     fun evidencias(oportunidadId: Long): String = "evidencias/$oportunidadId"
 
+    // ----- Propuestas enviadas (HU-16) -----
+    const val PROPUESTAS = "propuestas"
+
     // ----- Organizaciones y contactos -----
     const val ORGANIZACIONES = "organizaciones"
     const val ARG_ORGANIZACION = "organizacionId"
@@ -91,5 +94,6 @@ fun tituloDeRuta(ruta: String?, rol: RolUsuario): String = when (ruta) {
     Rutas.DETALLE_ORGANIZACION -> "Ficha de la organización"
     Rutas.FORMULARIO_ORGANIZACION -> "Registrar organización"
     Rutas.FORMULARIO_CONTACTO -> "Registrar contacto"
+    Rutas.PROPUESTAS -> "Propuestas enviadas"
     else -> "Atenas"
 }

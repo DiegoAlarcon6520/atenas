@@ -36,7 +36,11 @@ data class DashboardEjecutivoUiState(
     val enGestion: Int = 0,
     val proximas: List<OportunidadResumen> = emptyList(),
     val atrasadas: List<GestionPendiente> = emptyList(),
-    val conteos: List<ConteoPorEstado> = emptyList()
+    val conteos: List<ConteoPorEstado> = emptyList(),
+    /** Alerta: oportunidades activas que todavía no se contactan (HU-17). */
+    val sinContacto: List<OportunidadResumen> = emptyList(),
+    /** Alerta: propuestas enviadas que esperan respuesta (HU-17). */
+    val propuestasSinRespuesta: List<OportunidadResumen> = emptyList()
 )
 
 /** Tablero del ejecutivo: solo muestra las oportunidades asignadas a él. */
@@ -48,12 +52,20 @@ class DashboardEjecutivoViewModel(
 
     private val usuario = sesion.requerirUsuario()
 
+    // combine() admite hasta cinco flujos con tipos propios: las dos
+    // alertas nuevas se juntan primero en un par.
+    private val alertas = combine(
+        oportunidades.observarSinContacto(usuario.id),
+        oportunidades.observarPropuestasSinRespuesta(usuario.id)
+    ) { sinContacto, propuestas -> sinContacto to propuestas }
+
     val estado: StateFlow<DashboardEjecutivoUiState> = combine(
         oportunidades.observarResumen(usuario.id),
         oportunidades.observarProximas(dias = 30, responsableId = usuario.id),
         seguimientos.observarGestionesAtrasadas(usuario.id),
-        oportunidades.observarConteoPorEstado(usuario.id)
-    ) { asignadas, proximas, atrasadas, conteos ->
+        oportunidades.observarConteoPorEstado(usuario.id),
+        alertas
+    ) { asignadas, proximas, atrasadas, conteos, (sinContacto, propuestas) ->
         val cerradas = setOf(EstadoOportunidad.DESCARTADA, EstadoOportunidad.CERRADA)
         DashboardEjecutivoUiState(
             cargando = false,
@@ -62,7 +74,9 @@ class DashboardEjecutivoViewModel(
             enGestion = asignadas.count { it.estado !in cerradas },
             proximas = proximas,
             atrasadas = atrasadas,
-            conteos = conteos.sortedBy { it.estado.orden }
+            conteos = conteos.sortedBy { it.estado.orden },
+            sinContacto = sinContacto,
+            propuestasSinRespuesta = propuestas
         )
     }.stateIn(
         scope = viewModelScope,

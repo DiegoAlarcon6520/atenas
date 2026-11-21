@@ -17,8 +17,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -36,12 +40,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cl.duoc.atenas.data.local.entity.Comuna
+import cl.duoc.atenas.data.local.entity.Organizacion
+import cl.duoc.atenas.data.local.entity.Region
+import cl.duoc.atenas.data.local.entity.Usuario
 import cl.duoc.atenas.domain.model.EstadoOportunidad
 import cl.duoc.atenas.domain.model.PotencialComercial
 import cl.duoc.atenas.domain.model.Prioridad
+import cl.duoc.atenas.domain.model.RangoFecha
 import cl.duoc.atenas.domain.model.TipoOportunidad
 import cl.duoc.atenas.ui.components.EstadoVacio
 import cl.duoc.atenas.ui.components.IndicadorCarga
+import cl.duoc.atenas.ui.components.ListaDesplegable
 import cl.duoc.atenas.ui.components.TarjetaOportunidad
 import cl.duoc.atenas.ui.theme.Espaciado
 
@@ -159,6 +169,56 @@ fun ListaOportunidadesScreen(
                             seleccionada = estado.filtros.tipo,
                             alSeleccionar = viewModel::alSeleccionarTipo
                         )
+                        GrupoFiltros(
+                            titulo = "Fecha del evento",
+                            opciones = RangoFecha.entries,
+                            etiqueta = { it.etiqueta },
+                            seleccionada = estado.filtros.rangoFecha,
+                            alSeleccionar = viewModel::alSeleccionarRangoFecha
+                        )
+
+                        // Ubicación, organización y responsable tienen muchas
+                        // opciones: van en listas desplegables, no en chips.
+                        // La primera opción de cada lista quita el filtro.
+                        Column(
+                            modifier = Modifier.padding(horizontal = Espaciado.md),
+                            verticalArrangement = Arrangement.spacedBy(Espaciado.xs)
+                        ) {
+                            ListaDesplegable<Region?>(
+                                etiqueta = "Región",
+                                icono = Icons.Default.Map,
+                                opciones = listOf<Region?>(null) + estado.regiones,
+                                seleccionada = estado.regiones.firstOrNull { it.id == estado.filtros.regionId },
+                                textoDe = { it?.nombre ?: "Todas las regiones" },
+                                alSeleccionar = viewModel::alSeleccionarRegion
+                            )
+                            ListaDesplegable<Comuna?>(
+                                etiqueta = "Comuna",
+                                icono = Icons.Default.LocationOn,
+                                opciones = listOf<Comuna?>(null) + estado.comunasDisponibles,
+                                seleccionada = estado.comunasDisponibles.firstOrNull { it.id == estado.filtros.comunaId },
+                                textoDe = { it?.nombre ?: "Todas las comunas" },
+                                alSeleccionar = viewModel::alSeleccionarComuna
+                            )
+                            ListaDesplegable<Organizacion?>(
+                                etiqueta = "Organización",
+                                icono = Icons.Default.Business,
+                                opciones = listOf<Organizacion?>(null) + estado.organizaciones,
+                                seleccionada = estado.organizaciones.firstOrNull { it.id == estado.filtros.organizacionId },
+                                textoDe = { it?.nombre ?: "Todas las organizaciones" },
+                                alSeleccionar = viewModel::alSeleccionarOrganizacion
+                            )
+                            if (estado.esSupervisor) {
+                                ListaDesplegable<Usuario?>(
+                                    etiqueta = "Responsable",
+                                    icono = Icons.Default.Person,
+                                    opciones = listOf<Usuario?>(null) + estado.ejecutivos,
+                                    seleccionada = estado.ejecutivos.firstOrNull { it.id == estado.filtros.responsableId },
+                                    textoDe = { it?.nombreCompleto ?: "Todos los ejecutivos" },
+                                    alSeleccionar = viewModel::alSeleccionarResponsable
+                                )
+                            }
+                        }
                         if (estado.filtros.hayAlguno) {
                             TextButton(
                                 onClick = viewModel::limpiarFiltros,

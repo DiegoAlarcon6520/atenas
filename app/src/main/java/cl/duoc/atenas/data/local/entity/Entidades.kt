@@ -191,6 +191,8 @@ data class Oportunidad(
     val costoReferencial: Double,
     val condiciones: String?,
     val requisitos: String?,
+    /** Espacios que ofrece el organizador: stands, módulos, metros disponibles (HU-11). */
+    val espaciosDisponibles: String? = null,
     val observaciones: String?,
     val fechaCreacion: Long,
     val fechaActualizacion: Long

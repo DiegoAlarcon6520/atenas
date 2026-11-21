@@ -25,6 +25,25 @@ import kotlinx.coroutines.flow.Flow
  *  - acá se calculan parámetros derivados, como el rango de fechas de
  *    "próximos 30 días".
  */
+/**
+ * Criterios del listado de oportunidades (HU-18). Cada filtro nulo o vacío
+ * significa "no filtrar por esto". Las fechas son medianoches locales y
+ * acotan la fecha de inicio del evento.
+ */
+data class CriteriosBusqueda(
+    val texto: String = "",
+    val estado: EstadoOportunidad? = null,
+    val prioridad: Prioridad? = null,
+    val tipo: TipoOportunidad? = null,
+    val potencial: PotencialComercial? = null,
+    val desde: Long? = null,
+    val hasta: Long? = null,
+    val regionId: Long? = null,
+    val comunaId: Long? = null,
+    val organizacionId: Long? = null,
+    val responsableId: Long? = null
+)
+
 class OportunidadRepository(private val dao: OportunidadDao) {
 
     /** [responsableId] nulo trae todas: es la vista del supervisor. */
@@ -43,22 +62,38 @@ class OportunidadRepository(private val dao: OportunidadDao) {
 
     fun buscar(
         responsableId: Long?,
-        texto: String,
-        estado: EstadoOportunidad?,
-        prioridad: Prioridad?,
-        tipo: TipoOportunidad?,
-        potencial: PotencialComercial? = null
+        filtros: CriteriosBusqueda
     ): Flow<List<OportunidadResumen>> = dao.buscar(
         responsableId = responsableId,
-        texto = texto.trim(),
-        estado = estado?.name,
-        prioridad = prioridad?.name,
-        tipo = tipo?.name,
-        potencial = potencial?.name
+        texto = filtros.texto.trim(),
+        estado = filtros.estado?.name,
+        prioridad = filtros.prioridad?.name,
+        tipo = filtros.tipo?.name,
+        potencial = filtros.potencial?.name,
+        desde = filtros.desde,
+        hasta = filtros.hasta,
+        regionId = filtros.regionId,
+        comunaId = filtros.comunaId,
+        organizacionId = filtros.organizacionId,
+        filtroResponsableId = filtros.responsableId
     )
 
-    fun observarPorOrganizacion(organizacionId: Long): Flow<List<OportunidadResumen>> =
-        dao.observarPorOrganizacion(organizacionId)
+    /** Alerta: oportunidades activas a las que todavía no se ha contactado. */
+    fun observarSinContacto(responsableId: Long?): Flow<List<OportunidadResumen>> =
+        dao.observarEnEstados(
+            listOf(EstadoOportunidad.IDENTIFICADA.name, EstadoOportunidad.CONTACTO_PENDIENTE.name),
+            responsableId
+        )
+
+    /** Alerta: propuestas enviadas que siguen esperando la respuesta de la organización. */
+    fun observarPropuestasSinRespuesta(responsableId: Long?): Flow<List<OportunidadResumen>> =
+        dao.observarEnEstados(
+            listOf(EstadoOportunidad.PROPUESTA_ENVIADA.name, EstadoOportunidad.EN_ESPERA_RESPUESTA.name),
+            responsableId
+        )
+
+    fun observarPorOrganizacion(organizacionId: Long, responsableId: Long?): Flow<List<OportunidadResumen>> =
+        dao.observarPorOrganizacion(organizacionId, responsableId)
 
     fun observarDetalle(id: Long): Flow<OportunidadDetalle?> = dao.observarDetalle(id)
 

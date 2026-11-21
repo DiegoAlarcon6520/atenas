@@ -30,7 +30,9 @@ data class PanelSupervisorUiState(
     val atrasadas: List<GestionPendiente> = emptyList(),
     val conteos: List<ConteoPorEstado> = emptyList(),
     val ejecutivos: List<Usuario> = emptyList(),
-    val cargaPorEjecutivo: Map<String, Int> = emptyMap()
+    val cargaPorEjecutivo: Map<String, Int> = emptyMap(),
+    val sinContacto: List<OportunidadResumen> = emptyList(),
+    val propuestasSinRespuesta: List<OportunidadResumen> = emptyList()
 )
 
 /** Tablero del supervisor: consulta global de toda la cartera. */
@@ -43,13 +45,19 @@ class PanelSupervisorViewModel(
 
     private val usuario = sesion.requerirUsuario()
 
+    private val alertas = combine(
+        oportunidades.observarSinContacto(responsableId = null),
+        oportunidades.observarPropuestasSinRespuesta(responsableId = null),
+        usuarios.observarEjecutivos()
+    ) { sinContacto, propuestas, ejecutivos -> Triple(sinContacto, propuestas, ejecutivos) }
+
     val estado: StateFlow<PanelSupervisorUiState> = combine(
         oportunidades.observarResumen(responsableId = null),
         oportunidades.observarSinResponsable(),
         oportunidades.observarConteoPorEstado(responsableId = null),
         seguimientos.observarGestionesAtrasadas(responsableId = null),
-        usuarios.observarEjecutivos()
-    ) { todas, sinAsignar, conteos, atrasadas, ejecutivos ->
+        alertas
+    ) { todas, sinAsignar, conteos, atrasadas, (sinContacto, propuestas, ejecutivos) ->
         val cerradas = setOf(EstadoOportunidad.DESCARTADA, EstadoOportunidad.CERRADA)
         PanelSupervisorUiState(
             cargando = false,
@@ -64,6 +72,8 @@ class PanelSupervisorViewModel(
             atrasadas = atrasadas,
             conteos = conteos.sortedBy { it.estado.orden },
             ejecutivos = ejecutivos,
+            sinContacto = sinContacto,
+            propuestasSinRespuesta = propuestas,
             cargaPorEjecutivo = ejecutivos.associate { ejecutivo ->
                 ejecutivo.nombreCompleto to todas.count {
                     it.responsableNombre == ejecutivo.nombreCompleto && it.estado !in cerradas

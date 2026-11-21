@@ -48,6 +48,7 @@ import cl.duoc.atenas.ui.organizaciones.FormularioContactoScreen
 import cl.duoc.atenas.ui.organizaciones.FormularioOrganizacionScreen
 import cl.duoc.atenas.ui.organizaciones.ListaOrganizacionesScreen
 import cl.duoc.atenas.ui.perfil.PerfilScreen
+import cl.duoc.atenas.ui.propuestas.PropuestasScreen
 import cl.duoc.atenas.ui.seguimiento.RegistrarSeguimientoScreen
 import cl.duoc.atenas.ui.supervisor.PanelSupervisorScreen
 import kotlinx.coroutines.launch
@@ -213,11 +214,29 @@ private fun ContenedorPrincipal(usuario: Usuario) {
 
             // Inicio: el contenido depende del perfil autenticado.
             composable(Rutas.INICIO) {
-                if (Permisos.puedeVerPanelDeEquipo(usuario.rol)) {
-                    PanelSupervisorScreen()
-                } else {
-                    DashboardEjecutivoScreen()
+                // Las alertas del tablero llevan directo a la oportunidad.
+                val alAbrirOportunidad: (Long) -> Unit = { id ->
+                    navController.navigate(Rutas.detalleOportunidad(id))
                 }
+                val alVerPropuestas = { navController.navigate(Rutas.PROPUESTAS) }
+                if (Permisos.puedeVerPanelDeEquipo(usuario.rol)) {
+                    PanelSupervisorScreen(
+                        alAbrirOportunidad = alAbrirOportunidad,
+                        alVerPropuestas = alVerPropuestas
+                    )
+                } else {
+                    DashboardEjecutivoScreen(
+                        alAbrirOportunidad = alAbrirOportunidad,
+                        alVerPropuestas = alVerPropuestas
+                    )
+                }
+            }
+
+            // Propuestas enviadas (HU-16), abierta desde los tableros.
+            composable(Rutas.PROPUESTAS) {
+                PropuestasScreen(
+                    alAbrirOportunidad = { id -> navController.navigate(Rutas.detalleOportunidad(id)) }
+                )
             }
 
             // Listado con búsqueda y filtros.

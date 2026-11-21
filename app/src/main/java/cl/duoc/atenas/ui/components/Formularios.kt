@@ -206,13 +206,19 @@ fun SelectorFecha(
     )
 
     if (mostrarCalendario) {
-        val estadoCalendario = rememberDatePickerState(initialSelectedDateMillis = valor)
+        // El calendario espera y entrega fechas en UTC; la aplicación guarda
+        // la medianoche local. Se convierte en ambos sentidos (ver Fechas).
+        val estadoCalendario = rememberDatePickerState(
+            initialSelectedDateMillis = valor?.let { Fechas.localAUtc(it) }
+        )
         DatePickerDialog(
             onDismissRequest = { mostrarCalendario = false },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        estadoCalendario.selectedDateMillis?.let(alSeleccionar)
+                        estadoCalendario.selectedDateMillis
+                            ?.let { Fechas.utcALocal(it) }
+                            ?.let(alSeleccionar)
                         mostrarCalendario = false
                     }
                 ) { Text("Aceptar") }

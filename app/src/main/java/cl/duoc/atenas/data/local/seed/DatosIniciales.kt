@@ -224,7 +224,7 @@ object DatosIniciales {
                     prioridad = Prioridad.ALTA, estado = EstadoOportunidad.PROPUESTA_ENVIADA,
                     potencial = PotencialComercial.ALTO, afinidad = AfinidadPublico.ALTA,
                     costoReferencial = 180000.0, condiciones = "Stand de 3x3 con mesa y dos sillas.",
-                    requisitos = "Inscripción con 10 días de anticipación.", observaciones = null,
+                    requisitos = "Inscripción con 10 días de anticipación.", espaciosDisponibles = "12 stands de 3x3 en la plaza central", observaciones = null,
                     fechaCreacion = ahora, fechaActualizacion = ahora
                 ),
                 Oportunidad(
@@ -238,7 +238,7 @@ object DatosIniciales {
                     prioridad = Prioridad.ALTA, estado = EstadoOportunidad.EN_ESPERA_RESPUESTA,
                     potencial = PotencialComercial.ALTO, afinidad = AfinidadPublico.MEDIA,
                     costoReferencial = 0.0, condiciones = "Sin costo, espacio facilitado por la empresa.",
-                    requisitos = "Credencial de acceso para dos promotores.", observaciones = null,
+                    requisitos = "Credencial de acceso para dos promotores.", espaciosDisponibles = "Un módulo en el casino de la empresa", observaciones = null,
                     fechaCreacion = ahora, fechaActualizacion = ahora
                 ),
                 Oportunidad(
@@ -252,7 +252,7 @@ object DatosIniciales {
                     prioridad = Prioridad.ALTA, estado = EstadoOportunidad.CONTACTO_REALIZADO,
                     potencial = PotencialComercial.ALTO, afinidad = AfinidadPublico.ALTA,
                     costoReferencial = 950000.0, condiciones = "Arriendo por metro cuadrado, mínimo 9 m².",
-                    requisitos = "Contrato firmado y pago del 50% por adelantado.", observaciones = null,
+                    requisitos = "Contrato firmado y pago del 50% por adelantado.", espaciosDisponibles = "Pabellón B, 40 stands; quedan 6 disponibles", observaciones = null,
                     fechaCreacion = ahora, fechaActualizacion = ahora
                 ),
                 Oportunidad(
@@ -280,7 +280,7 @@ object DatosIniciales {
                     prioridad = Prioridad.ALTA, estado = EstadoOportunidad.CONFIRMADA,
                     potencial = PotencialComercial.ALTO, afinidad = AfinidadPublico.ALTA,
                     costoReferencial = 250000.0, condiciones = "Stand asignado por la institución.",
-                    requisitos = "Nómina de personal con 5 días de anticipación.", observaciones = null,
+                    requisitos = "Nómina de personal con 5 días de anticipación.", espaciosDisponibles = "Stand asignado en el hall principal", observaciones = null,
                     fechaCreacion = ahora, fechaActualizacion = ahora
                 ),
                 Oportunidad(

@@ -38,7 +38,14 @@ Toda la información de organizaciones, contactos, usuarios y eventos es
 - Panel del supervisor con la cartera completa, carga por ejecutivo,
   distribución por estado y oportunidades sin responsable
 - Listado con búsqueda por evento, organización o comuna, y filtros por estado,
-  prioridad, potencial comercial y tipo
+  prioridad, potencial comercial, tipo, fecha del evento, región, comuna,
+  organización y, para el supervisor, responsable
+- Alertas en los tableros: gestiones atrasadas, propuestas sin respuesta y
+  oportunidades sin contacto, con acceso directo a cada oportunidad
+- Pantalla de propuestas enviadas con su estado y los días que llevan esperando
+  respuesta
+- Solo el supervisor fija la prioridad: al ejecutivo se le asigna la sugerida
+- Una oportunidad cerrada queda sellada: no admite gestiones ni ediciones
 - Evaluación de cada oportunidad por potencial comercial y afinidad con el
   público objetivo, con una prioridad sugerida a partir de ambos criterios
 - Ficha de detalle con todos los antecedentes y el historial de gestiones
@@ -49,7 +56,10 @@ Toda la información de organizaciones, contactos, usuarios y eventos es
 
 **Organizaciones y contactos**
 - Catálogo de organizaciones con búsqueda y filtro por tipo
-- Ficha con sus contactos y las oportunidades gestionadas con ella
+- Ficha con sus contactos, las oportunidades gestionadas con ella y el
+  historial de gestiones con la organización
+- La fecha de último contacto se actualiza sola al registrar una gestión con
+  el contacto; los contactos desactivados no se ofrecen en oportunidades nuevas
 - Formularios de organización y de contacto, con validación de correo y teléfono
 
 **Seguimiento**
@@ -62,6 +72,9 @@ Toda la información de organizaciones, contactos, usuarios y eventos es
 - Al cerrar una oportunidad no se exige próxima acción ni fecha de seguimiento:
   una gestión pendiente sobre algo cerrado reaparecería como atrasada
 - Historial completo con la trazabilidad de cada cambio
+- La gestión, el cambio de estado y la fecha de último contacto se guardan en
+  una sola transacción
+- Al registrar un envío de propuesta se sugiere el estado "Propuesta enviada"
 
 **Preferencias**
 - Selector de tema claro, oscuro o según el sistema, desde el perfil del usuario
@@ -192,6 +205,11 @@ El proyecto incluye pruebas de las reglas de negocio, en
   ya no se pueden reabrir y cuáles son los estados de cierre
 - `SugerenciaPrioridadTest` — 7 pruebas de la prioridad sugerida a partir del
   potencial comercial y la afinidad con el público objetivo
+- `ReglasAuditoriaTest` — 8 pruebas de las reglas agregadas tras la auditoría
+  funcional: prioridad por perfil, oportunidades cerradas, qué gestiones
+  cuentan como contacto y rangos del filtro por fecha
+- `core/FechasTest` — 5 pruebas de la conversión de fechas entre el calendario
+  de Material 3 (UTC) y la hora local de Chile
 
 Se ejecutan sin emulador, porque ninguna de esas clases depende de Android.
 
