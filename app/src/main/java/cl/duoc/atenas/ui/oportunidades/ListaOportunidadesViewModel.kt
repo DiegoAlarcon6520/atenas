@@ -10,6 +10,7 @@ import cl.duoc.atenas.data.local.dao.OportunidadResumen
 import cl.duoc.atenas.data.repository.OportunidadRepository
 import cl.duoc.atenas.di.contenedor
 import cl.duoc.atenas.domain.model.EstadoOportunidad
+import cl.duoc.atenas.domain.model.PotencialComercial
 import cl.duoc.atenas.domain.model.Prioridad
 import cl.duoc.atenas.domain.model.TipoOportunidad
 import cl.duoc.atenas.domain.rules.Permisos
@@ -26,9 +27,10 @@ data class FiltrosOportunidades(
     val texto: String = "",
     val estado: EstadoOportunidad? = null,
     val prioridad: Prioridad? = null,
-    val tipo: TipoOportunidad? = null
+    val tipo: TipoOportunidad? = null,
+    val potencial: PotencialComercial? = null
 ) {
-    val cantidadActivos: Int get() = listOfNotNull(estado, prioridad, tipo).size
+    val cantidadActivos: Int get() = listOfNotNull(estado, prioridad, tipo, potencial).size
     val hayAlguno: Boolean get() = cantidadActivos > 0 || texto.isNotBlank()
 }
 
@@ -65,7 +67,8 @@ class ListaOportunidadesViewModel(
             texto = filtros.texto,
             estado = filtros.estado,
             prioridad = filtros.prioridad,
-            tipo = filtros.tipo
+            tipo = filtros.tipo,
+            potencial = filtros.potencial
         )
     }
 
@@ -102,6 +105,10 @@ class ListaOportunidadesViewModel(
 
     fun alSeleccionarTipo(valor: TipoOportunidad) = _filtros.update {
         it.copy(tipo = if (it.tipo == valor) null else valor)
+    }
+
+    fun alSeleccionarPotencial(valor: PotencialComercial) = _filtros.update {
+        it.copy(potencial = if (it.potencial == valor) null else valor)
     }
 
     fun limpiarFiltros() = _filtros.update { FiltrosOportunidades() }

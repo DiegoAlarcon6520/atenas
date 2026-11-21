@@ -18,10 +18,13 @@ import cl.duoc.atenas.data.repository.ContactoRepository
 import cl.duoc.atenas.data.repository.OportunidadRepository
 import cl.duoc.atenas.data.repository.OrganizacionRepository
 import cl.duoc.atenas.di.contenedor
+import cl.duoc.atenas.domain.model.AfinidadPublico
 import cl.duoc.atenas.domain.model.EstadoOportunidad
+import cl.duoc.atenas.domain.model.PotencialComercial
 import cl.duoc.atenas.domain.model.Prioridad
 import cl.duoc.atenas.domain.model.RolUsuario
 import cl.duoc.atenas.domain.model.TipoOportunidad
+import cl.duoc.atenas.domain.rules.SugerenciaPrioridad
 import cl.duoc.atenas.domain.validation.Validadores
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -81,6 +84,8 @@ data class FormularioOportunidadUiState(
     val fuenteInformacion: String = "",
     val tipo: TipoOportunidad = TipoOportunidad.EVENTO_CORPORATIVO,
     val prioridad: Prioridad = Prioridad.MEDIA,
+    val potencial: PotencialComercial = PotencialComercial.MEDIO,
+    val afinidad: AfinidadPublico = AfinidadPublico.MEDIA,
     val fechaDeteccion: Long = Fechas.hoy(),
     val fechaInicioEvento: Long? = null,
     val fechaTerminoEvento: Long? = null,
@@ -105,7 +110,11 @@ data class FormularioOportunidadUiState(
     val contactosDisponibles: List<Contacto> = emptyList(),
 
     val errores: ErroresFormulario = ErroresFormulario()
-)
+) {
+    /** Prioridad recomendada según la evaluación (HU-06). Solo orienta: no se aplica sola. */
+    val prioridadSugerida: Prioridad
+        get() = SugerenciaPrioridad.sugerir(potencial, afinidad)
+}
 
 /**
  * VIEWMODEL DEL FORMULARIO DE OPORTUNIDAD
@@ -182,6 +191,8 @@ class FormularioOportunidadViewModel(
                 fuenteInformacion = existente.fuenteInformacion,
                 tipo = existente.tipo,
                 prioridad = existente.prioridad,
+                potencial = existente.potencial,
+                afinidad = existente.afinidad,
                 fechaDeteccion = existente.fechaDeteccion,
                 fechaInicioEvento = existente.fechaInicioEvento,
                 fechaTerminoEvento = existente.fechaTerminoEvento,
@@ -231,6 +242,13 @@ class FormularioOportunidadViewModel(
     fun alCambiarTipo(valor: TipoOportunidad) = _estado.update { it.copy(tipo = valor) }
 
     fun alCambiarPrioridad(valor: Prioridad) = _estado.update { it.copy(prioridad = valor) }
+
+    fun alCambiarPotencial(valor: PotencialComercial) = _estado.update { it.copy(potencial = valor) }
+
+    fun alCambiarAfinidad(valor: AfinidadPublico) = _estado.update { it.copy(afinidad = valor) }
+
+    /** Copia la prioridad sugerida al campo de prioridad. */
+    fun aplicarPrioridadSugerida() = _estado.update { it.copy(prioridad = it.prioridadSugerida) }
 
     fun alCambiarFechaInicio(valor: Long) = _estado.update {
         it.copy(fechaInicioEvento = valor, errores = it.errores.copy(fechaInicioEvento = null))
@@ -387,6 +405,8 @@ class FormularioOportunidadViewModel(
                             publicoObjetivo = actual.publicoObjetivo.trim(),
                             publicoEsperado = actual.publicoEsperado.toInt(),
                             prioridad = actual.prioridad,
+                            potencial = actual.potencial,
+                            afinidad = actual.afinidad,
                             costoReferencial = actual.costoReferencial.toDoubleOrNull() ?: 0.0,
                             condiciones = actual.condiciones.ifBlank { null },
                             requisitos = actual.requisitos.ifBlank { null },
@@ -418,6 +438,8 @@ class FormularioOportunidadViewModel(
                             publicoObjetivo = actual.publicoObjetivo.trim(),
                             publicoEsperado = actual.publicoEsperado.toInt(),
                             prioridad = actual.prioridad,
+                            potencial = actual.potencial,
+                            afinidad = actual.afinidad,
                             // Toda oportunidad nueva entra al embudo por el principio.
                             estado = EstadoOportunidad.IDENTIFICADA,
                             costoReferencial = actual.costoReferencial.toDoubleOrNull() ?: 0.0,

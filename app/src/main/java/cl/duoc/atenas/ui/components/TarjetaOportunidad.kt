@@ -54,6 +54,12 @@ fun TarjetaOportunidad(
                 EtiquetaPrioridad(oportunidad.prioridad)
             }
             Text(
+                text = "Potencial ${oportunidad.potencial.etiqueta.lowercase()} · " +
+                    "Afinidad ${oportunidad.afinidad.etiqueta.lowercase()}",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
                 text = "Responsable: ${oportunidad.responsableNombre ?: "sin asignar"}",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant

@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.AssignmentTurnedIn
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
@@ -34,6 +36,7 @@ import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -42,6 +45,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,6 +55,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.atenas.core.Fechas
+import cl.duoc.atenas.domain.model.AfinidadPublico
+import cl.duoc.atenas.domain.model.PotencialComercial
 import cl.duoc.atenas.domain.model.Prioridad
 import cl.duoc.atenas.domain.model.TipoOportunidad
 import cl.duoc.atenas.ui.components.CampoTexto
@@ -301,6 +307,25 @@ fun FormularioOportunidadScreen(
             ayuda = "Cantidad estimada de asistentes"
         )
 
+        // Evaluación de la oportunidad (HU-06): potencial y afinidad.
+        ListaDesplegable(
+            etiqueta = "Potencial comercial",
+            icono = Icons.Default.Insights,
+            opciones = PotencialComercial.entries,
+            seleccionada = estado.potencial,
+            textoDe = { it.etiqueta },
+            alSeleccionar = viewModel::alCambiarPotencial
+        )
+
+        ListaDesplegable(
+            etiqueta = "Afinidad con el público objetivo",
+            icono = Icons.Default.ThumbUp,
+            opciones = AfinidadPublico.entries,
+            seleccionada = estado.afinidad,
+            textoDe = { it.etiqueta },
+            alSeleccionar = viewModel::alCambiarAfinidad
+        )
+
         ListaDesplegable(
             etiqueta = "Prioridad",
             icono = Icons.Default.Flag,
@@ -309,6 +334,33 @@ fun FormularioOportunidadScreen(
             textoDe = { it.etiqueta },
             alSeleccionar = viewModel::alCambiarPrioridad
         )
+
+        // La sugerencia se recalcula sola al cambiar potencial o afinidad,
+        // pero solo se aplica si el usuario lo pide.
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.AutoAwesome,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp)
+            )
+            Text(
+                text = "Prioridad sugerida: ${estado.prioridadSugerida.etiqueta}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = Espaciado.sm)
+            )
+            if (estado.prioridad != estado.prioridadSugerida) {
+                TextButton(onClick = viewModel::aplicarPrioridadSugerida) {
+                    Text("Aplicar")
+                }
+            }
+        }
 
         CampoTexto(
             valor = estado.costoReferencial,
