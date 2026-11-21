@@ -1,9 +1,11 @@
 package cl.duoc.atenas.data.local
 
 import androidx.room.TypeConverter
+import cl.duoc.atenas.domain.model.AfinidadPublico
 import cl.duoc.atenas.domain.model.AreaContacto
 import cl.duoc.atenas.domain.model.EstadoOportunidad
 import cl.duoc.atenas.domain.model.MedioContacto
+import cl.duoc.atenas.domain.model.PotencialComercial
 import cl.duoc.atenas.domain.model.Prioridad
 import cl.duoc.atenas.domain.model.RolUsuario
 import cl.duoc.atenas.domain.model.TipoAccion
@@ -30,6 +32,12 @@ class Convertidores {
 
     @TypeConverter fun desdePrioridad(valor: Prioridad): String = valor.name
     @TypeConverter fun aPrioridad(valor: String): Prioridad = Prioridad.valueOf(valor)
+
+    @TypeConverter fun desdePotencial(valor: PotencialComercial): String = valor.name
+    @TypeConverter fun aPotencial(valor: String): PotencialComercial = PotencialComercial.valueOf(valor)
+
+    @TypeConverter fun desdeAfinidad(valor: AfinidadPublico): String = valor.name
+    @TypeConverter fun aAfinidad(valor: String): AfinidadPublico = AfinidadPublico.valueOf(valor)
 
     @TypeConverter fun desdeEstado(valor: EstadoOportunidad): String = valor.name
     @TypeConverter fun aEstado(valor: String): EstadoOportunidad = EstadoOportunidad.valueOf(valor)

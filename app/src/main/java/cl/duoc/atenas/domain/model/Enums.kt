@@ -53,6 +53,27 @@ enum class Prioridad(val etiqueta: String, val peso: Int) {
 }
 
 /**
+ * Potencial comercial estimado de una oportunidad: cuánto podría aportar a la
+ * agencia en contactos, inscripciones y convenios si se concreta.
+ */
+enum class PotencialComercial(val etiqueta: String, val peso: Int) {
+    ALTO("Alto", 3),
+    MEDIO("Medio", 2),
+    BAJO("Bajo", 1)
+}
+
+/**
+ * Afinidad entre el público del evento y el público objetivo de la agencia
+ * (trabajadores y familias interesadas en convenios dentales, automotrices
+ * y veterinarios).
+ */
+enum class AfinidadPublico(val etiqueta: String, val peso: Int) {
+    ALTA("Alta", 3),
+    MEDIA("Media", 2),
+    BAJA("Baja", 1)
+}
+
+/**
  * Estados de la gestión comercial. El campo [orden] permite ordenar el embudo
  * y comparar avance entre oportunidades.
  */

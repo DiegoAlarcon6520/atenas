@@ -6,7 +6,9 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import cl.duoc.atenas.data.local.entity.Oportunidad
+import cl.duoc.atenas.domain.model.AfinidadPublico
 import cl.duoc.atenas.domain.model.EstadoOportunidad
+import cl.duoc.atenas.domain.model.PotencialComercial
 import cl.duoc.atenas.domain.model.Prioridad
 import cl.duoc.atenas.domain.model.TipoOportunidad
 import cl.duoc.atenas.domain.model.TipoOrganizacion
@@ -25,6 +27,8 @@ data class OportunidadResumen(
     val prioridad: Prioridad,
     val fechaInicioEvento: Long,
     val publicoEsperado: Int,
+    val potencial: PotencialComercial,
+    val afinidad: AfinidadPublico,
     val organizacionNombre: String,
     val comunaNombre: String,
     val responsableNombre: String?
@@ -82,6 +86,8 @@ interface OportunidadDao {
                o.prioridad AS prioridad,
                o.fechaInicioEvento AS fechaInicioEvento,
                o.publicoEsperado AS publicoEsperado,
+               o.potencial AS potencial,
+               o.afinidad AS afinidad,
                org.nombre AS organizacionNombre,
                c.nombre AS comunaNombre,
                u.nombreCompleto AS responsableNombre
@@ -99,6 +105,7 @@ interface OportunidadDao {
           AND (:estado IS NULL OR o.estado = :estado)
           AND (:prioridad IS NULL OR o.prioridad = :prioridad)
           AND (:tipo IS NULL OR o.tipo = :tipo)
+          AND (:potencial IS NULL OR o.potencial = :potencial)
         ORDER BY o.fechaInicioEvento ASC
         """
     )
@@ -107,7 +114,8 @@ interface OportunidadDao {
         texto: String,
         estado: String?,
         prioridad: String?,
-        tipo: String?
+        tipo: String?,
+        potencial: String?
     ): Flow<List<OportunidadResumen>>
 
     @Query(
@@ -155,6 +163,8 @@ interface OportunidadDao {
                o.prioridad AS prioridad,
                o.fechaInicioEvento AS fechaInicioEvento,
                o.publicoEsperado AS publicoEsperado,
+               o.potencial AS potencial,
+               o.afinidad AS afinidad,
                org.nombre AS organizacionNombre,
                c.nombre AS comunaNombre,
                u.nombreCompleto AS responsableNombre
@@ -178,6 +188,8 @@ interface OportunidadDao {
                o.prioridad AS prioridad,
                o.fechaInicioEvento AS fechaInicioEvento,
                o.publicoEsperado AS publicoEsperado,
+               o.potencial AS potencial,
+               o.afinidad AS afinidad,
                org.nombre AS organizacionNombre,
                c.nombre AS comunaNombre,
                u.nombreCompleto AS responsableNombre
@@ -201,6 +213,8 @@ interface OportunidadDao {
                o.prioridad AS prioridad,
                o.fechaInicioEvento AS fechaInicioEvento,
                o.publicoEsperado AS publicoEsperado,
+               o.potencial AS potencial,
+               o.afinidad AS afinidad,
                org.nombre AS organizacionNombre,
                c.nombre AS comunaNombre,
                u.nombreCompleto AS responsableNombre
@@ -226,6 +240,8 @@ interface OportunidadDao {
                o.prioridad AS prioridad,
                o.fechaInicioEvento AS fechaInicioEvento,
                o.publicoEsperado AS publicoEsperado,
+               o.potencial AS potencial,
+               o.afinidad AS afinidad,
                org.nombre AS organizacionNombre,
                c.nombre AS comunaNombre,
                u.nombreCompleto AS responsableNombre

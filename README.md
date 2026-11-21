@@ -38,7 +38,9 @@ Toda la información de organizaciones, contactos, usuarios y eventos es
 - Panel del supervisor con la cartera completa, carga por ejecutivo,
   distribución por estado y oportunidades sin responsable
 - Listado con búsqueda por evento, organización o comuna, y filtros por estado,
-  prioridad y tipo
+  prioridad, potencial comercial y tipo
+- Evaluación de cada oportunidad por potencial comercial y afinidad con el
+  público objetivo, con una prioridad sugerida a partir de ambos criterios
 - Ficha de detalle con todos los antecedentes y el historial de gestiones
 - Formulario de creación y edición con validaciones y reglas de negocio
 - Asignación y reasignación de responsables, exclusiva del supervisor
@@ -188,6 +190,8 @@ El proyecto incluye pruebas de las reglas de negocio, en
 - `TransicionesEstadoTest` — 18 pruebas de la máquina de estados: qué avances
   habilita cada perfil, qué retrocesos permite el supervisor, qué oportunidades
   ya no se pueden reabrir y cuáles son los estados de cierre
+- `SugerenciaPrioridadTest` — 7 pruebas de la prioridad sugerida a partir del
+  potencial comercial y la afinidad con el público objetivo
 
 Se ejecutan sin emulador, porque ninguna de esas clases depende de Android.
 

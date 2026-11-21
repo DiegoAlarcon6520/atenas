@@ -50,6 +50,7 @@ import cl.duoc.atenas.ui.components.EtiquetaPrioridad
 import cl.duoc.atenas.ui.components.IndicadorCarga
 import cl.duoc.atenas.ui.components.ListaDesplegable
 import cl.duoc.atenas.ui.theme.Espaciado
+import cl.duoc.atenas.domain.rules.SugerenciaPrioridad
 import java.util.Locale
 
 @Composable
@@ -266,6 +267,10 @@ fun DetalleOportunidadScreen(
                     "Registrada por" to detalle.creadorNombre,
                     "Fuente" to oportunidad.fuenteInformacion,
                     "Detectada el" to Fechas.aTexto(oportunidad.fechaDeteccion),
+                    "Potencial comercial" to oportunidad.potencial.etiqueta,
+                    "Afinidad con el público" to oportunidad.afinidad.etiqueta,
+                    "Prioridad sugerida" to SugerenciaPrioridad
+                        .sugerir(oportunidad.potencial, oportunidad.afinidad).etiqueta,
                     "Costo referencial" to formatearMonto(oportunidad.costoReferencial),
                     "Condiciones" to (oportunidad.condiciones ?: "Sin condiciones registradas"),
                     "Requisitos" to (oportunidad.requisitos ?: "Sin requisitos registrados"),

@@ -10,9 +10,11 @@ import cl.duoc.atenas.data.local.entity.Organizacion
 import cl.duoc.atenas.data.local.entity.Region
 import cl.duoc.atenas.data.local.entity.Seguimiento
 import cl.duoc.atenas.data.local.entity.Usuario
+import cl.duoc.atenas.domain.model.AfinidadPublico
 import cl.duoc.atenas.domain.model.AreaContacto
 import cl.duoc.atenas.domain.model.EstadoOportunidad
 import cl.duoc.atenas.domain.model.MedioContacto
+import cl.duoc.atenas.domain.model.PotencialComercial
 import cl.duoc.atenas.domain.model.Prioridad
 import cl.duoc.atenas.domain.model.RolUsuario
 import cl.duoc.atenas.domain.model.TipoAccion
@@ -220,6 +222,7 @@ object DatosIniciales {
                     organizacionId = cerroVerde, contactoId = contactos[2], responsableId = camila,
                     creadoPorId = camila, publicoObjetivo = "Vecinos y familias", publicoEsperado = 2500,
                     prioridad = Prioridad.ALTA, estado = EstadoOportunidad.PROPUESTA_ENVIADA,
+                    potencial = PotencialComercial.ALTO, afinidad = AfinidadPublico.ALTA,
                     costoReferencial = 180000.0, condiciones = "Stand de 3x3 con mesa y dos sillas.",
                     requisitos = "Inscripción con 10 días de anticipación.", observaciones = null,
                     fechaCreacion = ahora, fechaActualizacion = ahora
@@ -233,6 +236,7 @@ object DatosIniciales {
                     organizacionId = vertice, contactoId = contactos[0], responsableId = camila,
                     creadoPorId = camila, publicoObjetivo = "Trabajadores de la constructora", publicoEsperado = 400,
                     prioridad = Prioridad.ALTA, estado = EstadoOportunidad.EN_ESPERA_RESPUESTA,
+                    potencial = PotencialComercial.ALTO, afinidad = AfinidadPublico.MEDIA,
                     costoReferencial = 0.0, condiciones = "Sin costo, espacio facilitado por la empresa.",
                     requisitos = "Credencial de acceso para dos promotores.", observaciones = null,
                     fechaCreacion = ahora, fechaActualizacion = ahora
@@ -246,6 +250,7 @@ object DatosIniciales {
                     organizacionId = expoSur, contactoId = contactos[4], responsableId = paulina,
                     creadoPorId = paulina, publicoObjetivo = "Trabajadores del sector industrial", publicoEsperado = 8000,
                     prioridad = Prioridad.ALTA, estado = EstadoOportunidad.CONTACTO_REALIZADO,
+                    potencial = PotencialComercial.ALTO, afinidad = AfinidadPublico.ALTA,
                     costoReferencial = 950000.0, condiciones = "Arriendo por metro cuadrado, mínimo 9 m².",
                     requisitos = "Contrato firmado y pago del 50% por adelantado.", observaciones = null,
                     fechaCreacion = ahora, fechaActualizacion = ahora
@@ -259,6 +264,7 @@ object DatosIniciales {
                     organizacionId = riberas, contactoId = contactos[5], responsableId = rodrigo,
                     creadoPorId = rodrigo, publicoObjetivo = "Visitantes del centro comercial", publicoEsperado = 15000,
                     prioridad = Prioridad.MEDIA, estado = EstadoOportunidad.CONTACTO_PENDIENTE,
+                    potencial = PotencialComercial.MEDIO, afinidad = AfinidadPublico.MEDIA,
                     costoReferencial = 420000.0, condiciones = null,
                     requisitos = "Seguro de responsabilidad civil.", observaciones = null,
                     fechaCreacion = ahora, fechaActualizacion = ahora
@@ -272,6 +278,7 @@ object DatosIniciales {
                     organizacionId = araucaria, contactoId = contactos[3], responsableId = camila,
                     creadoPorId = marcelo, publicoObjetivo = "Afiliados y familias", publicoEsperado = 1200,
                     prioridad = Prioridad.ALTA, estado = EstadoOportunidad.CONFIRMADA,
+                    potencial = PotencialComercial.ALTO, afinidad = AfinidadPublico.ALTA,
                     costoReferencial = 250000.0, condiciones = "Stand asignado por la institución.",
                     requisitos = "Nómina de personal con 5 días de anticipación.", observaciones = null,
                     fechaCreacion = ahora, fechaActualizacion = ahora
@@ -285,6 +292,7 @@ object DatosIniciales {
                     organizacionId = agmAndes, contactoId = contactos[6], responsableId = null,
                     creadoPorId = marcelo, publicoObjetivo = "Trabajadores de empresas socias", publicoEsperado = 900,
                     prioridad = Prioridad.MEDIA, estado = EstadoOportunidad.IDENTIFICADA,
+                    potencial = PotencialComercial.MEDIO, afinidad = AfinidadPublico.ALTA,
                     costoReferencial = 150000.0, condiciones = null, requisitos = null,
                     observaciones = "Falta asignar responsable.",
                     fechaCreacion = ahora, fechaActualizacion = ahora
@@ -298,6 +306,7 @@ object DatosIniciales {
                     organizacionId = cerroVerde, contactoId = contactos[7], responsableId = camila,
                     creadoPorId = camila, publicoObjetivo = "Vecinos en búsqueda de empleo", publicoEsperado = 1800,
                     prioridad = Prioridad.MEDIA, estado = EstadoOportunidad.ACTIVACION_REALIZADA,
+                    potencial = PotencialComercial.MEDIO, afinidad = AfinidadPublico.MEDIA,
                     costoReferencial = 120000.0, condiciones = null, requisitos = null,
                     observaciones = "Activación ejecutada, pendiente registrar resultados.",
                     fechaCreacion = ahora, fechaActualizacion = ahora
@@ -311,6 +320,7 @@ object DatosIniciales {
                     organizacionId = vertice, contactoId = contactos[1], responsableId = rodrigo,
                     creadoPorId = rodrigo, publicoObjetivo = "Proveedores y contratistas", publicoEsperado = 150,
                     prioridad = Prioridad.BAJA, estado = EstadoOportunidad.DESCARTADA,
+                    potencial = PotencialComercial.BAJO, afinidad = AfinidadPublico.BAJA,
                     costoReferencial = 0.0, condiciones = null, requisitos = null,
                     observaciones = "Público no coincide con el objetivo de la agencia.",
                     fechaCreacion = ahora, fechaActualizacion = ahora
@@ -324,6 +334,7 @@ object DatosIniciales {
                     organizacionId = expoSur, contactoId = null, responsableId = paulina,
                     creadoPorId = paulina, publicoObjetivo = "Público familiar", publicoEsperado = 6000,
                     prioridad = Prioridad.BAJA, estado = EstadoOportunidad.IDENTIFICADA,
+                    potencial = PotencialComercial.BAJO, afinidad = AfinidadPublico.MEDIA,
                     costoReferencial = 90000.0, condiciones = null,
                     requisitos = null, observaciones = "Falta identificar el contacto responsable.",
                     fechaCreacion = ahora, fechaActualizacion = ahora
@@ -337,6 +348,7 @@ object DatosIniciales {
                     organizacionId = araucaria, contactoId = contactos[3], responsableId = rodrigo,
                     creadoPorId = marcelo, publicoObjetivo = "Funcionarios de la institución", publicoEsperado = 600,
                     prioridad = Prioridad.MEDIA, estado = EstadoOportunidad.CONTACTO_REALIZADO,
+                    potencial = PotencialComercial.MEDIO, afinidad = AfinidadPublico.BAJA,
                     costoReferencial = 75000.0, condiciones = null, requisitos = null, observaciones = null,
                     fechaCreacion = ahora, fechaActualizacion = ahora
                 )

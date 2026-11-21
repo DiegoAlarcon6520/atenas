@@ -4,9 +4,11 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import cl.duoc.atenas.domain.model.AfinidadPublico
 import cl.duoc.atenas.domain.model.AreaContacto
 import cl.duoc.atenas.domain.model.EstadoOportunidad
 import cl.duoc.atenas.domain.model.MedioContacto
+import cl.duoc.atenas.domain.model.PotencialComercial
 import cl.duoc.atenas.domain.model.Prioridad
 import cl.duoc.atenas.domain.model.RolUsuario
 import cl.duoc.atenas.domain.model.TipoAccion
@@ -181,6 +183,10 @@ data class Oportunidad(
     val publicoObjetivo: String,
     val publicoEsperado: Int,
     val prioridad: Prioridad,
+    /** Potencial comercial estimado por quien registra la oportunidad (HU-06). */
+    val potencial: PotencialComercial = PotencialComercial.MEDIO,
+    /** Afinidad del público del evento con el público objetivo de la agencia (HU-06). */
+    val afinidad: AfinidadPublico = AfinidadPublico.MEDIA,
     val estado: EstadoOportunidad,
     val costoReferencial: Double,
     val condiciones: String?,

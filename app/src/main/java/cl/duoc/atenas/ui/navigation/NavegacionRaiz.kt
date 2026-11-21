@@ -104,6 +104,18 @@ private fun ContenedorPrincipal(usuario: Usuario) {
     val rutaActual = entradaActual?.destination?.route ?: Rutas.INICIO
     val esRutaPrincipal = items.any { it.ruta == rutaActual }
 
+    // Pestaña a la que pertenece la pantalla visible. No basta con mirar la
+    // ruta actual: en un detalle o formulario la ruta ya no es la de la
+    // pestaña, pero la pestaña sigue en la pila debajo. Inicio es el destino
+    // de partida y siempre está en la pila, así que se revisan primero las
+    // demás; si ninguna está, la pantalla cuelga de Inicio.
+    val pestanaActual = remember(entradaActual) {
+        items.map { it.ruta }
+            .filter { it != Rutas.INICIO }
+            .firstOrNull { ruta -> runCatching { navController.getBackStackEntry(ruta) }.isSuccess }
+            ?: Rutas.INICIO
+    }
+
     // Snackbar compartido: cualquier pantalla puede pedir mostrar un mensaje
     // de confirmación sin tener que montar su propio Scaffold.
     val estadoSnackbar = remember { SnackbarHostState() }
@@ -164,9 +176,16 @@ private fun ContenedorPrincipal(usuario: Usuario) {
             NavigationBar {
                 items.forEach { item ->
                     NavigationBarItem(
-                        selected = rutaActual == item.ruta,
+                        // Marcada también en sus pantallas internas.
+                        selected = pestanaActual == item.ruta,
                         onClick = {
-                            if (rutaActual != item.ruta) {
+                            if (pestanaActual == item.ruta) {
+                                // Ya estamos en esta sección: tocar su ícono
+                                // cierra las pantallas internas y vuelve a la
+                                // raíz de la sección. Si ya está en la raíz,
+                                // no hace nada.
+                                navController.popBackStack(item.ruta, inclusive = false)
+                            } else {
                                 navController.navigate(item.ruta) {
                                     // popUpTo + saveState: al cambiar de
                                     // pestaña no se apilan copias y cada una

@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.atenas.domain.model.EstadoOportunidad
+import cl.duoc.atenas.domain.model.PotencialComercial
 import cl.duoc.atenas.domain.model.Prioridad
 import cl.duoc.atenas.domain.model.TipoOportunidad
 import cl.duoc.atenas.ui.components.EstadoVacio
@@ -143,6 +144,13 @@ fun ListaOportunidadesScreen(
                             etiqueta = { it.etiqueta },
                             seleccionada = estado.filtros.prioridad,
                             alSeleccionar = viewModel::alSeleccionarPrioridad
+                        )
+                        GrupoFiltros(
+                            titulo = "Potencial comercial",
+                            opciones = PotencialComercial.entries,
+                            etiqueta = { it.etiqueta },
+                            seleccionada = estado.filtros.potencial,
+                            alSeleccionar = viewModel::alSeleccionarPotencial
                         )
                         GrupoFiltros(
                             titulo = "Tipo de evento",
