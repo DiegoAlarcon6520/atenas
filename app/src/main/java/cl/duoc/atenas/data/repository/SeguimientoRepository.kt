@@ -17,6 +17,12 @@ class SeguimientoRepository(private val dao: SeguimientoDao) {
     fun observarGestionesAtrasadas(responsableId: Long?): Flow<List<GestionPendiente>> =
         dao.observarGestionesAtrasadas(Fechas.hoy(), responsableId)
 
+    /** Gestiones comprometidas para hoy (todavía a tiempo). */
+    fun observarGestionesDeHoy(responsableId: Long?): Flow<List<GestionPendiente>> {
+        val hoy = Fechas.hoy()
+        return dao.observarGestionesEntre(hoy, Fechas.masDias(hoy, 1), responsableId)
+    }
+
     fun observarPorOrganizacion(organizacionId: Long, responsableId: Long?): Flow<List<GestionDeOrganizacion>> =
         dao.observarPorOrganizacion(organizacionId, responsableId)
 

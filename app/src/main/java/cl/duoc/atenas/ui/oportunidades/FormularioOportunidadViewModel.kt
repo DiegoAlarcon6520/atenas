@@ -76,6 +76,8 @@ data class ErroresFormulario(
 data class FormularioOportunidadUiState(
     val cargando: Boolean = true,
     val esEdicion: Boolean = false,
+    /** Paso actual del asistente, de 0 a TOTAL_PASOS - 1. */
+    val paso: Int = 0,
     /** Solo el supervisor elige la prioridad; al ejecutivo se le asigna la sugerida (HU-05). */
     val puedeCambiarPrioridad: Boolean = false,
     /** False si la oportunidad está cerrada: no se puede guardar. */
@@ -400,6 +402,47 @@ class FormularioOportunidadViewModel(
     )
 
     /**
+     * Pasa al siguiente paso solo si los campos del paso actual son válidos.
+     * Así el error aparece donde el usuario está mirando, no al final.
+     */
+    fun pasoSiguiente() {
+        val actual = _estado.value
+        val errores = soloDelPaso(validar(actual), actual.paso)
+        if (errores.hayErrores) {
+            _estado.update { it.copy(errores = errores, errorGeneral = "Revisa los campos marcados") }
+            return
+        }
+        _estado.update {
+            it.copy(paso = (it.paso + 1).coerceAtMost(TOTAL_PASOS - 1), errorGeneral = null)
+        }
+    }
+
+    /** Vuelve al paso anterior sin validar: retroceder nunca se bloquea. */
+    fun pasoAnterior() = _estado.update { it.copy(paso = (it.paso - 1).coerceAtLeast(0), errorGeneral = null) }
+
+    /** Deja solo los errores de los campos que se piden en [paso]. */
+    private fun soloDelPaso(e: ErroresFormulario, paso: Int): ErroresFormulario = when (paso) {
+        0 -> ErroresFormulario(nombre = e.nombre, descripcion = e.descripcion, fuenteInformacion = e.fuenteInformacion)
+        1 -> ErroresFormulario(
+            fechaInicioEvento = e.fechaInicioEvento,
+            fechaTerminoEvento = e.fechaTerminoEvento,
+            horario = e.horario,
+            direccion = e.direccion,
+            comuna = e.comuna
+        )
+        2 -> ErroresFormulario(organizacion = e.organizacion)
+        else -> ErroresFormulario(
+            publicoObjetivo = e.publicoObjetivo,
+            publicoEsperado = e.publicoEsperado,
+            costoReferencial = e.costoReferencial
+        )
+    }
+
+    /** Primer paso que tiene algún error, para llevar al usuario hasta él. */
+    private fun primerPasoConError(e: ErroresFormulario): Int =
+        (0 until TOTAL_PASOS).firstOrNull { soloDelPaso(e, it).hayErrores } ?: (TOTAL_PASOS - 1)
+
+    /**
      * Valida y, si todo está correcto, persiste en Room.
      *
      * Si la validación falla NO se borra nada de lo escrito: solo se guardan
@@ -418,6 +461,8 @@ class FormularioOportunidadViewModel(
             _estado.update {
                 it.copy(
                     errores = errores,
+                    // Si el error quedó en un paso anterior, se vuelve a él.
+                    paso = primerPasoConError(errores),
                     errorGeneral = "Revisa los campos marcados antes de guardar"
                 )
             }
@@ -517,6 +562,9 @@ class FormularioOportunidadViewModel(
     }
 
     companion object {
+        /** Pasos del asistente: evento, fecha y lugar, organización, evaluación. */
+        const val TOTAL_PASOS = 4
+
         /**
          * Fábrica del ViewModel. createSavedStateHandle() entrega los
          * argumentos de navegación; de ahí sacamos el id de la oportunidad

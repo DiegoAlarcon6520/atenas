@@ -15,9 +15,6 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -41,6 +38,7 @@ import androidx.navigation.navArgument
 import cl.duoc.atenas.AtenasApp
 import cl.duoc.atenas.data.local.entity.Usuario
 import cl.duoc.atenas.domain.rules.Permisos
+import cl.duoc.atenas.ui.agenda.AgendaScreen
 import cl.duoc.atenas.ui.dashboard.DashboardEjecutivoScreen
 import cl.duoc.atenas.ui.evidencias.EvidenciasScreen
 import cl.duoc.atenas.ui.login.LoginScreen
@@ -129,15 +127,29 @@ private fun ContenedorPrincipal(usuario: Usuario) {
         alcanceCorrutina.launch { estadoSnackbar.showSnackbar(mensaje) }
     }
 
+    // Abre una pestaña sin apilar copias: cada pestaña recuerda su propia
+    // pila (popUpTo + saveState + restoreState). Tocar la pestaña en la que
+    // ya se está vuelve a su pantalla raíz.
+    val irAPestana: (String) -> Unit = { ruta ->
+        if (pestanaActual == ruta) {
+            navController.popBackStack(ruta, inclusive = false)
+        } else {
+            navController.navigate(ruta) {
+                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(estadoSnackbar) },
         topBar = {
-            // Inicio no lleva barra: su encabezado es el saludo con avatar,
-            // como en la referencia visual. El resto muestra un título
-            // centrado y, si corresponde, la flecha para volver.
-            if (rutaActual != Rutas.INICIO) {
+            // Inicio, Agenda y Cartera dibujan su propio encabezado. El resto
+            // muestra un título centrado y, si corresponde, la flecha para volver.
+            if (rutaActual !in rutasSinBarraSuperior) {
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
@@ -146,8 +158,6 @@ private fun ContenedorPrincipal(usuario: Usuario) {
                         )
                     },
                     navigationIcon = {
-                        // La flecha de volver solo aparece en pantallas que se
-                        // abrieron encima de una pestaña (detalle, formulario).
                         if (!esRutaPrincipal) {
                             IconButton(onClick = { navController.popBackStack() }) {
                                 Icon(
@@ -170,72 +180,29 @@ private fun ContenedorPrincipal(usuario: Usuario) {
             }
         },
         floatingActionButton = {
-            // El botón de crear cambia de destino según la pestaña activa,
-            // y no aparece en las pantallas donde no tendría sentido.
-            when (rutaActual) {
-                Rutas.OPORTUNIDADES -> if (Permisos.puedeCrearOportunidad(usuario.rol)) {
-                    ExtendedFloatingActionButton(
-                        onClick = { navController.navigate(Rutas.formularioOportunidad()) },
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                        shape = CircleShape,
-                        icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                        text = { Text("Nueva") }
-                    )
-                }
-
-                Rutas.ORGANIZACIONES -> ExtendedFloatingActionButton(
+            // El "+" central de la barra crea oportunidades; en Empresas el
+            // botón flotante crea organizaciones.
+            if (rutaActual == Rutas.ORGANIZACIONES) {
+                ExtendedFloatingActionButton(
                     onClick = { navController.navigate(Rutas.formularioOrganizacion()) },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     shape = CircleShape,
                     icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                    text = { Text("Nueva") }
+                    text = { Text("Nueva empresa") }
                 )
             }
         },
         bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                tonalElevation = 0.dp
-            ) {
-                items.forEach { item ->
-                    NavigationBarItem(
-                        // Marcada también en sus pantallas internas.
-                        selected = pestanaActual == item.ruta,
-                        onClick = {
-                            if (pestanaActual == item.ruta) {
-                                // Ya estamos en esta sección: tocar su ícono
-                                // cierra las pantallas internas y vuelve a la
-                                // raíz de la sección. Si ya está en la raíz,
-                                // no hace nada.
-                                navController.popBackStack(item.ruta, inclusive = false)
-                            } else {
-                                navController.navigate(item.ruta) {
-                                    // popUpTo + saveState: al cambiar de
-                                    // pestaña no se apilan copias y cada una
-                                    // recuerda dónde iba el scroll.
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        },
-                        icon = { Icon(item.icono, contentDescription = item.etiqueta) },
-                        label = { Text(item.etiqueta, style = MaterialTheme.typography.labelSmall) },
-                        // Pestaña activa en el color de marca con un halo
-                        // suave; las demás, en gris.
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    )
-                }
+            // Los flujos de captura (formularios, registrar gestión) ocupan
+            // toda la pantalla para que el usuario se concentre en completarlos.
+            if (rutaActual !in rutasDeFlujo) {
+                BarraInferior(
+                    items = items,
+                    pestanaActual = pestanaActual,
+                    alSeleccionar = { item -> irAPestana(item.ruta) },
+                    alCrear = { navController.navigate(Rutas.formularioOportunidad()) }
+                )
             }
         }
     ) { innerPadding ->
@@ -247,22 +214,36 @@ private fun ContenedorPrincipal(usuario: Usuario) {
 
             // Inicio: el contenido depende del perfil autenticado.
             composable(Rutas.INICIO) {
-                // Las alertas del tablero llevan directo a la oportunidad.
                 val alAbrirOportunidad: (Long) -> Unit = { id ->
                     navController.navigate(Rutas.detalleOportunidad(id))
                 }
+                val alRegistrarGestion: (Long) -> Unit = { id ->
+                    navController.navigate(Rutas.registrarSeguimiento(id))
+                }
+                val alAbrirPerfil = { navController.navigate(Rutas.PERFIL) }
                 val alVerPropuestas = { navController.navigate(Rutas.PROPUESTAS) }
                 if (Permisos.puedeVerPanelDeEquipo(usuario.rol)) {
                     PanelSupervisorScreen(
                         alAbrirOportunidad = alAbrirOportunidad,
-                        alVerPropuestas = alVerPropuestas
+                        alAbrirPerfil = alAbrirPerfil,
+                        alVerPropuestas = alVerPropuestas,
+                        mostrarMensaje = mostrarMensaje
                     )
                 } else {
                     DashboardEjecutivoScreen(
                         alAbrirOportunidad = alAbrirOportunidad,
-                        alVerPropuestas = alVerPropuestas
+                        alRegistrarGestion = alRegistrarGestion,
+                        alAbrirPerfil = alAbrirPerfil,
+                        alVerCartera = { irAPestana(Rutas.OPORTUNIDADES) }
                     )
                 }
+            }
+
+            // Agenda: eventos por fecha, para anticiparse.
+            composable(Rutas.AGENDA) {
+                AgendaScreen(
+                    alAbrirOportunidad = { id -> navController.navigate(Rutas.detalleOportunidad(id)) }
+                )
             }
 
             // Propuestas enviadas (HU-16), abierta desde los tableros.
@@ -288,6 +269,7 @@ private fun ContenedorPrincipal(usuario: Usuario) {
             ) {
                 DetalleOportunidadScreen(
                     alEditar = { id -> navController.navigate(Rutas.formularioOportunidad(id)) },
+                    alAbrirOrganizacion = { id -> navController.navigate(Rutas.detalleOrganizacion(id)) },
                     alRegistrarGestion = { id ->
                         navController.navigate(Rutas.registrarSeguimiento(id))
                     },

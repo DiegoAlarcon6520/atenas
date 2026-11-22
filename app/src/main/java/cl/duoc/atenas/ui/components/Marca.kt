@@ -47,8 +47,8 @@ import cl.duoc.atenas.data.local.dao.OportunidadResumen
 import cl.duoc.atenas.domain.model.TipoOportunidad
 import cl.duoc.atenas.ui.theme.DegradadoBoton
 import cl.duoc.atenas.ui.theme.DegradadoMarca
+import cl.duoc.atenas.ui.theme.DegradadoTarjeta
 import cl.duoc.atenas.ui.theme.Espaciado
-import cl.duoc.atenas.ui.theme.VeloTarjeta
 
 /*
  * COMPONENTES DE MARCA
@@ -169,14 +169,29 @@ fun EncabezadoSaludo(
     nombre: String,
     alertas: Int,
     alTocarAlertas: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    nombreAvatar: String = nombre,
+    alTocarAvatar: (() -> Unit)? = null
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Espaciado.md)
     ) {
-        Avatar(nombre)
+        // El avatar abre el perfil: así el perfil no ocupa una pestaña.
+        Box(
+            modifier = Modifier
+                .clip(CircleShape)
+                .then(
+                    if (alTocarAvatar != null) {
+                        Modifier.clickable(onClickLabel = "Abrir mi perfil", onClick = alTocarAvatar)
+                    } else {
+                        Modifier
+                    }
+                )
+        ) {
+            Avatar(nombreAvatar)
+        }
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = saludo,
@@ -230,8 +245,7 @@ fun TarjetaDestacada(
         modifier = modifier
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.large)
-            .background(DegradadoMarca)
-            .background(VeloTarjeta)
+            .background(DegradadoTarjeta)
             .clickable(onClick = onClick)
             .padding(Espaciado.tarjeta + 2.dp)
     ) {

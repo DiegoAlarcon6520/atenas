@@ -19,6 +19,7 @@ import cl.duoc.atenas.data.repository.OrganizacionRepository
 import cl.duoc.atenas.data.repository.UsuarioRepository
 import cl.duoc.atenas.di.contenedor
 import cl.duoc.atenas.domain.model.EstadoOportunidad
+import cl.duoc.atenas.domain.model.EtapaCartera
 import cl.duoc.atenas.domain.model.PotencialComercial
 import cl.duoc.atenas.domain.model.Prioridad
 import cl.duoc.atenas.domain.model.RangoFecha
@@ -87,7 +88,13 @@ data class ListaOportunidadesUiState(
     val filtros: FiltrosOportunidades = FiltrosOportunidades(),
     val mostrarFiltros: Boolean = false,
     val esSupervisor: Boolean = false,
+    /** Oportunidades de la etapa elegida. */
     val oportunidades: List<OportunidadResumen> = emptyList(),
+    /** Etapa elegida en las pestañas; null muestra todas. */
+    val etapa: EtapaCartera? = null,
+    /** Cuántas oportunidades hay en cada etapa con la búsqueda y filtros actuales. */
+    val conteoPorEtapa: Map<EtapaCartera, Int> = emptyMap(),
+    val totalSinEtapa: Int = 0,
     val regiones: List<Region> = emptyList(),
     /** Comunas de la región elegida; todas si no hay región. */
     val comunasDisponibles: List<Comuna> = emptyList(),
@@ -117,6 +124,7 @@ class ListaOportunidadesViewModel(
 
     private val _filtros = MutableStateFlow(FiltrosOportunidades())
     private val _mostrarFiltros = MutableStateFlow(false)
+    private val _etapa = MutableStateFlow<EtapaCartera?>(null)
 
     private val resultados = _filtros.flatMapLatest { filtros ->
         oportunidades.buscar(responsableId = alcance, filtros = filtros.aCriterios(Fechas.hoy()))
@@ -131,18 +139,24 @@ class ListaOportunidadesViewModel(
         CatalogosFiltro(regiones, comunas, listaOrganizaciones, ejecutivos)
     }
 
+    private val vista = combine(_filtros, _mostrarFiltros, _etapa) { f, m, e -> Triple(f, m, e) }
+
     val estado: StateFlow<ListaOportunidadesUiState> = combine(
-        _filtros,
-        _mostrarFiltros,
+        vista,
         resultados,
         catalogos
-    ) { filtros, mostrarFiltros, lista, cat ->
+    ) { (filtros, mostrarFiltros, etapa), lista, cat ->
         ListaOportunidadesUiState(
             cargando = false,
             filtros = filtros,
             mostrarFiltros = mostrarFiltros,
             esSupervisor = esSupervisor,
-            oportunidades = lista,
+            // Las pestañas de etapa filtran en memoria: así cada pestaña
+            // puede mostrar su total sin otra consulta a la base.
+            oportunidades = if (etapa == null) lista else lista.filter { it.estado in etapa.estados },
+            etapa = etapa,
+            conteoPorEtapa = EtapaCartera.entries.associateWith { e -> lista.count { it.estado in e.estados } },
+            totalSinEtapa = lista.size,
             regiones = cat.regiones,
             comunasDisponibles = filtros.regionId
                 ?.let { id -> cat.comunas.filter { it.regionId == id } }
@@ -159,6 +173,15 @@ class ListaOportunidadesViewModel(
     fun alBuscar(texto: String) = _filtros.update { it.copy(texto = texto) }
 
     fun alternarPanelFiltros() = _mostrarFiltros.update { !it }
+
+    fun cerrarPanelFiltros() = _mostrarFiltros.update { false }
+
+    fun alElegirEtapa(etapa: EtapaCartera?) = _etapa.update { etapa }
+
+    fun quitarRangoFecha() = _filtros.update { it.copy(rangoFecha = null) }
+    fun quitarPrioridad() = _filtros.update { it.copy(prioridad = null) }
+    fun quitarTipo() = _filtros.update { it.copy(tipo = null) }
+    fun quitarPotencial() = _filtros.update { it.copy(potencial = null) }
 
     /** Tocar el filtro ya seleccionado lo desactiva. */
     fun alSeleccionarEstado(valor: EstadoOportunidad) = _filtros.update {
@@ -196,7 +219,8 @@ class ListaOportunidadesViewModel(
         it.copy(responsableId = ejecutivo?.id)
     }
 
-    fun limpiarFiltros() = _filtros.update { FiltrosOportunidades() }
+    /** Quita los filtros pero conserva lo escrito en el buscador. */
+    fun limpiarFiltros() = _filtros.update { FiltrosOportunidades(texto = it.texto) }
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {

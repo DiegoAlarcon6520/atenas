@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.core.SesionManager
 import cl.duoc.atenas.data.local.dao.ConteoPorEstado
 import cl.duoc.atenas.data.local.dao.GestionPendiente
@@ -13,37 +14,51 @@ import cl.duoc.atenas.data.repository.OportunidadRepository
 import cl.duoc.atenas.data.repository.SeguimientoRepository
 import cl.duoc.atenas.di.contenedor
 import cl.duoc.atenas.domain.model.EstadoOportunidad
+import cl.duoc.atenas.domain.rules.GuiaGestion
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
-/*
- * VIEWMODEL DEL TABLERO DEL EJECUTIVO
- *
- * combine() junta varios Flow de la base de datos en un solo estado: cada vez
- * que cualquiera de las consultas cambia, se recalcula el UiState completo y
- * la pantalla se redibuja sola.
- *
- * stateIn() convierte ese Flow en un StateFlow con valor inicial.
- * WhileSubscribed(5000) mantiene viva la suscripción cinco segundos después de
- * que la pantalla desaparece, para no reconsultar la base al rotar el teléfono.
- */
+/** Qué tipo de pendiente es una tarea; define su ícono, color y botón. */
+enum class TipoTarea { ATRASADA, HOY, PROPUESTA, SIN_CONTACTO }
+
+/** Una fila de "Qué hacer hoy": algo concreto que el ejecutivo debe resolver. */
+data class Tarea(
+    val clave: String,
+    val oportunidadId: Long,
+    val tipo: TipoTarea,
+    val titulo: String,
+    val detalle: String,
+    val meta: String
+)
+
+/** Un tramo del embudo resumido en el inicio. */
+data class TramoEmbudo(val etiqueta: String, val total: Int, val estados: Set<EstadoOportunidad>)
+
 data class DashboardEjecutivoUiState(
     val cargando: Boolean = true,
     val nombreUsuario: String = "",
-    val zona: String = "",
-    val enGestion: Int = 0,
-    val proximas: List<OportunidadResumen> = emptyList(),
-    val atrasadas: List<GestionPendiente> = emptyList(),
-    val conteos: List<ConteoPorEstado> = emptyList(),
-    /** Alerta: oportunidades activas que todavía no se contactan (HU-17). */
-    val sinContacto: List<OportunidadResumen> = emptyList(),
-    /** Alerta: propuestas enviadas que esperan respuesta (HU-17). */
-    val propuestasSinRespuesta: List<OportunidadResumen> = emptyList()
-)
+    val primerNombre: String = "",
+    val tareas: List<Tarea> = emptyList(),
+    val atrasadas: Int = 0,
+    val propuestasPorInsistir: Int = 0,
+    val embudo: List<TramoEmbudo> = emptyList()
+) {
+    val totalActivas: Int get() = embudo.sumOf { it.total }
+}
 
-/** Tablero del ejecutivo: solo muestra las oportunidades asignadas a él. */
+/*
+ * VIEWMODEL DEL INICIO DEL EJECUTIVO: "QUÉ HACER HOY"
+ *
+ * En vez de un tablero de números, el inicio arma una lista de tareas
+ * concretas a partir de cuatro fuentes, en orden de urgencia:
+ *  1. gestiones atrasadas,
+ *  2. gestiones que vencen hoy,
+ *  3. propuestas que esperan respuesta (insistir),
+ *  4. oportunidades activas sin primer contacto.
+ * Una oportunidad aparece una sola vez, en su motivo más urgente.
+ */
 class DashboardEjecutivoViewModel(
     sesion: SesionManager,
     oportunidades: OportunidadRepository,
@@ -52,31 +67,25 @@ class DashboardEjecutivoViewModel(
 
     private val usuario = sesion.requerirUsuario()
 
-    // combine() admite hasta cinco flujos con tipos propios: las dos
-    // alertas nuevas se juntan primero en un par.
     private val alertas = combine(
         oportunidades.observarSinContacto(usuario.id),
         oportunidades.observarPropuestasSinRespuesta(usuario.id)
     ) { sinContacto, propuestas -> sinContacto to propuestas }
 
     val estado: StateFlow<DashboardEjecutivoUiState> = combine(
-        oportunidades.observarResumen(usuario.id),
-        oportunidades.observarProximas(dias = 30, responsableId = usuario.id),
         seguimientos.observarGestionesAtrasadas(usuario.id),
+        seguimientos.observarGestionesDeHoy(usuario.id),
         oportunidades.observarConteoPorEstado(usuario.id),
         alertas
-    ) { asignadas, proximas, atrasadas, conteos, (sinContacto, propuestas) ->
-        val cerradas = setOf(EstadoOportunidad.DESCARTADA, EstadoOportunidad.CERRADA)
+    ) { atrasadas, deHoy, conteos, (sinContacto, propuestas) ->
         DashboardEjecutivoUiState(
             cargando = false,
             nombreUsuario = usuario.nombreCompleto,
-            zona = usuario.zona,
-            enGestion = asignadas.count { it.estado !in cerradas },
-            proximas = proximas,
-            atrasadas = atrasadas,
-            conteos = conteos.sortedBy { it.estado.orden },
-            sinContacto = sinContacto,
-            propuestasSinRespuesta = propuestas
+            primerNombre = usuario.nombreCompleto.substringBefore(" "),
+            tareas = armarTareas(atrasadas, deHoy, propuestas, sinContacto),
+            atrasadas = atrasadas.size,
+            propuestasPorInsistir = propuestas.size,
+            embudo = armarEmbudo(conteos)
         )
     }.stateIn(
         scope = viewModelScope,
@@ -92,6 +101,80 @@ class DashboardEjecutivoViewModel(
                     oportunidades = contenedor.oportunidades,
                     seguimientos = contenedor.seguimientos
                 )
+            }
+        }
+
+        /** Junta los pendientes en una sola lista, sin repetir oportunidades. */
+        fun armarTareas(
+            atrasadas: List<GestionPendiente>,
+            deHoy: List<GestionPendiente>,
+            propuestas: List<OportunidadResumen>,
+            sinContacto: List<OportunidadResumen>
+        ): List<Tarea> {
+            val hoy = Fechas.hoy()
+            val tareas = buildList {
+                atrasadas.forEach { g ->
+                    add(
+                        Tarea(
+                            clave = "atr-${g.id}",
+                            oportunidadId = g.oportunidadId,
+                            tipo = TipoTarea.ATRASADA,
+                            titulo = g.oportunidadNombre,
+                            detalle = g.proximaAccion ?: "Retomar la gestión",
+                            meta = GuiaGestion.textoVencimiento(Fechas.diasEntre(hoy, g.fechaProximoSeguimiento))
+                        )
+                    )
+                }
+                deHoy.forEach { g ->
+                    add(
+                        Tarea(
+                            clave = "hoy-${g.id}",
+                            oportunidadId = g.oportunidadId,
+                            tipo = TipoTarea.HOY,
+                            titulo = g.oportunidadNombre,
+                            detalle = g.proximaAccion ?: "Gestión comprometida para hoy",
+                            meta = "Vence hoy"
+                        )
+                    )
+                }
+                propuestas.forEach { o ->
+                    add(
+                        Tarea(
+                            clave = "pro-${o.id}",
+                            oportunidadId = o.id,
+                            tipo = TipoTarea.PROPUESTA,
+                            titulo = o.nombre,
+                            detalle = o.organizacionNombre,
+                            meta = o.estado.etiqueta
+                        )
+                    )
+                }
+                sinContacto.forEach { o ->
+                    add(
+                        Tarea(
+                            clave = "sin-${o.id}",
+                            oportunidadId = o.id,
+                            tipo = TipoTarea.SIN_CONTACTO,
+                            titulo = o.nombre,
+                            detalle = "Evento el ${Fechas.aTexto(o.fechaInicioEvento)} · ${o.organizacionNombre}",
+                            meta = "Sin primer contacto"
+                        )
+                    )
+                }
+            }
+            return tareas.distinctBy { it.oportunidadId }
+        }
+
+        /** Resume los estados activos en cuatro tramos fáciles de leer. */
+        fun armarEmbudo(conteos: List<ConteoPorEstado>): List<TramoEmbudo> {
+            val porEstado = conteos.associate { it.estado to it.total }
+            return listOf(
+                "Identificadas" to setOf(EstadoOportunidad.IDENTIFICADA),
+                "Contacto" to setOf(EstadoOportunidad.CONTACTO_PENDIENTE, EstadoOportunidad.CONTACTO_REALIZADO),
+                "Propuesta" to setOf(EstadoOportunidad.PROPUESTA_ENVIADA, EstadoOportunidad.EN_ESPERA_RESPUESTA),
+                "Confirmadas" to setOf(EstadoOportunidad.CONFIRMADA)
+            ).map { (etiqueta, estados) ->
+                TramoEmbudo(etiqueta, estados.sumOf { porEstado[it] ?: 0 }, estados)
             }
         }
     }

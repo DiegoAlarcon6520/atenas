@@ -135,3 +135,35 @@ enum class RangoFecha(val etiqueta: String) {
         PASADOS -> null to hoy - 1
     }
 }
+
+/**
+ * Agrupación del embudo en las pestañas de la cartera. Siete estados son
+ * demasiados para recorrerlos de un vistazo: el ejecutivo piensa en "a quién
+ * me falta contactar", "qué estoy negociando" y "qué ya está cerrado".
+ */
+enum class EtapaCartera(val etiqueta: String, val estados: Set<EstadoOportunidad>) {
+    POR_CONTACTAR(
+        "Por contactar",
+        setOf(EstadoOportunidad.IDENTIFICADA, EstadoOportunidad.CONTACTO_PENDIENTE)
+    ),
+    EN_CURSO(
+        "En curso",
+        setOf(
+            EstadoOportunidad.CONTACTO_REALIZADO,
+            EstadoOportunidad.PROPUESTA_ENVIADA,
+            EstadoOportunidad.EN_ESPERA_RESPUESTA
+        )
+    ),
+    CONFIRMADAS(
+        "Confirmadas",
+        setOf(EstadoOportunidad.CONFIRMADA, EstadoOportunidad.ACTIVACION_REALIZADA)
+    ),
+    CERRADAS(
+        "Cerradas",
+        setOf(EstadoOportunidad.DESCARTADA, EstadoOportunidad.CERRADA)
+    );
+
+    companion object {
+        fun de(estado: EstadoOportunidad): EtapaCartera = entries.first { estado in it.estados }
+    }
+}

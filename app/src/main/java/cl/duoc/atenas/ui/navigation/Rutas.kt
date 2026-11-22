@@ -2,15 +2,16 @@ package cl.duoc.atenas.ui.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Business
-import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.automirrored.filled.EventNote
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Work
 import androidx.compose.ui.graphics.vector.ImageVector
 import cl.duoc.atenas.domain.model.RolUsuario
 
 object Rutas {
     const val INICIO = "inicio"
     const val OPORTUNIDADES = "oportunidades"
+    const val AGENDA = "agenda"
     const val PERFIL = "perfil"
 
     const val ARG_OPORTUNIDAD = "oportunidadId"
@@ -65,32 +66,43 @@ data class ItemNavegacion(
     val icono: ImageVector
 )
 
-/** La barra inferior se arma según el perfil que inició sesión. */
-fun itemsDeNavegacion(rol: RolUsuario): List<ItemNavegacion> = when (rol) {
-    RolUsuario.EJECUTIVO -> listOf(
-        ItemNavegacion(Rutas.INICIO, "Mi tablero", Icons.Default.Dashboard),
-        ItemNavegacion(Rutas.OPORTUNIDADES, "Oportunidades", Icons.AutoMirrored.Filled.EventNote),
-        ItemNavegacion(Rutas.ORGANIZACIONES, "Organizaciones", Icons.Default.Business),
-        ItemNavegacion(Rutas.PERFIL, "Perfil", Icons.Default.Person)
-    )
+/**
+ * Pestañas de la barra inferior. El perfil no es una pestaña: se abre desde
+ * el avatar del encabezado, y el botón "+" central (fuera de esta lista)
+ * registra una oportunidad nueva.
+ */
+fun itemsDeNavegacion(rol: RolUsuario): List<ItemNavegacion> = listOf(
+    ItemNavegacion(
+        Rutas.INICIO,
+        if (rol == RolUsuario.SUPERVISOR) "Equipo" else "Inicio",
+        Icons.Default.Home
+    ),
+    ItemNavegacion(Rutas.AGENDA, "Agenda", Icons.Default.CalendarMonth),
+    ItemNavegacion(Rutas.OPORTUNIDADES, "Cartera", Icons.Default.Work),
+    ItemNavegacion(Rutas.ORGANIZACIONES, "Empresas", Icons.Default.Business)
+)
 
-    RolUsuario.SUPERVISOR -> listOf(
-        ItemNavegacion(Rutas.INICIO, "Equipo", Icons.Default.Dashboard),
-        ItemNavegacion(Rutas.OPORTUNIDADES, "Cartera", Icons.AutoMirrored.Filled.EventNote),
-        ItemNavegacion(Rutas.ORGANIZACIONES, "Organizaciones", Icons.Default.Business),
-        ItemNavegacion(Rutas.PERFIL, "Perfil", Icons.Default.Person)
-    )
-}
+/** Rutas de flujos de captura: ocupan toda la pantalla, sin barra inferior. */
+val rutasDeFlujo = setOf(
+    Rutas.FORMULARIO_OPORTUNIDAD,
+    Rutas.REGISTRAR_SEGUIMIENTO,
+    Rutas.FORMULARIO_ORGANIZACION,
+    Rutas.FORMULARIO_CONTACTO
+)
+
+/** Pantallas que dibujan su propio encabezado y no llevan barra superior. */
+val rutasSinBarraSuperior = setOf(Rutas.INICIO, Rutas.AGENDA, Rutas.OPORTUNIDADES)
 
 /** Título de la barra superior según la ruta activa. */
 fun tituloDeRuta(ruta: String?, rol: RolUsuario): String = when (ruta) {
-    Rutas.OPORTUNIDADES -> if (rol == RolUsuario.SUPERVISOR) "Cartera comercial" else "Mis oportunidades"
+    Rutas.OPORTUNIDADES -> if (rol == RolUsuario.SUPERVISOR) "Cartera comercial" else "Mi cartera"
+    Rutas.AGENDA -> "Agenda"
     Rutas.PERFIL -> "Mi perfil"
-    Rutas.DETALLE_OPORTUNIDAD -> "Detalle de la oportunidad"
-    Rutas.FORMULARIO_OPORTUNIDAD -> "Registrar oportunidad"
+    Rutas.DETALLE_OPORTUNIDAD -> "Oportunidad"
+    Rutas.FORMULARIO_OPORTUNIDAD -> "Nueva oportunidad"
     Rutas.REGISTRAR_SEGUIMIENTO -> "Nueva gestión"
     Rutas.EVIDENCIAS -> "Evidencias"
-    Rutas.ORGANIZACIONES -> "Organizaciones"
+    Rutas.ORGANIZACIONES -> "Empresas e instituciones"
     Rutas.DETALLE_ORGANIZACION -> "Ficha de la organización"
     Rutas.FORMULARIO_ORGANIZACION -> "Registrar organización"
     Rutas.FORMULARIO_CONTACTO -> "Registrar contacto"

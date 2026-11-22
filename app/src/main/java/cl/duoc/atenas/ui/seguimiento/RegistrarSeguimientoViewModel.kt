@@ -156,6 +156,9 @@ class RegistrarSeguimientoViewModel(
 
     fun alCambiarProximaAccion(valor: String) = _estado.update { it.copy(proximaAccion = valor) }
 
+    /** Atajo de plazo: el próximo seguimiento queda a [dias] días desde hoy. */
+    fun alElegirPlazo(dias: Int) = alCambiarFechaProximoSeguimiento(Fechas.masDias(Fechas.hoy(), dias))
+
     fun alCambiarFechaProximoSeguimiento(valor: Long) = _estado.update {
         it.copy(
             fechaProximoSeguimiento = valor,

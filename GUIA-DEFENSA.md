@@ -105,6 +105,12 @@ el ViewModel, y toda la regla de negocio en `domain/`.
 | Historial de gestiones por organización | `SeguimientoDao.observarPorOrganizacion`, `DetalleOrganizacionScreen.kt` |
 | Transacción de una gestión | `SeguimientoDao.registrarGestion` (`@Transaction`) |
 | Fechas del calendario (UTC vs. local) | `Fechas.localAUtc` / `utcALocal`, `SelectorFecha` |
+| Inicio "Qué hacer hoy" | `ui/dashboard/` (`armarTareas`, `armarEmbudo`) |
+| Agenda | `ui/agenda/` |
+| Siguiente paso, etapas, conversión | `domain/rules/GuiaGestion.kt` |
+| Etapas de la cartera | `EtapaCartera` en `domain/model/Enums.kt` |
+| Barra inferior con "+" | `ui/navigation/BarraInferior.kt` |
+| Asistente de nueva oportunidad | `FormularioOportunidadViewModel` (`paso`, `pasoSiguiente`) |
 | Identidad visual (paleta, degradados, fuente) | `ui/theme/Color.kt`, `Degradados.kt`, `Type.kt`, `res/font/` |
 | Botón con degradado, avatar, tarjeta destacada, chips | `ui/components/Marca.kt` |
 | Volver a la raíz de una sección | `NavegacionRaiz.kt` (`pestanaActual` y el `onClick` de la barra inferior) |
