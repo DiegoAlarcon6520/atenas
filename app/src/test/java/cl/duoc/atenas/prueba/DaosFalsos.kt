@@ -124,6 +124,11 @@ class OrganizacionDaoFalso : OrganizacionDao {
         if (fallar) throw FalloSimulado(mensajeFallo)
         organizaciones.update { lista -> lista.map { if (it.id == organizacion.id) organizacion else it } }
     }
+
+    override suspend fun eliminar(id: Long) {
+        if (fallar) throw FalloSimulado(mensajeFallo)
+        organizaciones.update { lista -> lista.filterNot { it.id == id } }
+    }
 }
 
 class ContactoDaoFalso : ContactoDao {
@@ -150,6 +155,11 @@ class ContactoDaoFalso : ContactoDao {
     override suspend fun actualizar(contacto: Contacto) {
         if (fallar) throw FalloSimulado(mensajeFallo)
         contactos.update { lista -> lista.map { if (it.id == contacto.id) contacto else it } }
+    }
+
+    override suspend fun eliminar(id: Long) {
+        if (fallar) throw FalloSimulado(mensajeFallo)
+        contactos.update { lista -> lista.filterNot { it.id == id } }
     }
 }
 
@@ -311,7 +321,13 @@ class OportunidadDaoFalso : OportunidadDao {
         oportunidades.update { lista -> lista.map { if (it.id == oportunidad.id) oportunidad else it } }
     }
 
-    fun eliminar(id: Long) = oportunidades.update { lista -> lista.filterNot { it.id == id } }
+    override suspend fun eliminar(id: Long) {
+        if (fallar) throw FalloSimulado(mensajeFallo)
+        quitar(id)
+    }
+
+    /** Borra sin pasar por el repositorio, para simular cambios hechos por otro lado. */
+    fun quitar(id: Long) = oportunidades.update { lista -> lista.filterNot { it.id == id } }
 }
 
 /**

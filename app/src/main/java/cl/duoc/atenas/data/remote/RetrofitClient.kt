@@ -4,10 +4,12 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 /**
- * CLIENTE HTTP
+ * CLIENTES HTTP
  *
- * Un único Retrofit para toda la app (object = singleton). "by lazy" lo
- * construye recién la primera vez que se usa.
+ * Dos servicios, cada uno con su propio Retrofit porque tienen distinta
+ * dirección base: el microservicio propio (atenas-backend) y la API externa
+ * de feriados. object = singleton; "by lazy" los construye recién la primera
+ * vez que se usan.
  *
  * GsonConverterFactory convierte el JSON del servidor en las clases de
  * Dtos.kt y viceversa, usando los nombres de los campos.
@@ -28,5 +30,16 @@ object RetrofitClient {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(AtenasApi::class.java)
+    }
+
+    /** API externa pública (HTTPS, no necesita permiso de tráfico sin cifrar). */
+    const val URL_FERIADOS = "https://date.nager.at/api/v3/"
+
+    val feriados: FeriadosApi by lazy {
+        Retrofit.Builder()
+            .baseUrl(URL_FERIADOS)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(FeriadosApi::class.java)
     }
 }

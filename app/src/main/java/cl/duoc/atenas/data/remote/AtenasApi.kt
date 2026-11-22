@@ -39,17 +39,29 @@ interface AtenasApi {
     @PUT("organizaciones/{id}")
     suspend fun actualizarOrganizacion(@Path("id") id: Long, @Body solicitud: OrganizacionSolicitud): OrganizacionDto
 
+    /** 409 si tiene oportunidades; si no, el servidor la elimina junto con sus contactos. */
+    @DELETE("organizaciones/{id}")
+    suspend fun eliminarOrganizacion(@Path("id") id: Long)
+
     @POST("contactos")
     suspend fun crearContacto(@Body solicitud: ContactoSolicitud): ContactoDto
 
     @PUT("contactos/{id}")
     suspend fun actualizarContacto(@Path("id") id: Long, @Body solicitud: ContactoSolicitud): ContactoDto
 
+    /** 409 si está asignado a oportunidades: en ese caso se desactiva. */
+    @DELETE("contactos/{id}")
+    suspend fun eliminarContacto(@Path("id") id: Long)
+
     @POST("oportunidades")
     suspend fun crearOportunidad(@Body solicitud: OportunidadSolicitud): OportunidadDto
 
     @PUT("oportunidades/{id}")
     suspend fun actualizarOportunidad(@Path("id") id: Long, @Body solicitud: OportunidadSolicitud): OportunidadDto
+
+    /** 409 si ya tiene gestiones: en ese caso se descarta registrando una gestión. */
+    @DELETE("oportunidades/{id}")
+    suspend fun eliminarOportunidad(@Path("id") id: Long)
 
     @PATCH("oportunidades/{id}/responsable")
     suspend fun asignarResponsable(@Path("id") id: Long, @Body solicitud: AsignacionSolicitud): OportunidadDto

@@ -96,4 +96,8 @@ interface OrganizacionDao {
 
     @Update
     suspend fun actualizar(organizacion: Organizacion)
+
+    /** Room borra en cascada sus contactos (llave foránea CASCADE). */
+    @Query("DELETE FROM organizacion WHERE id = :id")
+    suspend fun eliminar(id: Long)
 }

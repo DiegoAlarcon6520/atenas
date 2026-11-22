@@ -7,6 +7,7 @@ import cl.duoc.atenas.domain.model.TipoOrganizacion
 import cl.duoc.atenas.prueba.Datos
 import cl.duoc.atenas.prueba.Entorno
 import cl.duoc.atenas.prueba.ReglaCorrutinas
+import cl.duoc.atenas.prueba.errorHttp
 import cl.duoc.atenas.prueba.observar
 import cl.duoc.atenas.prueba.recolectar
 import cl.duoc.atenas.data.repository.SinConexionException
@@ -145,6 +146,77 @@ class DetallesViewModelTest {
         assertTrue(e.oportunidadDao.llamadas.isEmpty())
     }
 
+    // ---------- Eliminar oportunidad ----------
+
+    @Test
+    fun `el supervisor elimina una oportunidad sin gestiones y la pantalla vuelve atras`() = runTest {
+        // Arrange
+        val e = Entorno(usuario = Datos.supervisor)
+        e.oportunidadDao.agregar(Datos.oportunidad(id = 1))
+        val vm = detalle(e)
+        observar(vm.estado)
+        val mensajes = recolectar(vm.mensajes)
+        val eliminada = recolectar(vm.eliminada)
+        assertTrue(vm.estado.value.puedeEliminar)
+
+        // Act
+        vm.eliminar()
+
+        // Assert: primero el servidor, después la copia local.
+        assertEquals(listOf("eliminarOportunidad"), e.api.llamadas)
+        assertTrue(e.oportunidadDao.oportunidades.value.isEmpty())
+        assertEquals(listOf("Oportunidad eliminada"), mensajes)
+        assertEquals(1, eliminada.size)
+    }
+
+    @Test
+    fun `una oportunidad con gestiones no se puede eliminar`() = runTest {
+        val e = Entorno(usuario = Datos.supervisor)
+        e.oportunidadDao.agregar(Datos.oportunidad(id = 1))
+        e.seguimientoDao.insertar(Datos.seguimiento(oportunidadId = 1))
+        val vm = detalle(e)
+        observar(vm.estado)
+
+        vm.eliminar()
+
+        assertFalse(vm.estado.value.puedeEliminar)
+        assertTrue(e.api.llamadas.isEmpty())
+        assertEquals(1, e.oportunidadDao.oportunidades.value.size)
+    }
+
+    @Test
+    fun `el ejecutivo no puede eliminar oportunidades`() = runTest {
+        val e = Entorno()
+        e.oportunidadDao.agregar(Datos.oportunidad(id = 1))
+        val vm = detalle(e)
+        observar(vm.estado)
+
+        vm.eliminar()
+
+        assertFalse(vm.estado.value.puedeEliminar)
+        assertTrue(e.api.llamadas.isEmpty())
+    }
+
+    @Test
+    fun `si el servidor rechaza la eliminacion la oportunidad se mantiene y se explica`() = runTest {
+        // Arrange: otro usuario registró una gestión que aún no llega a este teléfono.
+        val e = Entorno(usuario = Datos.supervisor)
+        e.oportunidadDao.agregar(Datos.oportunidad(id = 1))
+        e.api.fallo = errorHttp(409, "La oportunidad tiene gestiones registradas")
+        val vm = detalle(e)
+        observar(vm.estado)
+        val mensajes = recolectar(vm.mensajes)
+        val eliminada = recolectar(vm.eliminada)
+
+        // Act
+        vm.eliminar()
+
+        // Assert
+        assertEquals(1, e.oportunidadDao.oportunidades.value.size)
+        assertEquals(listOf("No se pudo eliminar: La oportunidad tiene gestiones registradas"), mensajes)
+        assertTrue(eliminada.isEmpty())
+    }
+
     // ---------- Ficha de organización ----------
 
     @Test
@@ -180,6 +252,60 @@ class DetallesViewModelTest {
 
         assertNull(e.oportunidadDao.ultimoAlcance)
         assertNull(e.seguimientoDao.ultimoAlcance)
+    }
+
+    private fun ficha(e: Entorno) =
+        DetalleOrganizacionViewModel(100, e.sesion, e.organizaciones, e.contactos, e.oportunidades, e.seguimientos)
+
+    @Test
+    fun `el supervisor elimina una organizacion sin oportunidades`() = runTest {
+        val e = Entorno(usuario = Datos.supervisor)
+        val vm = ficha(e)
+        observar(vm.estado)
+        val mensajes = recolectar(vm.mensajes)
+        val eliminada = recolectar(vm.eliminada)
+        assertTrue(vm.estado.value.puedeEliminar)
+
+        vm.eliminar()
+
+        assertEquals(listOf("eliminarOrganizacion"), e.api.llamadas)
+        assertTrue(e.organizacionDao.organizaciones.value.isEmpty())
+        assertEquals(listOf("Organización eliminada"), mensajes)
+        assertEquals(1, eliminada.size)
+    }
+
+    @Test
+    fun `una organizacion con oportunidades no se puede eliminar ni por el ejecutivo`() = runTest {
+        // Con oportunidades: ni el supervisor.
+        val conOportunidades = Entorno(usuario = Datos.supervisor)
+        conOportunidades.oportunidadDao.agregar(Datos.oportunidad(id = 1))
+        val vm = ficha(conOportunidades)
+        observar(vm.estado)
+        vm.eliminar()
+        assertFalse(vm.estado.value.puedeEliminar)
+        assertTrue(conOportunidades.api.llamadas.isEmpty())
+
+        // Sin oportunidades pero ejecutivo: tampoco.
+        val ejecutivo = Entorno()
+        val vmEjecutivo = ficha(ejecutivo)
+        observar(vmEjecutivo.estado)
+        vmEjecutivo.eliminar()
+        assertFalse(vmEjecutivo.estado.value.puedeEliminar)
+        assertTrue(ejecutivo.api.llamadas.isEmpty())
+    }
+
+    @Test
+    fun `si la organizacion no se puede eliminar se avisa y se mantiene`() = runTest {
+        val e = Entorno(usuario = Datos.supervisor)
+        e.api.fallo = IOException("sin red")
+        val vm = ficha(e)
+        observar(vm.estado)
+        val mensajes = recolectar(vm.mensajes)
+
+        vm.eliminar()
+
+        assertEquals(1, e.organizacionDao.organizaciones.value.size)
+        assertEquals(listOf("No se pudo eliminar: ${SinConexionException().message}"), mensajes)
     }
 
     // ---------- Listado de organizaciones ----------

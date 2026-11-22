@@ -28,6 +28,8 @@ data class DetalleOportunidadUiState(
     /** Ejecutivos disponibles para asignar; solo se llena para el supervisor. */
     val ejecutivos: List<Usuario> = emptyList(),
     val puedeAsignar: Boolean = false,
+    /** Solo el supervisor, y solo mientras no tenga gestiones (su historial no se borra). */
+    val puedeEliminar: Boolean = false,
     val sinAcceso: Boolean = false
 )
 
@@ -67,6 +69,7 @@ class DetalleOportunidadViewModel(
             rol = usuario.rol,
             ejecutivos = if (Permisos.puedeAsignarResponsable(usuario.rol)) ejecutivos else emptyList(),
             puedeAsignar = Permisos.puedeAsignarResponsable(usuario.rol),
+            puedeEliminar = autorizado && Permisos.puedeEliminar(usuario.rol) && historial.isEmpty(),
             sinAcceso = !autorizado
         )
     }.stateIn(
@@ -75,6 +78,14 @@ class DetalleOportunidadViewModel(
         initialValue = DetalleOportunidadUiState()
     )
 
+    /** Mensajes de una sola vez para el snackbar (asignación y eliminación). */
+    private val _mensajes = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    val mensajes: SharedFlow<String> = _mensajes.asSharedFlow()
+
+    /** Avisa a la pantalla que la oportunidad ya no existe y debe volver atrás. */
+    private val _eliminada = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val eliminada: SharedFlow<Unit> = _eliminada.asSharedFlow()
+
     /**
      * Asigna o reasigna el responsable de la oportunidad.
      *
@@ -82,10 +93,6 @@ class DetalleOportunidadViewModel(
      * control a los supervisores: la regla no puede depender de la UI.
      * Pasar null deja la oportunidad sin responsable.
      */
-    /** Mensajes de una sola vez para el snackbar (resultado de la asignación). */
-    private val _mensajes = MutableSharedFlow<String>(extraBufferCapacity = 1)
-    val mensajes: SharedFlow<String> = _mensajes.asSharedFlow()
-
     fun asignarResponsable(responsableId: Long?) {
         if (!Permisos.puedeAsignarResponsable(usuario.rol)) return
         viewModelScope.launch {
@@ -95,6 +102,24 @@ class DetalleOportunidadViewModel(
             } catch (excepcion: Exception) {
                 // Sin conexión o rechazado por el servidor: no cambia nada y se avisa.
                 _mensajes.tryEmit("No se pudo asignar: ${excepcion.message}")
+            }
+        }
+    }
+
+    /**
+     * Elimina la oportunidad (pensado para algo creado por error). Igual que
+     * la asignación, vuelve a comprobar el permiso; si ya tiene gestiones el
+     * servidor responde 409 y el mensaje lo explica.
+     */
+    fun eliminar() {
+        if (!estado.value.puedeEliminar) return
+        viewModelScope.launch {
+            try {
+                oportunidades.eliminar(oportunidadId)
+                _mensajes.tryEmit("Oportunidad eliminada")
+                _eliminada.tryEmit(Unit)
+            } catch (excepcion: Exception) {
+                _mensajes.tryEmit("No se pudo eliminar: ${excepcion.message}")
             }
         }
     }

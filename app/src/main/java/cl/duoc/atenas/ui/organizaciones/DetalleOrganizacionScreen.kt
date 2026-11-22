@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -27,6 +28,7 @@ import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.data.local.dao.GestionDeOrganizacion
 import cl.duoc.atenas.data.local.entity.Contacto
 import cl.duoc.atenas.di.FabricasViewModel
+import cl.duoc.atenas.ui.components.BotonEliminar
 import cl.duoc.atenas.ui.components.EstadoVacio
 import cl.duoc.atenas.ui.components.Etiqueta
 import cl.duoc.atenas.ui.components.IndicadorCarga
@@ -47,10 +49,15 @@ fun DetalleOrganizacionScreen(
     alAgregarContacto: (Long) -> Unit,
     alEditarContacto: (Long, Long) -> Unit,
     alAbrirOportunidad: (Long) -> Unit,
+    mostrarMensaje: (String) -> Unit,
+    alEliminada: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: DetalleOrganizacionViewModel = viewModel(factory = FabricasViewModel.detalleOrganizacion)
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) { viewModel.mensajes.collect { mostrarMensaje(it) } }
+    LaunchedEffect(Unit) { viewModel.eliminada.collect { alEliminada() } }
 
     if (estado.cargando) {
         IndicadorCarga(modifier)
@@ -145,6 +152,18 @@ fun DetalleOrganizacionScreen(
         } else {
             items(estado.gestiones, key = { "ge-${it.id}" }) { gestion ->
                 TarjetaGestion(gestion) { alAbrirOportunidad(gestion.oportunidadId) }
+            }
+        }
+
+        if (estado.puedeEliminar) {
+            item {
+                BotonEliminar(
+                    texto = "Eliminar organización",
+                    tituloConfirmacion = "¿Eliminar esta organización?",
+                    mensajeConfirmacion = "Se borrará \"${organizacion.nombre}\" junto con sus " +
+                        "${estado.contactos.size} contacto(s). Esta acción no se puede deshacer.",
+                    alConfirmar = viewModel::eliminar
+                )
             }
         }
     }

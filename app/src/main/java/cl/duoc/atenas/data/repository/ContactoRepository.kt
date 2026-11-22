@@ -26,6 +26,12 @@ class ContactoRepository(
         return creado.id
     }
 
+    /** El servidor lo rechaza (409) si está asignado a oportunidades: se desactiva en su lugar. */
+    suspend fun eliminar(id: Long) {
+        llamar { api.eliminarContacto(id) }
+        dao.eliminar(id)
+    }
+
     /** La fecha de último contacto la mantiene el servidor; se guarda la que devuelve. */
     suspend fun actualizar(contacto: Contacto) {
         val actualizado = llamar { api.actualizarContacto(contacto.id, ContactoSolicitud.desde(contacto)) }

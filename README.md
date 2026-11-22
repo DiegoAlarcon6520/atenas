@@ -51,6 +51,8 @@ Toda la información de organizaciones, contactos, usuarios y eventos es
 - Ficha de detalle con todos los antecedentes y el historial de gestiones
 - Formulario de creación y edición con validaciones y reglas de negocio
 - Asignación y reasignación de responsables, exclusiva del supervisor
+- Eliminación de una oportunidad registrada por error, exclusiva del supervisor
+  y solo mientras no tenga gestiones (si ya se gestionó, se descarta)
 - Leyendas explicativas en cada indicador de los tableros, para que el número
   deje claro qué está contando
 
@@ -61,6 +63,10 @@ Toda la información de organizaciones, contactos, usuarios y eventos es
 - La fecha de último contacto se actualiza sola al registrar una gestión con
   el contacto; los contactos desactivados no se ofrecen en oportunidades nuevas
 - Formularios de organización y de contacto, con validación de correo y teléfono
+- Eliminación de organizaciones sin oportunidades (supervisor; arrastra sus
+  contactos) y de contactos que no estén asignados a ninguna oportunidad
+- Toda eliminación pide confirmación y la decide el servidor: si el registro
+  ya tiene historial responde 409 y la app muestra el motivo sin borrar nada
 
 **Seguimiento**
 - Registro de gestiones con tipo de acción, resultado y próxima acción
@@ -86,6 +92,9 @@ Toda la información de organizaciones, contactos, usuarios y eventos es
   almacenamiento privado de la aplicación
 - Vista previa de las fotografías asociadas a cada oportunidad
 - Agenda de eventos y recordatorios en el calendario del dispositivo
+- Feriados de Chile en la agenda, obtenidos de una API externa: aviso del
+  próximo feriado, días feriados marcados en la semana y advertencia en los
+  eventos que caen en feriado (permisos del recinto y disponibilidad de personal)
 
 ## Diseño y experiencia de uso
 
@@ -225,7 +234,7 @@ Al volver a abrir la aplicación la base se siembra nuevamente desde cero.
 
 ## Pruebas unitarias y cobertura
 
-Hay **244 pruebas unitarias** (JUnit 4, patrón Arrange–Act–Assert) que corren
+Hay **260 pruebas unitarias** (JUnit 4, patrón Arrange–Act–Assert) que corren
 en la JVM, sin emulador. Se agrupan en tres capas:
 
 | Capa | Archivo | Pruebas | Qué verifica |
@@ -238,17 +247,18 @@ en la JVM, sin emulador. Se agrupan en tres capas:
 | | `domain/ReglasComplementariasTest` | 10 | Casos de borde: cada rama de los `when` y valores límite |
 | | `core/FechasTest` | 5 | Conversión de fechas entre el calendario (UTC) y la hora local |
 | Datos | `data/RepositoriosTest` | 25 | Traducción de filtros a la base, rangos de fechas, autenticación, transacción de gestiones, sesión |
+| | `data/FeriadosRepositoryTest` | 4 | API externa: fecha a medianoche local, solo feriados nacionales, una descarga por año, falla de red sin romper la agenda |
 | | `data/ServidorTest` | 13 | Login con y sin conexión, sincronización que conserva la clave local, mensajes de error del servidor, escrituras rechazadas que no tocan la copia local |
 | Pantallas | `ui/LoginViewModelTest` | 10 | Validación de campos y credenciales; descarga de la cartera al entrar, con y sin conexión |
 | | `ui/DashboardEjecutivoViewModelTest` | 7 | "Qué hacer hoy": orden por urgencia, sin repetidos, embudo |
 | | `ui/PanelSupervisorViewModelTest` | 7 | Métricas del equipo, conversión, confirmar y descartar, decisión rechazada por el servidor |
-| | `ui/AgendaViewModelTest` | 5 | Agrupación por cercanía, eventos en riesgo, alcance por perfil |
+| | `ui/AgendaViewModelTest` | 7 | Agrupación por cercanía, eventos en riesgo, alcance por perfil, eventos en feriado y próximo feriado |
 | | `ui/ListaOportunidadesViewModelTest` | 10 | Pestañas por etapa, cada filtro, región y comuna |
-| | `ui/DetallesViewModelTest` | 11 | Acceso por perfil al detalle, asignación (y su error), ficha y listado de organizaciones |
+| | `ui/DetallesViewModelTest` | 18 | Acceso por perfil al detalle, asignación (y su error), eliminación de oportunidades y organizaciones (permiso, historial, rechazo del servidor), ficha y listado de organizaciones |
 | | `ui/FormularioOportunidadViewModelTest` | 30 | Pasos, validaciones, prioridad sugerida, organizaciones y contactos registrados desde el paso 3, crear, editar, oportunidad cerrada, errores de la base y del servidor |
 | | `ui/RegistrarSeguimientoViewModelTest` | 21 | Transiciones por perfil, próxima acción, cierre, reutilizar gestión, errores |
 | | `ui/AlertasYPropuestasViewModelTest` | 6 | Alertas de la campana por perfil y filtro de propuestas |
-| | `ui/FormulariosOrganizacionViewModelTest` | 17 | Alta y edición de organizaciones y contactos |
+| | `ui/FormulariosOrganizacionViewModelTest` | 20 | Alta, edición y eliminación de organizaciones y contactos |
 
 Los ViewModel se prueban con **DAO falsos en memoria**
 (`app/src/test/.../prueba/DaosFalsos.kt`) y un **servidor falso**
@@ -322,8 +332,43 @@ ejecuta la app en el emulador. La dirección del servidor está en
 emulador apunta al PC). Para un celular físico, usa la IP del PC y agrégala
 en `res/xml/network_security_config.xml`.
 
+### Endpoints propios que usa la app
+
+| Método | Ruta | Uso en la app |
+|---|---|---|
+| POST | `/api/auth/login` | Inicio de sesión |
+| GET | `/api/sincronizacion?usuarioId=` | Descarga de la cartera al entrar |
+| POST / PUT / DELETE | `/api/organizaciones[/{id}]` | Crear, editar y eliminar organizaciones |
+| POST / PUT / DELETE | `/api/contactos[/{id}]` | Crear, editar y eliminar contactos |
+| POST / PUT / DELETE | `/api/oportunidades[/{id}]` | Crear, editar y eliminar oportunidades |
+| PATCH | `/api/oportunidades/{id}/responsable` | Asignar responsable |
+| POST | `/api/oportunidades/{id}/seguimientos` | Registrar gestión y cambio de estado |
+| POST / DELETE | `/api/evidencias[/{id}]` | Agregar y quitar evidencias |
+
+La documentación completa (Swagger) está en el README de atenas-backend.
+
+### API externa: feriados de Chile
+
+La agenda consulta la API pública [Nager.Date](https://date.nager.at), que no
+requiere clave:
+
+```
+GET https://date.nager.at/api/v3/PublicHolidays/{año}/CL
+```
+
+- **Para qué sirve:** una activación en feriado cambia la logística (recintos
+  cerrados, personal con recargo, menos público en oficinas), así que la
+  agenda avisa el próximo feriado y marca los eventos que caen en uno.
+- **Implementación:** segundo cliente Retrofit en `RetrofitClient.feriados`
+  (`data/remote/FeriadosApi.kt`) y `data/repository/FeriadosRepository.kt`.
+  Se piden el año en curso y el siguiente, se usan solo los feriados
+  nacionales (`global`) y cada año se descarga una vez por sesión.
+- **Sin conexión:** si la API no responde, la agenda funciona igual, sin
+  feriados, y se vuelve a intentar la próxima vez que se abre.
+
 ## Nota sobre los datos
 
 Todos los nombres de organizaciones, personas, correos, teléfonos, direcciones,
 costos y resultados de activación son inventados para efectos académicos. La
-aplicación no se conecta a ningún sistema externo ni a bases de datos reales.
+aplicación solo se conecta a su propio backend y a la API pública de feriados,
+que no recibe ningún dato de la app (solo el año consultado).

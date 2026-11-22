@@ -41,7 +41,7 @@ app/src/main/
     │   │   ├── entity/Entidades.kt Las 8 entidades con claves y relaciones
     │   │   ├── dao/                7 DAOs con las consultas SQL
     │   │   └── seed/               Datos ficticios iniciales
-    │   └── repository/             7 repositorios: puerta de entrada a los datos
+    │   └── repository/             9 repositorios: puerta de entrada a los datos
     │
     ├── di/                   AppContainer y FabricasViewModel (las fábricas
     │                         de cada ViewModel, fuera de su clase)
@@ -66,7 +66,7 @@ app/src/test/java/cl/duoc/atenas/
 └── prueba/               DAO falsos, datos de ejemplo y regla de corrutinas
 ```
 
-**13 pantallas · 14 ViewModels · 8 entidades · 7 DAOs · 7 repositorios · 244 pruebas unitarias**
+**13 pantallas · 14 ViewModels · 8 entidades · 7 DAOs · 9 repositorios · 260 pruebas unitarias**
 
 ---
 
@@ -333,7 +333,7 @@ identifica los tres estados de cierre, el ViewModel salta esas dos validaciones
 y guarda `null`.
 
 **¿Cómo se prueban las reglas de negocio?**
-Hay 244 pruebas unitarias en tres capas: dominio (validaciones, máquina de
+Hay 260 pruebas unitarias en tres capas: dominio (validaciones, máquina de
 estados, prioridad, guía de gestión), repositorios y ViewModel. Corren sin
 emulador. Los ViewModel reciben repositorios armados con DAO falsos en memoria
 (`prueba/DaosFalsos.kt`) y un servidor falso (`prueba/ApiFalsa.kt`), así cada prueba decide qué datos hay en la "base" y
@@ -359,3 +359,21 @@ Una línea como `if (rol == SUPERVISOR) null else usuario.id` está "cubierta"
 apenas se ejecuta una vez, pero solo se probó la mitad. La cobertura de ramas
 exige probar ambos caminos: por eso cada regla por perfil se prueba con un
 ejecutivo y con un supervisor.
+
+**¿Qué API externa usan y para qué?**
+Nager.Date (`GET https://date.nager.at/api/v3/PublicHolidays/{año}/CL`),
+pública y sin clave. La agenda avisa el próximo feriado y marca los eventos
+que caen en uno, porque eso cambia la logística de una activación (recinto,
+personal, público). Es un segundo cliente Retrofit (`RetrofitClient.feriados`)
+con su propio `FeriadosRepository`, que filtra los feriados nacionales,
+guarda en memoria cada año ya descargado y, si no hay red, devuelve una lista
+vacía para que la agenda nunca se caiga.
+
+**¿Por qué no se puede eliminar cualquier cosa?**
+Borrar algo con historial rompería la trazabilidad. Por eso solo el supervisor
+elimina oportunidades (sin gestiones) y organizaciones (sin oportunidades), y
+un contacto solo se borra si no está asignado a ninguna oportunidad. La app
+esconde el botón cuando no corresponde, pero quien decide es el servidor: si
+otro usuario registró una gestión que aún no llega al teléfono, responde 409,
+la app muestra el motivo y no borra nada en Room. Lo que ya tiene historial se
+descarta (oportunidad) o se desactiva (contacto) en vez de borrarse.

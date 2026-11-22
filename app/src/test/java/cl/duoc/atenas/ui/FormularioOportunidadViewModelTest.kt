@@ -555,7 +555,7 @@ class FormularioOportunidadViewModelTest {
         val e = Entorno()
         e.oportunidadDao.agregar(Datos.oportunidad(id = 7))
         val vm = crear(e, id = 7)
-        e.oportunidadDao.eliminar(7)
+        e.oportunidadDao.quitar(7)
 
         // Act
         vm.guardar()

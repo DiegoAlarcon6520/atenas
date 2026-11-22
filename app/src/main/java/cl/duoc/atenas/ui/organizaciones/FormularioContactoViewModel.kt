@@ -28,6 +28,9 @@ data class FormularioContactoUiState(
     val esEdicion: Boolean = false,
     val guardando: Boolean = false,
     val guardadoConExito: Boolean = false,
+    val eliminando: Boolean = false,
+    /** La pantalla vuelve atrás al verlo en true. */
+    val eliminadoConExito: Boolean = false,
     val errorGeneral: String? = null,
 
     val nombreOrganizacion: String = "",
@@ -171,6 +174,30 @@ class FormularioContactoViewModel(
                     it.copy(
                         guardando = false,
                         errorGeneral = "No se pudo guardar: ${excepcion.message ?: "error desconocido"}"
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Elimina un contacto existente. Si está asignado a alguna oportunidad el
+     * servidor responde 409: en ese caso conviene desmarcar "activo" en vez
+     * de borrarlo, y el mensaje de error lo explica.
+     */
+    fun eliminar() {
+        val actual = _estado.value
+        if (!actual.esEdicion || actual.eliminando) return
+        viewModelScope.launch {
+            _estado.update { it.copy(eliminando = true, errorGeneral = null) }
+            try {
+                contactos.eliminar(contactoId)
+                _estado.update { it.copy(eliminando = false, eliminadoConExito = true) }
+            } catch (excepcion: Exception) {
+                _estado.update {
+                    it.copy(
+                        eliminando = false,
+                        errorGeneral = "No se pudo eliminar: ${excepcion.message ?: "error desconocido"}"
                     )
                 }
             }
