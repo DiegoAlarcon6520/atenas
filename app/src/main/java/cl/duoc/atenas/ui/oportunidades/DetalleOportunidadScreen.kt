@@ -46,6 +46,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -113,6 +114,9 @@ fun DetalleOportunidadScreen(
     val estado by viewModel.estado.collectAsStateWithLifecycle()
     val contexto = LocalContext.current
     var pestana by rememberSaveable { mutableStateOf(PestanaDetalle.RESUMEN) }
+
+    // Resultado de la asignación de responsable (éxito o error del servidor).
+    LaunchedEffect(Unit) { viewModel.mensajes.collect { mostrarMensaje(it) } }
 
     if (estado.cargando) {
         IndicadorCarga(modifier)

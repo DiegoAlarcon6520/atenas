@@ -8,6 +8,9 @@ import cl.duoc.atenas.prueba.Datos
 import cl.duoc.atenas.prueba.Entorno
 import cl.duoc.atenas.prueba.ReglaCorrutinas
 import cl.duoc.atenas.prueba.observar
+import cl.duoc.atenas.prueba.recolectar
+import cl.duoc.atenas.data.repository.SinConexionException
+import java.io.IOException
 import cl.duoc.atenas.ui.oportunidades.DetalleOportunidadViewModel
 import cl.duoc.atenas.ui.organizaciones.DetalleOrganizacionViewModel
 import cl.duoc.atenas.ui.organizaciones.ListaOrganizacionesViewModel
@@ -86,15 +89,48 @@ class DetallesViewModelTest {
         e.oportunidadDao.agregar(Datos.oportunidad(id = 1, responsableId = null))
         val vm = detalle(e)
         observar(vm.estado)
+        val mensajes = recolectar(vm.mensajes)
 
         // Act
         vm.asignarResponsable(Datos.ejecutivo2.id)
 
         // Assert
+        assertEquals(listOf("Responsable asignado"), mensajes)
+        assertEquals(Datos.supervisor.id, e.api.ultimaAsignacion?.usuarioId)
         assertTrue(vm.estado.value.puedeAsignar)
         assertEquals(2, vm.estado.value.ejecutivos.size)
         assertEquals(Datos.ejecutivo2.id, e.oportunidadDao.oportunidades.value.single().responsableId)
         assertEquals("Rodrigo Fuentes", vm.estado.value.detalle?.responsableNombre)
+    }
+
+    @Test
+    fun `quitar el responsable deja la oportunidad sin asignar`() = runTest {
+        val e = Entorno(usuario = Datos.supervisor)
+        e.oportunidadDao.agregar(Datos.oportunidad(id = 1))
+        val vm = detalle(e)
+        val mensajes = recolectar(vm.mensajes)
+
+        vm.asignarResponsable(null)
+
+        assertEquals(listOf("Responsable quitado"), mensajes)
+        assertNull(e.oportunidadDao.oportunidades.value.single().responsableId)
+    }
+
+    @Test
+    fun `si la asignacion falla la oportunidad no cambia y se avisa el motivo`() = runTest {
+        // Arrange: el servidor no responde.
+        val e = Entorno(usuario = Datos.supervisor)
+        e.oportunidadDao.agregar(Datos.oportunidad(id = 1))
+        e.api.fallo = IOException("sin red")
+        val vm = detalle(e)
+        val mensajes = recolectar(vm.mensajes)
+
+        // Act
+        vm.asignarResponsable(Datos.ejecutivo2.id)
+
+        // Assert
+        assertEquals(Datos.ejecutiva.id, e.oportunidadDao.oportunidades.value.single().responsableId)
+        assertEquals(listOf("No se pudo asignar: ${SinConexionException().message}"), mensajes)
     }
 
     @Test

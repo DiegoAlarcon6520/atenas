@@ -1,6 +1,10 @@
 package cl.duoc.atenas.ui
 
+import cl.duoc.atenas.data.remote.SincronizacionDto
 import cl.duoc.atenas.prueba.Datos
+import cl.duoc.atenas.prueba.aDto
+import cl.duoc.atenas.prueba.errorHttp
+import java.io.IOException
 import cl.duoc.atenas.prueba.Entorno
 import cl.duoc.atenas.prueba.ReglaCorrutinas
 import cl.duoc.atenas.ui.login.LoginViewModel
@@ -12,14 +16,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
-/** HU-01: inicio de sesión con validación de campos y credenciales. */
+/** HU-01: inicio de sesión con validación de campos, credenciales y descarga de la cartera. */
 class LoginViewModelTest {
 
     @get:Rule
     val corrutinas = ReglaCorrutinas()
 
     private val e = Entorno(usuario = null)
-    private val vm = LoginViewModel(e.usuarios, e.sesion)
+    private val vm = LoginViewModel(e.usuarios, e.sincronizacion, e.sesion)
 
     @Test
     fun `campos vacios muestran ambos errores y no consultan la base`() {
@@ -104,5 +108,58 @@ class LoginViewModelTest {
         vm.alternarAyuda()
         assertFalse(vm.estado.value.mostrarClave)
         assertFalse(vm.estado.value.mostrarAyuda)
+    }
+
+    // ---------- Servidor ----------
+
+    @Test
+    fun `al entrar se descarga la cartera del servidor antes de abrir el inicio`() {
+        // Arrange
+        e.api.instantanea = SincronizacionDto(
+            generadoEn = 0,
+            usuarios = listOf(Datos.ejecutiva.aDto()),
+            regiones = emptyList(),
+            comunas = emptyList(),
+            organizaciones = emptyList(),
+            contactos = emptyList(),
+            oportunidades = listOf(Datos.oportunidad(id = 77, nombre = "Feria del servidor").aDto()),
+            seguimientos = emptyList(),
+            evidencias = emptyList()
+        )
+        vm.alCambiarUsuario("camila")
+        vm.alCambiarClave(Datos.CLAVE)
+
+        // Act
+        vm.iniciarSesion()
+
+        // Assert
+        assertEquals(listOf("login", "sincronizar"), e.api.llamadas)
+        assertEquals(listOf(77L), e.oportunidadDao.oportunidades.value.map { it.id })
+        assertEquals(Datos.ejecutiva.id, e.sesion.usuarioActual.value?.id)
+    }
+
+    @Test
+    fun `sin conexion se entra igual con la copia local`() {
+        e.api.fallo = IOException("sin red")
+        vm.alCambiarUsuario("camila")
+        vm.alCambiarClave(Datos.CLAVE)
+
+        vm.iniciarSesion()
+
+        assertEquals(Datos.ejecutiva.id, e.sesion.usuarioActual.value?.id)
+        assertFalse(vm.estado.value.cargando)
+    }
+
+    @Test
+    fun `si la descarga falla en el servidor se entra con los datos que ya habia`() {
+        e.oportunidadDao.agregar(Datos.oportunidad(id = 1))
+        e.api.falloSincronizacion = errorHttp(500, "Error interno")
+        vm.alCambiarUsuario("camila")
+        vm.alCambiarClave(Datos.CLAVE)
+
+        vm.iniciarSesion()
+
+        assertEquals(Datos.ejecutiva.id, e.sesion.usuarioActual.value?.id)
+        assertEquals(1, e.oportunidadDao.oportunidades.value.size)
     }
 }

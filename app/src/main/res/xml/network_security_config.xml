@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Desde Android 9 la app bloquea las conexiones HTTP sin cifrar. El servidor
+    local de desarrollo no usa HTTPS, así que se permite HTTP solo hacia estas
+    direcciones; cualquier otra sigue exigiendo HTTPS.
+
+    10.0.2.2 es la dirección con la que el emulador llega al PC (localhost
+    sería el propio emulador). Para probar en un celular físico, agrega aquí
+    la IP del PC en la red wifi y úsala en RetrofitClient.URL_BASE.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>

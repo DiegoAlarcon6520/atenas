@@ -6,6 +6,9 @@ import cl.duoc.atenas.data.local.dao.OportunidadDao
 import cl.duoc.atenas.data.local.dao.OportunidadDetalle
 import cl.duoc.atenas.data.local.dao.OportunidadResumen
 import cl.duoc.atenas.data.local.entity.Oportunidad
+import cl.duoc.atenas.data.remote.AsignacionSolicitud
+import cl.duoc.atenas.data.remote.AtenasApi
+import cl.duoc.atenas.data.remote.OportunidadSolicitud
 import cl.duoc.atenas.domain.model.EstadoOportunidad
 import cl.duoc.atenas.domain.model.PotencialComercial
 import cl.duoc.atenas.domain.model.Prioridad
@@ -19,7 +22,10 @@ import kotlinx.coroutines.flow.Flow
  * hablan con un DAO directamente.
  *
  * Para qué sirve esta capa:
- *  - si mañana los datos vinieran de una API, solo cambia esta clase,
+ *  - decide de dónde viene cada dato: las lecturas salen de Room (la copia
+ *    local, que funciona sin conexión) y las escrituras van primero al
+ *    servidor, que es la fuente de verdad; lo que el servidor confirma se
+ *    guarda después en Room,
  *  - acá se traducen cosas del dominio a cosas de la base (por ejemplo, los
  *    enum de los filtros se convierten a texto con .name),
  *  - acá se calculan parámetros derivados, como el rango de fechas de
@@ -44,7 +50,10 @@ data class CriteriosBusqueda(
     val responsableId: Long? = null
 )
 
-class OportunidadRepository(private val dao: OportunidadDao) {
+class OportunidadRepository(
+    private val dao: OportunidadDao,
+    private val api: AtenasApi
+) {
 
     /** [responsableId] nulo trae todas: es la vista del supervisor. */
     fun observarResumen(responsableId: Long?): Flow<List<OportunidadResumen>> =
@@ -101,13 +110,24 @@ class OportunidadRepository(private val dao: OportunidadDao) {
 
     suspend fun porId(id: Long): Oportunidad? = dao.porId(id)
 
-    suspend fun crear(oportunidad: Oportunidad): Long = dao.insertar(oportunidad)
+    /** Crea en el servidor y guarda en Room la versión confirmada, con el id que asignó. */
+    suspend fun crear(oportunidad: Oportunidad): Long {
+        val creada = llamar { api.crearOportunidad(OportunidadSolicitud.desde(oportunidad)) }
+        dao.insertar(creada.aEntidad())
+        return creada.id
+    }
 
-    suspend fun actualizar(oportunidad: Oportunidad) = dao.actualizar(oportunidad)
+    suspend fun actualizar(oportunidad: Oportunidad) {
+        val actualizada = llamar { api.actualizarOportunidad(oportunidad.id, OportunidadSolicitud.desde(oportunidad)) }
+        dao.actualizar(actualizada.aEntidad())
+    }
 
-    suspend fun cambiarEstado(id: Long, estado: EstadoOportunidad) =
-        dao.actualizarEstado(id, estado, Fechas.ahora())
-
-    suspend fun asignarResponsable(id: Long, responsableId: Long?) =
-        dao.asignarResponsable(id, responsableId, Fechas.ahora())
+    /**
+     * [asignadoPor] es quien hace la asignación: el servidor vuelve a
+     * verificar que sea supervisor antes de aplicarla.
+     */
+    suspend fun asignarResponsable(id: Long, responsableId: Long?, asignadoPor: Long) {
+        val actualizada = llamar { api.asignarResponsable(id, AsignacionSolicitud(responsableId, asignadoPor)) }
+        dao.actualizar(actualizada.aEntidad())
+    }
 }

@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.Upsert
 import cl.duoc.atenas.data.local.entity.Usuario
 import cl.duoc.atenas.domain.model.RolUsuario
 import kotlinx.coroutines.flow.Flow
@@ -41,4 +42,12 @@ interface UsuarioDao {
 
     @Update
     suspend fun actualizar(usuario: Usuario)
+
+    /**
+     * Inserta o actualiza sin borrar la fila. Un REPLACE la borraría primero
+     * y dispararía las llaves foráneas (por ejemplo, dejaría sin responsable
+     * sus oportunidades).
+     */
+    @Upsert
+    suspend fun guardar(usuario: Usuario)
 }

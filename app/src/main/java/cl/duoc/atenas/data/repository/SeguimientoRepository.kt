@@ -6,9 +6,14 @@ import cl.duoc.atenas.data.local.dao.GestionPendiente
 import cl.duoc.atenas.data.local.dao.PropuestaEnviada
 import cl.duoc.atenas.data.local.dao.SeguimientoDao
 import cl.duoc.atenas.data.local.entity.Seguimiento
+import cl.duoc.atenas.data.remote.AtenasApi
+import cl.duoc.atenas.data.remote.SeguimientoSolicitud
 import kotlinx.coroutines.flow.Flow
 
-class SeguimientoRepository(private val dao: SeguimientoDao) {
+class SeguimientoRepository(
+    private val dao: SeguimientoDao,
+    private val api: AtenasApi
+) {
 
     fun observarHistorial(oportunidadId: Long): Flow<List<Seguimiento>> =
         dao.observarHistorial(oportunidadId)
@@ -32,14 +37,21 @@ class SeguimientoRepository(private val dao: SeguimientoDao) {
     suspend fun ultima(oportunidadId: Long): Seguimiento? = dao.ultima(oportunidadId)
 
     /**
-     * Guarda la gestión, el estado de la oportunidad y la fecha de último
-     * contacto en una sola transacción.
+     * Registra la gestión en el servidor, que vuelve a validar la transición
+     * de estado y el perfil. Si la acepta, se replica en Room en una sola
+     * transacción: la gestión, el estado de la oportunidad y la fecha de
+     * último contacto, para que la copia local quede igual que el servidor.
      */
-    suspend fun registrar(seguimiento: Seguimiento, contactoId: Long?): Long =
+    suspend fun registrar(seguimiento: Seguimiento, contactoId: Long?): Long {
+        val registrada = llamar {
+            api.registrarGestion(seguimiento.oportunidadId, SeguimientoSolicitud.desde(seguimiento))
+        }
         dao.registrarGestion(
-            seguimiento = seguimiento,
+            seguimiento = registrada.aEntidad(),
             contactoId = contactoId,
-            actualizaContacto = seguimiento.tipoAccion.implicaContacto,
+            actualizaContacto = registrada.tipoAccion.implicaContacto,
             ahora = Fechas.ahora()
         )
+        return registrada.id
+    }
 }

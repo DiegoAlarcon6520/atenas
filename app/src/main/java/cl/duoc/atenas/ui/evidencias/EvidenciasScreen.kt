@@ -36,6 +36,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -83,6 +84,9 @@ fun EvidenciasScreen(
     val estado by viewModel.estado.collectAsStateWithLifecycle()
     val contexto = LocalContext.current
 
+    // El ViewModel avisa si el servidor guardó o rechazó cada foto.
+    LaunchedEffect(Unit) { viewModel.mensajes.collect { mostrarMensaje(it) } }
+
     // Archivo donde la cámara está escribiendo en este momento. Se guarda
     // para poder registrarlo si la foto sale bien, o borrarlo si se cancela.
     var archivoPendiente by remember { mutableStateOf<File?>(null) }
@@ -99,7 +103,6 @@ fun EvidenciasScreen(
                     uri = ArchivosImagen.uriPara(contexto, archivo).toString(),
                     descripcion = null
                 )
-                mostrarMensaje("Evidencia guardada")
             }
             // Cancelación: la cámara dejó un archivo vacío que hay que limpiar.
             else -> archivo?.delete()
@@ -145,9 +148,9 @@ fun EvidenciasScreen(
         } else {
             viewModel.agregarEvidencia(
                 uri = ArchivosImagen.uriPara(contexto, copia).toString(),
-                descripcion = null
+                descripcion = null,
+                mensajeExito = "Evidencia agregada desde la galería"
             )
-            mostrarMensaje("Evidencia agregada desde la galería")
         }
     }
 
@@ -257,7 +260,6 @@ fun EvidenciasScreen(
                     onClick = {
                         viewModel.eliminarEvidencia(evidencia)
                         evidenciaAEliminar = null
-                        mostrarMensaje("Evidencia eliminada")
                     }
                 ) { Text("Eliminar") }
             },

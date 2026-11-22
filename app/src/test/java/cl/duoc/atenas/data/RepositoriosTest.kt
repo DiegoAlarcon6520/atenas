@@ -4,7 +4,6 @@ import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.core.Seguridad
 import cl.duoc.atenas.data.local.entity.Evidencia
 import cl.duoc.atenas.data.repository.CriteriosBusqueda
-import cl.duoc.atenas.data.repository.EvidenciaRepository
 import cl.duoc.atenas.domain.model.EstadoOportunidad
 import cl.duoc.atenas.domain.model.PotencialComercial
 import cl.duoc.atenas.domain.model.Prioridad
@@ -14,7 +13,6 @@ import cl.duoc.atenas.domain.model.TipoOportunidad
 import cl.duoc.atenas.domain.model.TipoOrganizacion
 import cl.duoc.atenas.prueba.Datos
 import cl.duoc.atenas.prueba.Entorno
-import cl.duoc.atenas.prueba.EvidenciaDaoFalso
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -108,18 +106,16 @@ class RepositoriosTest {
     }
 
     @Test
-    fun `cambiar estado y asignar responsable escriben en la base`() = runBlocking {
+    fun `asignar responsable informa al servidor quien asigna y guarda la respuesta`() = runBlocking {
         // Arrange
         e.oportunidadDao.agregar(Datos.oportunidad(id = 1))
 
         // Act
-        e.oportunidades.cambiarEstado(1, EstadoOportunidad.CONTACTO_PENDIENTE)
-        e.oportunidades.asignarResponsable(1, 2L)
+        e.oportunidades.asignarResponsable(1, 2L, asignadoPor = Datos.supervisor.id)
 
         // Assert
-        val guardada = e.oportunidades.porId(1)!!
-        assertEquals(EstadoOportunidad.CONTACTO_PENDIENTE, guardada.estado)
-        assertEquals(2L, guardada.responsableId)
+        assertEquals(Datos.supervisor.id, e.api.ultimaAsignacion?.usuarioId)
+        assertEquals(2L, e.oportunidades.porId(1)!!.responsableId)
     }
 
     @Test
@@ -158,6 +154,8 @@ class RepositoriosTest {
 
     @Test
     fun `una investigacion interna no cuenta como contacto con la organizacion`() = runBlocking {
+        e.oportunidadDao.agregar(Datos.oportunidad())
+
         e.seguimientos.registrar(Datos.seguimiento(tipoAccion = TipoAccion.INVESTIGACION_INICIAL), contactoId = 500)
 
         assertTrue(e.seguimientoDao.ultimosContactos.isEmpty())
@@ -165,6 +163,8 @@ class RepositoriosTest {
 
     @Test
     fun `sin contacto asignado no se actualiza ningun ultimo contacto`() = runBlocking {
+        e.oportunidadDao.agregar(Datos.oportunidad())
+
         e.seguimientos.registrar(Datos.seguimiento(tipoAccion = TipoAccion.LLAMADA), contactoId = null)
 
         assertTrue(e.seguimientoDao.ultimosContactos.isEmpty())
@@ -273,17 +273,18 @@ class RepositoriosTest {
     @Test
     fun `las evidencias se agregan y eliminan por oportunidad`() = runBlocking {
         // Arrange
-        val repo = EvidenciaRepository(EvidenciaDaoFalso())
-        val foto = Evidencia(id = 1, oportunidadId = 1000, uri = "file://foto.jpg", descripcion = null, fechaCaptura = 0)
+        val repo = e.evidencias
+        val foto = Evidencia(oportunidadId = 1000, uri = "file://foto.jpg", descripcion = null, fechaCaptura = 0)
 
         // Act
-        repo.agregar(foto)
+        val id = repo.agregar(foto)
         val conFoto = repo.observarPorOportunidad(1000).first()
-        repo.eliminar(foto)
+        repo.eliminar(conFoto.single())
 
-        // Assert
-        assertEquals(1, conFoto.size)
+        // Assert: queda guardada con el id que asignó el servidor
+        assertEquals(id, conFoto.single().id)
         assertTrue(repo.observarPorOportunidad(1000).first().isEmpty())
+        assertEquals(listOf("crearEvidencia", "eliminarEvidencia"), e.api.llamadas)
     }
 
     // ---------- Sesión ----------
