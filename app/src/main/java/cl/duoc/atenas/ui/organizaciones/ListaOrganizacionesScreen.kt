@@ -59,9 +59,9 @@ fun ListaOrganizacionesScreen(
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(
-            start = Espaciado.md,
-            end = Espaciado.md,
-            top = Espaciado.sm,
+            start = Espaciado.pantalla,
+            end = Espaciado.pantalla,
+            top = Espaciado.xs,
             bottom = Espaciado.xl * 3
         ),
         verticalArrangement = Arrangement.spacedBy(Espaciado.sm)

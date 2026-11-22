@@ -109,6 +109,7 @@ el ViewModel, y toda la regla de negocio en `domain/`.
 | Agenda | `ui/agenda/` |
 | Siguiente paso, etapas, conversión | `domain/rules/GuiaGestion.kt` |
 | Etapas de la cartera | `EtapaCartera` en `domain/model/Enums.kt` |
+| Encabezado común con perfil y campana | `NavegacionRaiz.kt` (`encabezadoDe`), `ui/alertas/AlertasViewModel.kt`, `HojaAlertas` en `ui/components/Alertas.kt` |
 | Barra inferior con "+" | `ui/navigation/BarraInferior.kt` |
 | Asistente de nueva oportunidad | `FormularioOportunidadViewModel` (`paso`, `pasoSiguiente`) |
 | Identidad visual (paleta, degradados, fuente) | `ui/theme/Color.kt`, `Degradados.kt`, `Type.kt`, `res/font/` |

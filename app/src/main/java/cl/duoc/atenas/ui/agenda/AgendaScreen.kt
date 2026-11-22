@@ -40,9 +40,6 @@ import cl.duoc.atenas.ui.components.EtiquetaEstado
 import cl.duoc.atenas.ui.components.IndicadorCarga
 import cl.duoc.atenas.ui.theme.DegradadoBoton
 import cl.duoc.atenas.ui.theme.Espaciado
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 /**
  * AGENDA DE EVENTOS
@@ -70,24 +67,11 @@ fun AgendaScreen(
         contentPadding = PaddingValues(
             start = Espaciado.pantalla,
             end = Espaciado.pantalla,
-            top = Espaciado.md,
+            top = Espaciado.xs,
             bottom = Espaciado.xl
         ),
         verticalArrangement = Arrangement.spacedBy(Espaciado.entreTarjetas)
     ) {
-        item {
-            Column {
-                Text(
-                    text = SimpleDateFormat("MMMM yyyy", Locale.forLanguageTag("es-CL"))
-                        .format(Date())
-                        .replaceFirstChar { it.uppercase() },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text("Agenda", style = MaterialTheme.typography.headlineMedium)
-            }
-        }
-
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 estado.semana.forEach { dia ->

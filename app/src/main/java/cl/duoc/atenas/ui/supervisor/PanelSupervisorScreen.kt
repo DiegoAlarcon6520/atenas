@@ -14,9 +14,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.HowToVote
-import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -25,8 +22,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,12 +32,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.atenas.data.local.dao.OportunidadResumen
 import cl.duoc.atenas.domain.model.EstadoOportunidad
-import cl.duoc.atenas.ui.components.Alerta
 import cl.duoc.atenas.ui.components.Avatar
-import cl.duoc.atenas.ui.components.EncabezadoSaludo
 import cl.duoc.atenas.ui.components.EstadoVacio
-import cl.duoc.atenas.ui.components.GrupoAlertas
-import cl.duoc.atenas.ui.components.HojaAlertas
 import cl.duoc.atenas.ui.components.IndicadorCarga
 import cl.duoc.atenas.ui.components.TarjetaGestionAtrasada
 import cl.duoc.atenas.ui.components.TarjetaMetrica
@@ -63,14 +54,12 @@ import cl.duoc.atenas.ui.theme.colorDeEstado
 @Composable
 fun PanelSupervisorScreen(
     alAbrirOportunidad: (Long) -> Unit,
-    alAbrirPerfil: () -> Unit,
     alVerPropuestas: () -> Unit,
     mostrarMensaje: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: PanelSupervisorViewModel = viewModel(factory = PanelSupervisorViewModel.Factory)
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
-    var mostrarAlertas by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { viewModel.mensajes.collect { mostrarMensaje(it) } }
 
@@ -79,56 +68,16 @@ fun PanelSupervisorScreen(
         return
     }
 
-    // La campana abre el panel de alertas del equipo.
-    if (mostrarAlertas) {
-        val esquema = MaterialTheme.colorScheme
-        HojaAlertas(
-            grupos = listOf(
-                GrupoAlertas(
-                    "Esperan tu decisión",
-                    estado.decisiones.map {
-                        Alerta("d-${it.id}", it.id, it.nombre, "${it.responsableNombre ?: "Sin responsable"} · ${it.organizacionNombre}", Icons.Default.HowToVote, esquema.secondary)
-                    }
-                ),
-                GrupoAlertas(
-                    "Sin responsable",
-                    estado.sinAsignar.map {
-                        Alerta("s-${it.id}", it.id, it.nombre, it.organizacionNombre, Icons.Default.PersonAdd, esquema.primary)
-                    }
-                ),
-                GrupoAlertas(
-                    "Gestiones atrasadas",
-                    estado.atrasadas.map {
-                        Alerta("a-${it.id}", it.oportunidadId, it.oportunidadNombre, "${it.responsableNombre ?: "Sin responsable"} · ${it.proximaAccion ?: "Retomar la gestión"}", Icons.Default.Schedule, esquema.error)
-                    }
-                )
-            ),
-            alCerrar = { mostrarAlertas = false },
-            alAbrirOportunidad = alAbrirOportunidad
-        )
-    }
-
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(
             start = Espaciado.pantalla,
             end = Espaciado.pantalla,
-            top = Espaciado.md,
+            top = Espaciado.xs,
             bottom = Espaciado.xl
         ),
         verticalArrangement = Arrangement.spacedBy(Espaciado.entreTarjetas)
     ) {
-        item {
-            EncabezadoSaludo(
-                saludo = "Supervisor comercial",
-                nombre = "Panel del equipo",
-                nombreAvatar = estado.nombreUsuario,
-                alertas = estado.totalAlertas,
-                alTocarAvatar = alAbrirPerfil,
-                alTocarAlertas = { mostrarAlertas = true }
-            )
-        }
-
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(Espaciado.entreTarjetas)) {
                 TarjetaMetrica("En gestión", estado.enGestion.toString(), Modifier.weight(1f), destacada = true)

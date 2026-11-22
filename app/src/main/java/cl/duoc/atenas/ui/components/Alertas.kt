@@ -15,8 +15,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.HowToVote
 import androidx.compose.material.icons.filled.NotificationsNone
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.PersonSearch
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Today
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -34,6 +39,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.data.local.dao.GestionPendiente
+import cl.duoc.atenas.ui.alertas.AlertaPendiente
+import cl.duoc.atenas.ui.alertas.MotivoAlerta
 import cl.duoc.atenas.ui.theme.Espaciado
 
 /*
@@ -220,3 +227,30 @@ private fun FilaAlerta(alerta: Alerta, onClick: () -> Unit) {
         )
     }
 }
+
+/** Ícono y color de cada motivo de alerta. */
+@Composable
+fun estiloDeMotivo(motivo: MotivoAlerta): Pair<ImageVector, Color> {
+    val esquema = MaterialTheme.colorScheme
+    return when (motivo) {
+        MotivoAlerta.DECISION -> Icons.Default.HowToVote to esquema.secondary
+        MotivoAlerta.SIN_RESPONSABLE -> Icons.Default.PersonAdd to esquema.primary
+        MotivoAlerta.ATRASADA -> Icons.Default.Schedule to esquema.error
+        MotivoAlerta.HOY -> Icons.Default.Today to esquema.tertiary
+        MotivoAlerta.PROPUESTA -> Icons.AutoMirrored.Filled.Send to esquema.secondary
+        MotivoAlerta.SIN_CONTACTO -> Icons.Default.PersonSearch to esquema.primary
+    }
+}
+
+/** Arma los grupos del panel a partir de los pendientes, en el orden de los motivos. */
+@Composable
+fun gruposDeAlertas(pendientes: List<AlertaPendiente>): List<GrupoAlertas> =
+    MotivoAlerta.entries.map { motivo ->
+        val (icono, color) = estiloDeMotivo(motivo)
+        GrupoAlertas(
+            titulo = motivo.titulo,
+            alertas = pendientes.filter { it.motivo == motivo }.map {
+                Alerta(it.clave, it.oportunidadId, it.titulo, it.detalle, icono, color)
+            }
+        )
+    }

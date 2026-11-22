@@ -2,9 +2,11 @@ package cl.duoc.atenas.ui.navigation
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
@@ -22,12 +24,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -37,8 +43,13 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import cl.duoc.atenas.AtenasApp
 import cl.duoc.atenas.data.local.entity.Usuario
+import cl.duoc.atenas.domain.model.RolUsuario
 import cl.duoc.atenas.domain.rules.Permisos
 import cl.duoc.atenas.ui.agenda.AgendaScreen
+import cl.duoc.atenas.ui.alertas.AlertasViewModel
+import cl.duoc.atenas.ui.components.EncabezadoSaludo
+import cl.duoc.atenas.ui.components.HojaAlertas
+import cl.duoc.atenas.ui.components.gruposDeAlertas
 import cl.duoc.atenas.ui.dashboard.DashboardEjecutivoScreen
 import cl.duoc.atenas.ui.evidencias.EvidenciasScreen
 import cl.duoc.atenas.ui.login.LoginScreen
@@ -53,6 +64,10 @@ import cl.duoc.atenas.ui.perfil.PerfilScreen
 import cl.duoc.atenas.ui.propuestas.PropuestasScreen
 import cl.duoc.atenas.ui.seguimiento.RegistrarSeguimientoScreen
 import cl.duoc.atenas.ui.supervisor.PanelSupervisorScreen
+import cl.duoc.atenas.ui.theme.Espaciado
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlinx.coroutines.launch
 
 /**
@@ -142,14 +157,50 @@ private fun ContenedorPrincipal(usuario: Usuario) {
         }
     }
 
+    // Alertas de la campana. La clave por usuario evita que, al cerrar sesión
+    // y entrar con otra cuenta, se reutilice el ViewModel de la anterior.
+    val alertasViewModel: AlertasViewModel = viewModel(
+        key = "alertas-${usuario.id}",
+        factory = AlertasViewModel.Factory
+    )
+    val alertas by alertasViewModel.alertas.collectAsStateWithLifecycle()
+    var mostrarAlertas by rememberSaveable { mutableStateOf(false) }
+
+    // El panel siempre muestra algo (los pendientes o "Estás al día"), así el
+    // toque en la campana nunca parece no haber hecho nada.
+    if (mostrarAlertas) {
+        HojaAlertas(
+            grupos = gruposDeAlertas(alertas),
+            alCerrar = { mostrarAlertas = false },
+            alAbrirOportunidad = { id -> navController.navigate(Rutas.detalleOportunidad(id)) }
+        )
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(estadoSnackbar) },
         topBar = {
-            // Inicio, Agenda y Cartera dibujan su propio encabezado. El resto
-            // muestra un título centrado y, si corresponde, la flecha para volver.
-            if (rutaActual !in rutasSinBarraSuperior) {
+            // Las cuatro pestañas comparten un encabezado con el avatar (abre
+            // el perfil), el título de la sección y la campana de alertas: así
+            // el perfil y las alertas están a mano en toda la aplicación.
+            // Las pantallas internas muestran un título centrado y la flecha
+            // para volver.
+            if (esRutaPrincipal) {
+                val (subtitulo, titulo) = encabezadoDe(rutaActual, usuario)
+                EncabezadoSaludo(
+                    saludo = subtitulo,
+                    nombre = titulo,
+                    nombreAvatar = usuario.nombreCompleto,
+                    alertas = alertas.size,
+                    alTocarAvatar = { navController.navigate(Rutas.PERFIL) },
+                    alTocarAlertas = { mostrarAlertas = true },
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.background)
+                        .statusBarsPadding()
+                        .padding(horizontal = Espaciado.pantalla, vertical = 12.dp)
+                )
+            } else {
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
@@ -220,12 +271,10 @@ private fun ContenedorPrincipal(usuario: Usuario) {
                 val alRegistrarGestion: (Long) -> Unit = { id ->
                     navController.navigate(Rutas.registrarSeguimiento(id))
                 }
-                val alAbrirPerfil = { navController.navigate(Rutas.PERFIL) }
                 val alVerPropuestas = { navController.navigate(Rutas.PROPUESTAS) }
                 if (Permisos.puedeVerPanelDeEquipo(usuario.rol)) {
                     PanelSupervisorScreen(
                         alAbrirOportunidad = alAbrirOportunidad,
-                        alAbrirPerfil = alAbrirPerfil,
                         alVerPropuestas = alVerPropuestas,
                         mostrarMensaje = mostrarMensaje
                     )
@@ -233,7 +282,6 @@ private fun ContenedorPrincipal(usuario: Usuario) {
                     DashboardEjecutivoScreen(
                         alAbrirOportunidad = alAbrirOportunidad,
                         alRegistrarGestion = alRegistrarGestion,
-                        alAbrirPerfil = alAbrirPerfil,
                         alVerCartera = { irAPestana(Rutas.OPORTUNIDADES) }
                     )
                 }
@@ -383,5 +431,21 @@ private fun ContenedorPrincipal(usuario: Usuario) {
                 PerfilScreen(usuario = usuario)
             }
         }
+    }
+}
+
+/** Subtítulo y título del encabezado común de cada pestaña. */
+private fun encabezadoDe(ruta: String, usuario: Usuario): Pair<String, String> {
+    val locale = Locale.forLanguageTag("es-CL")
+    val supervisor = usuario.rol == RolUsuario.SUPERVISOR
+    return when (ruta) {
+        Rutas.AGENDA -> SimpleDateFormat("MMMM yyyy", locale).format(Date())
+            .replaceFirstChar { it.uppercase() } to "Agenda"
+        Rutas.OPORTUNIDADES -> (if (supervisor) "Todo el equipo" else "Asignadas a ti") to
+            (if (supervisor) "Cartera comercial" else "Mi cartera")
+        Rutas.ORGANIZACIONES -> "Organizaciones y contactos" to "Empresas"
+        else -> SimpleDateFormat("EEEE d 'de' MMMM", locale).format(Date())
+            .replaceFirstChar { it.uppercase() } to
+            (if (supervisor) "Panel del equipo" else "Hola, ${usuario.nombreCompleto.substringBefore(" ")}")
     }
 }

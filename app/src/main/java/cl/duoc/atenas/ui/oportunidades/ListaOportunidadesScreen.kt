@@ -100,29 +100,11 @@ fun ListaOportunidadesScreen(
         contentPadding = PaddingValues(
             start = Espaciado.pantalla,
             end = Espaciado.pantalla,
-            top = Espaciado.md,
+            top = Espaciado.xs,
             bottom = Espaciado.xl
         ),
         verticalArrangement = Arrangement.spacedBy(Espaciado.entreTarjetas)
     ) {
-        item {
-            Column {
-                Text(
-                    text = if (estado.esSupervisor) {
-                        "${estado.totalSinEtapa} oportunidades del equipo"
-                    } else {
-                        "${estado.totalSinEtapa} oportunidades asignadas"
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = if (estado.esSupervisor) "Cartera comercial" else "Mi cartera",
-                    style = MaterialTheme.typography.headlineMedium
-                )
-            }
-        }
-
         // ---------- Buscador y botón de filtros ----------
         item {
             Row(

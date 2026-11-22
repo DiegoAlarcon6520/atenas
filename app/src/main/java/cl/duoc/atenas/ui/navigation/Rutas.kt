@@ -90,9 +90,6 @@ val rutasDeFlujo = setOf(
     Rutas.FORMULARIO_CONTACTO
 )
 
-/** Pantallas que dibujan su propio encabezado y no llevan barra superior. */
-val rutasSinBarraSuperior = setOf(Rutas.INICIO, Rutas.AGENDA, Rutas.OPORTUNIDADES)
-
 /** Título de la barra superior según la ruta activa. */
 fun tituloDeRuta(ruta: String?, rol: RolUsuario): String = when (ruta) {
     Rutas.OPORTUNIDADES -> if (rol == RolUsuario.SUPERVISOR) "Cartera comercial" else "Mi cartera"
