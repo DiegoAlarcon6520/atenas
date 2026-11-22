@@ -30,6 +30,12 @@ class OrganizacionRepository(
         return creada.id
     }
 
+    /** El servidor la rechaza (409) si tiene oportunidades; si no, borra también sus contactos. */
+    suspend fun eliminar(id: Long) {
+        llamar { api.eliminarOrganizacion(id) }
+        dao.eliminar(id)
+    }
+
     suspend fun actualizar(organizacion: Organizacion) {
         val actualizada = llamar { api.actualizarOrganizacion(organizacion.id, OrganizacionSolicitud.desde(organizacion)) }
         dao.actualizar(actualizada.aEntidad())

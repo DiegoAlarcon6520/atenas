@@ -123,6 +123,15 @@ class OportunidadRepository(
     }
 
     /**
+     * Elimina en el servidor y después en Room. El servidor la rechaza (409)
+     * si ya tiene gestiones: su historial no se puede borrar.
+     */
+    suspend fun eliminar(id: Long) {
+        llamar { api.eliminarOportunidad(id) }
+        dao.eliminar(id)
+    }
+
+    /**
      * [asignadoPor] es quien hace la asignación: el servidor vuelve a
      * verificar que sea supervisor antes de aplicarla.
      */

@@ -5,6 +5,7 @@ import cl.duoc.atenas.data.local.entity.Usuario
 import cl.duoc.atenas.data.repository.CatalogoRepository
 import cl.duoc.atenas.data.repository.ContactoRepository
 import cl.duoc.atenas.data.repository.EvidenciaRepository
+import cl.duoc.atenas.data.repository.FeriadosRepository
 import cl.duoc.atenas.data.repository.OportunidadRepository
 import cl.duoc.atenas.data.repository.OrganizacionRepository
 import cl.duoc.atenas.data.repository.SeguimientoRepository
@@ -43,4 +44,8 @@ class Entorno(usuario: Usuario? = Datos.ejecutiva) {
     val contactos = ContactoRepository(contactoDao, api)
     val evidencias = EvidenciaRepository(evidenciaDao, api)
     val sincronizacion = SincronizacionRepository(api, sincronizacionDao, usuarioDao)
+
+    /** API externa de feriados (falsa): por defecto no hay feriados. */
+    val feriadosApi = FeriadosApiFalsa()
+    val feriados = FeriadosRepository(feriadosApi)
 }

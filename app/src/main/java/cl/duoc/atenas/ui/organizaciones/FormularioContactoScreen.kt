@@ -43,6 +43,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.atenas.di.FabricasViewModel
 import cl.duoc.atenas.domain.model.AreaContacto
 import cl.duoc.atenas.domain.model.MedioContacto
+import cl.duoc.atenas.ui.components.BotonEliminar
 import cl.duoc.atenas.ui.components.CampoTexto
 import cl.duoc.atenas.ui.components.IndicadorCarga
 import cl.duoc.atenas.ui.components.ListaDesplegable
@@ -61,6 +62,13 @@ fun FormularioContactoScreen(
     LaunchedEffect(estado.guardadoConExito) {
         if (estado.guardadoConExito) {
             mostrarMensaje(if (estado.esEdicion) "Contacto actualizado" else "Contacto creado")
+            alTerminar()
+        }
+    }
+
+    LaunchedEffect(estado.eliminadoConExito) {
+        if (estado.eliminadoConExito) {
+            mostrarMensaje("Contacto eliminado")
             alTerminar()
         }
     }
@@ -212,6 +220,17 @@ fun FormularioContactoScreen(
                     Text(if (estado.esEdicion) "Guardar cambios" else "Crear contacto")
                 }
             }
+        }
+
+        if (estado.esEdicion) {
+            BotonEliminar(
+                texto = "Eliminar contacto",
+                tituloConfirmacion = "¿Eliminar este contacto?",
+                mensajeConfirmacion = "Si está asignado a alguna oportunidad no se podrá eliminar; " +
+                    "en ese caso desactiva \"Contacto activo\" para dejar de usarlo.",
+                alConfirmar = viewModel::eliminar,
+                habilitado = !estado.guardando && !estado.eliminando
+            )
         }
     }
 }

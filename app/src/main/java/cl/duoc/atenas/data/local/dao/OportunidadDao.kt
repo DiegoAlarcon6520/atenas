@@ -320,4 +320,8 @@ interface OportunidadDao {
 
     @Update
     suspend fun actualizar(oportunidad: Oportunidad)
+
+    /** Room borra en cascada sus gestiones y evidencias (llaves foráneas CASCADE). */
+    @Query("DELETE FROM oportunidad WHERE id = :id")
+    suspend fun eliminar(id: Long)
 }

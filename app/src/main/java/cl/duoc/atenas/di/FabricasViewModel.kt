@@ -36,7 +36,8 @@ object FabricasViewModel {
         initializer {
             AgendaViewModel(
                 sesion = contenedor.sesion,
-                oportunidades = contenedor.oportunidades
+                oportunidades = contenedor.oportunidades,
+                feriados = contenedor.feriados
             )
         }
     }

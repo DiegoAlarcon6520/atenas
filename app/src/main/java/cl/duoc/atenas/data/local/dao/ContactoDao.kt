@@ -30,4 +30,8 @@ interface ContactoDao {
 
     @Update
     suspend fun actualizar(contacto: Contacto)
+
+    /** Las oportunidades que lo tenían asignado quedan sin contacto (SET_NULL). */
+    @Query("DELETE FROM contacto WHERE id = :id")
+    suspend fun eliminar(id: Long)
 }

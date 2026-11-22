@@ -323,7 +323,8 @@ private fun ContenedorPrincipal(usuario: Usuario) {
                         navController.navigate(Rutas.registrarSeguimiento(id))
                     },
                     alVerEvidencias = { id -> navController.navigate(Rutas.evidencias(id)) },
-                    mostrarMensaje = mostrarMensaje
+                    mostrarMensaje = mostrarMensaje,
+                    alEliminada = { navController.popBackStack() }
                 )
             }
 
@@ -396,7 +397,9 @@ private fun ContenedorPrincipal(usuario: Usuario) {
                     },
                     alAbrirOportunidad = { id ->
                         navController.navigate(Rutas.detalleOportunidad(id))
-                    }
+                    },
+                    mostrarMensaje = mostrarMensaje,
+                    alEliminada = { navController.popBackStack() }
                 )
             }
 

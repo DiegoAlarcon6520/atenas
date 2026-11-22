@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Celebration
 import androidx.compose.material.icons.filled.EventAvailable
 import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.Card
@@ -33,6 +34,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.di.FabricasViewModel
 import cl.duoc.atenas.ui.components.BloqueFecha
 import cl.duoc.atenas.ui.components.EstadoVacio
@@ -49,6 +51,10 @@ import cl.duoc.atenas.ui.theme.Espaciado
  * un aviso cuando hay eventos cercanos sin confirmar y la lista de eventos
  * agrupada por cercanía. Cada evento muestra cuántos días faltan, con color
  * según el margen que queda para prepararlo.
+ *
+ * Los feriados vienen de una API externa (Nager.Date): los días feriados se
+ * marcan en rojo, se avisa el próximo y cada evento que cae en uno lo indica,
+ * porque cambia la afluencia esperada y la disponibilidad del equipo.
  */
 @Composable
 fun AgendaScreen(
@@ -88,6 +94,10 @@ fun AgendaScreen(
 
         if (estado.sinConfirmarPronto > 0) {
             item { AvisoAnticipacion(estado.sinConfirmarPronto) }
+        }
+
+        estado.proximoFeriado?.let { feriado ->
+            item { AvisoFeriado(feriado) }
         }
 
         if (estado.grupos.isEmpty()) {
@@ -133,7 +143,11 @@ private fun BotonDia(dia: DiaSemana, elegido: Boolean, onClick: () -> Unit, modi
             .clip(MaterialTheme.shapes.medium)
             .then(fondo)
             .clickable(onClick = onClick)
-            .semantics { contentDescription = "Día ${dia.numero}" + if (dia.tieneEventos) ", con eventos" else "" },
+            .semantics {
+                contentDescription = "Día ${dia.numero}" +
+                    (if (dia.tieneEventos) ", con eventos" else "") +
+                    (dia.feriado?.let { ", feriado: $it" } ?: "")
+            },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -145,7 +159,13 @@ private fun BotonDia(dia: DiaSemana, elegido: Boolean, onClick: () -> Unit, modi
         Text(
             text = dia.numero.toString(),
             style = MaterialTheme.typography.titleMedium,
-            color = if (elegido) Color.White else if (resaltado) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+            // Como en un calendario impreso, los feriados van en rojo.
+            color = when {
+                elegido -> Color.White
+                dia.feriado != null -> MaterialTheme.colorScheme.error
+                resaltado -> MaterialTheme.colorScheme.primary
+                else -> MaterialTheme.colorScheme.onSurface
+            }
         )
         Box(
             modifier = Modifier
@@ -182,6 +202,32 @@ private fun AvisoAnticipacion(cantidad: Int) {
             } else {
                 "$cantidad eventos en menos de $DIAS_AVISO días todavía sin participación confirmada."
             },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+private fun AvisoFeriado(feriado: ProximoFeriado) {
+    val color = MaterialTheme.colorScheme.error
+    val cuando = when (feriado.diasRestantes) {
+        0 -> "hoy"
+        1 -> "mañana"
+        else -> "en ${feriado.diasRestantes} días (${Fechas.aTexto(feriado.fecha)})"
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.medium)
+            .background(color.copy(alpha = 0.08f))
+            .padding(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(Icons.Default.Celebration, contentDescription = null, tint = color)
+        Text(
+            text = "Próximo feriado: ${feriado.nombre}, $cuando.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -226,6 +272,15 @@ private fun TarjetaEvento(evento: EventoAgenda, onClick: () -> Unit) {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Etiqueta(textoMargen, colorMargen)
                     EtiquetaEstado(oportunidad.estado)
+                }
+                evento.feriado?.let { feriado ->
+                    Text(
+                        text = "Cae en feriado ($feriado): revisa permisos del recinto y personal",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         }

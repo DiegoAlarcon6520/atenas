@@ -75,6 +75,7 @@ import cl.duoc.atenas.domain.rules.SugerenciaPrioridad
 import cl.duoc.atenas.domain.rules.TransicionesEstado
 import cl.duoc.atenas.ui.components.Avatar
 import cl.duoc.atenas.ui.components.BotonContorno
+import cl.duoc.atenas.ui.components.BotonEliminar
 import cl.duoc.atenas.ui.components.EstadoVacio
 import cl.duoc.atenas.ui.components.EtiquetaEstado
 import cl.duoc.atenas.ui.components.EtiquetaSobreDegradado
@@ -108,6 +109,7 @@ fun DetalleOportunidadScreen(
     alRegistrarGestion: (Long) -> Unit,
     alVerEvidencias: (Long) -> Unit,
     mostrarMensaje: (String) -> Unit,
+    alEliminada: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: DetalleOportunidadViewModel = viewModel(factory = FabricasViewModel.detalleOportunidad)
 ) {
@@ -117,6 +119,8 @@ fun DetalleOportunidadScreen(
 
     // Resultado de la asignación de responsable (éxito o error del servidor).
     LaunchedEffect(Unit) { viewModel.mensajes.collect { mostrarMensaje(it) } }
+    // Tras eliminarla no queda nada que mostrar: se vuelve a la pantalla anterior.
+    LaunchedEffect(Unit) { viewModel.eliminada.collect { alEliminada() } }
 
     if (estado.cargando) {
         IndicadorCarga(modifier)
@@ -256,6 +260,17 @@ fun DetalleOportunidadScreen(
                             "Última actualización" to Fechas.aTextoConHora(oportunidad.fechaActualizacion)
                         )
                     )
+                }
+                if (estado.puedeEliminar) {
+                    item {
+                        BotonEliminar(
+                            texto = "Eliminar oportunidad",
+                            tituloConfirmacion = "¿Eliminar esta oportunidad?",
+                            mensajeConfirmacion = "Se borrará \"${oportunidad.nombre}\" junto con sus evidencias. " +
+                                "Úsalo solo para algo registrado por error; si ya se gestionó, cámbiala a Descartada.",
+                            alConfirmar = viewModel::eliminar
+                        )
+                    }
                 }
             }
 

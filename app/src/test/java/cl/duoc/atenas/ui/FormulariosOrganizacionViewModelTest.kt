@@ -5,6 +5,7 @@ import cl.duoc.atenas.domain.model.MedioContacto
 import cl.duoc.atenas.domain.model.TipoOrganizacion
 import cl.duoc.atenas.prueba.Datos
 import cl.duoc.atenas.prueba.Entorno
+import cl.duoc.atenas.prueba.errorHttp
 import cl.duoc.atenas.prueba.ReglaCorrutinas
 import cl.duoc.atenas.ui.organizaciones.FormularioContactoViewModel
 import cl.duoc.atenas.ui.organizaciones.FormularioOrganizacionViewModel
@@ -294,5 +295,41 @@ class FormulariosOrganizacionViewModelTest {
         vm.guardar()
         assertEquals("No se pudo guardar: error desconocido", vm.estado.value.errorGeneral)
         assertFalse(vm.estado.value.guardando)
+    }
+
+    // ---------- Eliminar contacto ----------
+
+    @Test
+    fun `un contacto existente se elimina en el servidor y en la copia local`() {
+        val vm = contacto(id = 500)
+
+        vm.eliminar()
+
+        assertTrue(vm.estado.value.eliminadoConExito)
+        assertTrue(e.api.llamadas.contains("eliminarContacto"))
+        assertTrue(e.contactoDao.contactos.value.isEmpty())
+    }
+
+    @Test
+    fun `un contacto asignado a oportunidades no se elimina y se explica el motivo`() {
+        val vm = contacto(id = 500)
+        e.api.fallo = errorHttp(409, "El contacto está asignado a oportunidades")
+
+        vm.eliminar()
+
+        assertFalse(vm.estado.value.eliminadoConExito)
+        assertFalse(vm.estado.value.eliminando)
+        assertEquals("No se pudo eliminar: El contacto está asignado a oportunidades", vm.estado.value.errorGeneral)
+        assertEquals(1, e.contactoDao.contactos.value.size)
+    }
+
+    @Test
+    fun `un contacto nuevo todavia no se puede eliminar`() {
+        val vm = contacto()
+
+        vm.eliminar()
+
+        assertFalse(vm.estado.value.eliminadoConExito)
+        assertTrue(e.api.llamadas.isEmpty())
     }
 }

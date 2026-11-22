@@ -10,6 +10,8 @@ import cl.duoc.atenas.data.remote.ContactoDto
 import cl.duoc.atenas.data.remote.ContactoSolicitud
 import cl.duoc.atenas.data.remote.EvidenciaDto
 import cl.duoc.atenas.data.remote.EvidenciaSolicitud
+import cl.duoc.atenas.data.remote.FeriadoDto
+import cl.duoc.atenas.data.remote.FeriadosApi
 import cl.duoc.atenas.data.remote.LoginSolicitud
 import cl.duoc.atenas.data.remote.OportunidadDto
 import cl.duoc.atenas.data.remote.OportunidadSolicitud
@@ -134,6 +136,39 @@ class ApiFalsa(
 
     override suspend fun eliminarEvidencia(id: Long) {
         recibir("eliminarEvidencia")
+    }
+
+    // Las reglas de rechazo (409) del backend se simulan con fallo = errorHttp(409, ...).
+    override suspend fun eliminarOportunidad(id: Long) {
+        recibir("eliminarOportunidad")
+    }
+
+    override suspend fun eliminarOrganizacion(id: Long) {
+        recibir("eliminarOrganizacion")
+    }
+
+    override suspend fun eliminarContacto(id: Long) {
+        recibir("eliminarContacto")
+    }
+}
+
+/**
+ * API DE FERIADOS FALSA
+ *
+ * Reemplaza a date.nager.at. Responde la lista configurada para cualquier año
+ * (cambiando el año de cada fecha) y cuenta cuántas veces la llamaron, para
+ * probar la memoria del repositorio.
+ */
+class FeriadosApiFalsa(
+    var respuesta: List<FeriadoDto> = emptyList(),
+    var fallo: Exception? = null
+) : FeriadosApi {
+    val aniosPedidos = mutableListOf<Int>()
+
+    override suspend fun feriadosDeChile(anio: Int): List<FeriadoDto> {
+        aniosPedidos += anio
+        fallo?.let { throw it }
+        return respuesta.map { it.copy(date = "$anio" + it.date.substring(4)) }
     }
 }
 

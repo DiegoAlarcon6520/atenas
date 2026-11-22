@@ -9,6 +9,7 @@ import cl.duoc.atenas.data.remote.RetrofitClient
 import cl.duoc.atenas.data.repository.CatalogoRepository
 import cl.duoc.atenas.data.repository.ContactoRepository
 import cl.duoc.atenas.data.repository.EvidenciaRepository
+import cl.duoc.atenas.data.repository.FeriadosRepository
 import cl.duoc.atenas.data.repository.OportunidadRepository
 import cl.duoc.atenas.data.repository.OrganizacionRepository
 import cl.duoc.atenas.data.repository.SeguimientoRepository
@@ -38,6 +39,7 @@ class AppContainer(context: Context) {
     val oportunidades = OportunidadRepository(db.oportunidadDao(), api)
     val seguimientos = SeguimientoRepository(db.seguimientoDao(), api)
     val evidencias = EvidenciaRepository(db.evidenciaDao(), api)
+    val feriados = FeriadosRepository(RetrofitClient.feriados)
     val sincronizacion = SincronizacionRepository(api, db.sincronizacionDao(), db.usuarioDao())
 
     suspend fun sembrarDatosIniciales() = DatosIniciales.sembrarSiEstaVacia(db)

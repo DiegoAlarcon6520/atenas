@@ -30,6 +30,14 @@ object Permisos {
     fun puedeRetrocederEstado(rol: RolUsuario): Boolean =
         rol == RolUsuario.SUPERVISOR
 
+    /**
+     * Eliminar oportunidades u organizaciones es una corrección de datos
+     * (algo creado por error), así que queda en manos del supervisor. Además,
+     * el servidor rechaza borrar lo que ya tiene historial.
+     */
+    fun puedeEliminar(rol: RolUsuario): Boolean =
+        rol == RolUsuario.SUPERVISOR
+
     fun puedeCrearOportunidad(rol: RolUsuario): Boolean = true
 
     fun puedeRegistrarSeguimiento(rol: RolUsuario): Boolean = true
