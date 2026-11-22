@@ -1,10 +1,7 @@
 package cl.duoc.atenas.ui.oportunidades
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.core.SesionManager
 import cl.duoc.atenas.data.local.dao.OportunidadResumen
@@ -17,7 +14,6 @@ import cl.duoc.atenas.data.repository.CriteriosBusqueda
 import cl.duoc.atenas.data.repository.OportunidadRepository
 import cl.duoc.atenas.data.repository.OrganizacionRepository
 import cl.duoc.atenas.data.repository.UsuarioRepository
-import cl.duoc.atenas.di.contenedor
 import cl.duoc.atenas.domain.model.EstadoOportunidad
 import cl.duoc.atenas.domain.model.EtapaCartera
 import cl.duoc.atenas.domain.model.PotencialComercial
@@ -221,18 +217,4 @@ class ListaOportunidadesViewModel(
 
     /** Quita los filtros pero conserva lo escrito en el buscador. */
     fun limpiarFiltros() = _filtros.update { FiltrosOportunidades(texto = it.texto) }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                ListaOportunidadesViewModel(
-                    sesion = contenedor.sesion,
-                    oportunidades = contenedor.oportunidades,
-                    catalogo = contenedor.catalogo,
-                    organizaciones = contenedor.organizaciones,
-                    usuarios = contenedor.usuarios
-                )
-            }
-        }
-    }
 }

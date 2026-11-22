@@ -17,11 +17,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Category
-import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Button
@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cl.duoc.atenas.di.FabricasViewModel
 import cl.duoc.atenas.domain.model.AreaContacto
 import cl.duoc.atenas.domain.model.MedioContacto
 import cl.duoc.atenas.ui.components.CampoTexto
@@ -53,7 +54,7 @@ fun FormularioContactoScreen(
     alTerminar: () -> Unit,
     mostrarMensaje: (String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: FormularioContactoViewModel = viewModel(factory = FormularioContactoViewModel.Factory)
+    viewModel: FormularioContactoViewModel = viewModel(factory = FabricasViewModel.formularioContacto)
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
 

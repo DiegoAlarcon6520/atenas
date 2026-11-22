@@ -220,28 +220,76 @@ adb shell pm clear cl.duoc.atenas
 
 Al volver a abrir la aplicación la base se siembra nuevamente desde cero.
 
-## Pruebas unitarias
+## Pruebas unitarias y cobertura
 
-El proyecto incluye pruebas de las reglas de negocio, en
-`app/src/test/java/cl/duoc/atenas/domain/`:
+Hay **222 pruebas unitarias** (JUnit 4, patrón Arrange–Act–Assert) que corren
+en la JVM, sin emulador. Se agrupan en tres capas:
 
-- `ValidadoresTest` — 21 pruebas de las validaciones de formulario y de las
-  reglas de coherencia entre campos
-- `TransicionesEstadoTest` — 18 pruebas de la máquina de estados: qué avances
-  habilita cada perfil, qué retrocesos permite el supervisor, qué oportunidades
-  ya no se pueden reabrir y cuáles son los estados de cierre
-- `SugerenciaPrioridadTest` — 7 pruebas de la prioridad sugerida a partir del
-  potencial comercial y la afinidad con el público objetivo
-- `ReglasAuditoriaTest` — 8 pruebas de las reglas agregadas tras la auditoría
-  funcional: prioridad por perfil, oportunidades cerradas, qué gestiones
-  cuentan como contacto y rangos del filtro por fecha
-- `GuiaGestionTest` — 13 pruebas del siguiente paso sugerido, el indicador de
-  etapas, la tasa de conversión, los textos de vencimiento y las etapas de la
-  cartera
-- `core/FechasTest` — 5 pruebas de la conversión de fechas entre el calendario
-  de Material 3 (UTC) y la hora local de Chile
+| Capa | Archivo | Pruebas | Qué verifica |
+|---|---|---|---|
+| Dominio | `domain/ValidadoresTest` | 21 | Validaciones de formulario y coherencia entre campos |
+| | `domain/TransicionesEstadoTest` | 18 | Máquina de estados: avances por perfil, retrocesos del supervisor, cierre |
+| | `domain/SugerenciaPrioridadTest` | 7 | Prioridad sugerida según potencial y afinidad |
+| | `domain/ReglasAuditoriaTest` | 8 | Reglas agregadas tras la auditoría funcional |
+| | `domain/GuiaGestionTest` | 13 | Siguiente paso, etapas, conversión, vencimientos |
+| | `domain/ReglasComplementariasTest` | 10 | Casos de borde: cada rama de los `when` y valores límite |
+| | `core/FechasTest` | 5 | Conversión de fechas entre el calendario (UTC) y la hora local |
+| Datos | `data/RepositoriosTest` | 25 | Traducción de filtros a la base, rangos de fechas, autenticación, transacción de gestiones, sesión |
+| Pantallas | `ui/LoginViewModelTest` | 7 | Validación de campos y credenciales |
+| | `ui/DashboardEjecutivoViewModelTest` | 7 | "Qué hacer hoy": orden por urgencia, sin repetidos, embudo |
+| | `ui/PanelSupervisorViewModelTest` | 6 | Métricas del equipo, conversión, confirmar y descartar |
+| | `ui/AgendaViewModelTest` | 5 | Agrupación por cercanía, eventos en riesgo, alcance por perfil |
+| | `ui/ListaOportunidadesViewModelTest` | 10 | Pestañas por etapa, cada filtro, región y comuna |
+| | `ui/DetallesViewModelTest` | 9 | Acceso por perfil al detalle, asignación, ficha y listado de organizaciones |
+| | `ui/FormularioOportunidadViewModelTest` | 27 | Pasos, validaciones, prioridad sugerida, crear, editar, oportunidad cerrada, errores de la base |
+| | `ui/RegistrarSeguimientoViewModelTest` | 21 | Transiciones por perfil, próxima acción, cierre, reutilizar gestión, errores |
+| | `ui/AlertasYPropuestasViewModelTest` | 6 | Alertas de la campana por perfil y filtro de propuestas |
+| | `ui/FormulariosOrganizacionViewModelTest` | 17 | Alta y edición de organizaciones y contactos |
 
-Se ejecutan sin emulador, porque ninguna de esas clases depende de Android.
+Los ViewModel se prueban con **DAO falsos en memoria**
+(`app/src/test/.../prueba/DaosFalsos.kt`): reemplazan a Room, permiten fijar
+exactamente qué datos ve la pantalla y simular que la base rechaza una
+escritura. `ReglaCorrutinas` reemplaza el hilo principal de Android por un
+despachador de prueba (`kotlinx-coroutines-test`) para que cada prueba sea
+determinista.
+
+### Cómo ejecutarlas
+
+En Android Studio: clic derecho sobre la carpeta `app/src/test` → *Run tests*.
+Por consola (Windows):
+
+```
+gradlew.bat :app:testDebugUnitTest
+```
+
+### Reporte de cobertura (Kover)
+
+```
+gradlew.bat :app:koverHtmlReportDebug
+```
+
+El reporte queda en `app/build/reports/kover/htmlDebug/index.html`. Para que
+la compilación falle si la cobertura de ramas baja del 80 %:
+
+```
+gradlew.bat :app:koverVerifyDebug
+```
+
+**Qué se mide y por qué.** El reporte incluye solo el código que contiene
+lógica de negocio (configurado en `app/build.gradle.kts`, bloque `kover`):
+
+- `domain` completo: validaciones, permisos, máquina de estados y reglas.
+- `core.Fechas` y `core.SesionManager`.
+- `data.repository`: la traducción entre el dominio y la base.
+- Los ViewModel de `ui`: deciden qué ve cada perfil y qué se puede guardar.
+
+Queda fuera, a propósito, lo que no tiene decisiones que probar o que solo se
+puede verificar en un dispositivo: `MainActivity`, `AtenasApp`, las pantallas
+Compose, el tema, la navegación, la base Room (`data.local`, que Room genera),
+los datos semilla, la inyección de dependencias (`di`, donde viven las
+fábricas de ViewModel), cámara, calendario y preferencias. También se excluyen
+`PerfilViewModel` y `EvidenciasViewModel`, que solo reenvían llamadas sin
+tomar decisiones, y `CriteriosBusqueda`, que es solo un contenedor de datos.
 
 ## Nota sobre los datos
 

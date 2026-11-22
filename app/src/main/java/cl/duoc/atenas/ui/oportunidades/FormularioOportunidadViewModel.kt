@@ -1,11 +1,7 @@
 package cl.duoc.atenas.ui.oportunidades
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.core.SesionManager
 import cl.duoc.atenas.data.local.entity.Comuna
@@ -17,7 +13,6 @@ import cl.duoc.atenas.data.repository.CatalogoRepository
 import cl.duoc.atenas.data.repository.ContactoRepository
 import cl.duoc.atenas.data.repository.OportunidadRepository
 import cl.duoc.atenas.data.repository.OrganizacionRepository
-import cl.duoc.atenas.di.contenedor
 import cl.duoc.atenas.domain.model.AfinidadPublico
 import cl.duoc.atenas.domain.model.EstadoOportunidad
 import cl.duoc.atenas.domain.model.PotencialComercial
@@ -564,24 +559,5 @@ class FormularioOportunidadViewModel(
     companion object {
         /** Pasos del asistente: evento, fecha y lugar, organización, evaluación. */
         const val TOTAL_PASOS = 4
-
-        /**
-         * Fábrica del ViewModel. createSavedStateHandle() entrega los
-         * argumentos de navegación; de ahí sacamos el id de la oportunidad
-         * (-1 significa "crear una nueva").
-         */
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val argumentos = createSavedStateHandle()
-                FormularioOportunidadViewModel(
-                    oportunidadId = argumentos.get<Long>("oportunidadId") ?: -1L,
-                    sesion = contenedor.sesion,
-                    oportunidades = contenedor.oportunidades,
-                    catalogo = contenedor.catalogo,
-                    organizaciones = contenedor.organizaciones,
-                    contactos = contenedor.contactos
-                )
-            }
-        }
     }
 }

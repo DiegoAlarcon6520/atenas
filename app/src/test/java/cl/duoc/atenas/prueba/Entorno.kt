@@ -1,0 +1,35 @@
+package cl.duoc.atenas.prueba
+
+import cl.duoc.atenas.core.SesionManager
+import cl.duoc.atenas.data.local.entity.Usuario
+import cl.duoc.atenas.data.repository.CatalogoRepository
+import cl.duoc.atenas.data.repository.ContactoRepository
+import cl.duoc.atenas.data.repository.OportunidadRepository
+import cl.duoc.atenas.data.repository.OrganizacionRepository
+import cl.duoc.atenas.data.repository.SeguimientoRepository
+import cl.duoc.atenas.data.repository.UsuarioRepository
+
+/**
+ * ENTORNO DE PRUEBA
+ *
+ * Arma, con los DAO falsos, los mismos repositorios que usa la aplicación
+ * real. Cada prueba crea su propio entorno, así ninguna arrastra datos de
+ * otra. Si se entrega un usuario, la sesión queda iniciada con él.
+ */
+class Entorno(usuario: Usuario? = Datos.ejecutiva) {
+    val sesion = SesionManager().apply { usuario?.let(::iniciarSesion) }
+
+    val oportunidadDao = OportunidadDaoFalso()
+    val seguimientoDao = SeguimientoDaoFalso(oportunidadDao)
+    val usuarioDao = UsuarioDaoFalso()
+    val catalogoDao = CatalogoDaoFalso()
+    val organizacionDao = OrganizacionDaoFalso()
+    val contactoDao = ContactoDaoFalso()
+
+    val oportunidades = OportunidadRepository(oportunidadDao)
+    val seguimientos = SeguimientoRepository(seguimientoDao)
+    val usuarios = UsuarioRepository(usuarioDao)
+    val catalogo = CatalogoRepository(catalogoDao)
+    val organizaciones = OrganizacionRepository(organizacionDao)
+    val contactos = ContactoRepository(contactoDao)
+}

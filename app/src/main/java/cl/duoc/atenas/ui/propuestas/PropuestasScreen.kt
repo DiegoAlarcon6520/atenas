@@ -21,6 +21,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.data.local.dao.PropuestaEnviada
+import cl.duoc.atenas.di.FabricasViewModel
 import cl.duoc.atenas.ui.components.EstadoVacio
 import cl.duoc.atenas.ui.components.EtiquetaEstado
 import cl.duoc.atenas.ui.components.IndicadorCarga
@@ -37,7 +38,7 @@ import cl.duoc.atenas.ui.theme.Espaciado
 fun PropuestasScreen(
     alAbrirOportunidad: (Long) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: PropuestasViewModel = viewModel(factory = PropuestasViewModel.Factory)
+    viewModel: PropuestasViewModel = viewModel(factory = FabricasViewModel.propuestas)
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
 

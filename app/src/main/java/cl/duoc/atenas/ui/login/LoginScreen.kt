@@ -51,6 +51,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cl.duoc.atenas.di.FabricasViewModel
 import cl.duoc.atenas.ui.components.BotonContorno
 import cl.duoc.atenas.ui.components.BotonDegradado
 import cl.duoc.atenas.ui.components.coloresCampo
@@ -83,7 +84,7 @@ private val FormaEncabezado = GenericShape { tamano, _ ->
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
-    viewModel: LoginViewModel = viewModel(factory = LoginViewModel.Factory)
+    viewModel: LoginViewModel = viewModel(factory = FabricasViewModel.login)
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
 

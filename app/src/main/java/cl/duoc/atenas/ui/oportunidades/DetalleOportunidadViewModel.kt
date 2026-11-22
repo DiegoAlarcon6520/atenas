@@ -1,11 +1,7 @@
 package cl.duoc.atenas.ui.oportunidades
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import cl.duoc.atenas.core.SesionManager
 import cl.duoc.atenas.data.local.dao.OportunidadDetalle
 import cl.duoc.atenas.data.local.entity.Seguimiento
@@ -13,7 +9,6 @@ import cl.duoc.atenas.data.local.entity.Usuario
 import cl.duoc.atenas.data.repository.OportunidadRepository
 import cl.duoc.atenas.data.repository.SeguimientoRepository
 import cl.duoc.atenas.data.repository.UsuarioRepository
-import cl.duoc.atenas.di.contenedor
 import cl.duoc.atenas.domain.model.RolUsuario
 import cl.duoc.atenas.domain.rules.Permisos
 import kotlinx.coroutines.flow.SharingStarted
@@ -88,22 +83,6 @@ class DetalleOportunidadViewModel(
         if (!Permisos.puedeAsignarResponsable(usuario.rol)) return
         viewModelScope.launch {
             oportunidades.asignarResponsable(oportunidadId, responsableId)
-        }
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val argumentos = createSavedStateHandle()
-                DetalleOportunidadViewModel(
-                    oportunidadId = argumentos.get<Long>("oportunidadId")
-                        ?: error("Falta el identificador de la oportunidad."),
-                    sesion = contenedor.sesion,
-                    oportunidades = contenedor.oportunidades,
-                    seguimientos = contenedor.seguimientos,
-                    usuarios = contenedor.usuarios
-                )
-            }
         }
     }
 }

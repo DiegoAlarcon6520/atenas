@@ -11,10 +11,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,8 +32,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -49,13 +49,14 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import cl.duoc.atenas.core.ArchivosImagen
 import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.data.local.entity.Evidencia
+import cl.duoc.atenas.di.FabricasViewModel
 import cl.duoc.atenas.ui.components.EstadoVacio
 import cl.duoc.atenas.ui.components.IndicadorCarga
 import cl.duoc.atenas.ui.theme.Espaciado
+import coil.compose.AsyncImage
 import java.io.File
 
 /**
@@ -77,7 +78,7 @@ import java.io.File
 fun EvidenciasScreen(
     mostrarMensaje: (String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: EvidenciasViewModel = viewModel(factory = EvidenciasViewModel.Factory)
+    viewModel: EvidenciasViewModel = viewModel(factory = FabricasViewModel.evidencias)
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
     val contexto = LocalContext.current

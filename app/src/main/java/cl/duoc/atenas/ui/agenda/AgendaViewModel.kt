@@ -1,15 +1,11 @@
 package cl.duoc.atenas.ui.agenda
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.core.SesionManager
 import cl.duoc.atenas.data.local.dao.OportunidadResumen
 import cl.duoc.atenas.data.repository.OportunidadRepository
-import cl.duoc.atenas.di.contenedor
 import cl.duoc.atenas.domain.model.EstadoOportunidad
 import cl.duoc.atenas.domain.rules.Permisos
 import java.util.Calendar
@@ -129,17 +125,6 @@ class AgendaViewModel(
             )
             calendario.add(Calendar.DAY_OF_YEAR, 1)
             dia
-        }
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                AgendaViewModel(
-                    sesion = contenedor.sesion,
-                    oportunidades = contenedor.oportunidades
-                )
-            }
         }
     }
 }

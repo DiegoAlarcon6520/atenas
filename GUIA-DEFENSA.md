@@ -43,7 +43,8 @@ app/src/main/
     │   │   └── seed/               Datos ficticios iniciales
     │   └── repository/             7 repositorios: puerta de entrada a los datos
     │
-    ├── di/                   AppContainer y acceso desde las fábricas
+    ├── di/                   AppContainer y FabricasViewModel (las fábricas
+    │                         de cada ViewModel, fuera de su clase)
     │
     └── ui/
         ├── theme/            Color, Degradados, Type, Formas, Espaciado, ColoresSemanticos
@@ -58,10 +59,14 @@ app/src/main/
         ├── evidencias/       Cámara y fotografías
         └── perfil/           Datos del usuario y cierre de sesión
 
-app/src/test/java/cl/duoc/atenas/domain/   Pruebas unitarias
+app/src/test/java/cl/duoc/atenas/
+├── domain/ y core/       Pruebas de reglas y fechas
+├── data/                 Pruebas de los repositorios
+├── ui/                   Pruebas de los ViewModel
+└── prueba/               DAO falsos, datos de ejemplo y regla de corrutinas
 ```
 
-**13 pantallas · 14 ViewModels · 8 entidades · 7 DAOs · 7 repositorios · 39 pruebas unitarias**
+**13 pantallas · 14 ViewModels · 8 entidades · 7 DAOs · 7 repositorios · 222 pruebas unitarias**
 
 ---
 
@@ -328,8 +333,29 @@ identifica los tres estados de cierre, el ViewModel salta esas dos validaciones
 y guarda `null`.
 
 **¿Cómo se prueban las reglas de negocio?**
-`app/src/test/java/cl/duoc/atenas/domain/` tiene 39 pruebas: `ValidadoresTest`
-(21) y `TransicionesEstadoTest` (18). Corren sin emulador porque ninguna de esas
-clases depende de Android: esa es la razón de haberlas dejado en `domain/`.
-Se ejecutan con `./gradlew testDebugUnitTest`, o con clic derecho sobre la
-carpeta `test` → *Run tests*.
+Hay 222 pruebas unitarias en tres capas: dominio (validaciones, máquina de
+estados, prioridad, guía de gestión), repositorios y ViewModel. Corren sin
+emulador. Los ViewModel reciben repositorios armados con DAO falsos en memoria
+(`prueba/DaosFalsos.kt`), así cada prueba decide qué datos hay en la "base" y
+puede simular que una escritura falla. `ReglaCorrutinas` cambia el hilo
+principal por un despachador de prueba para que todo ocurra en orden.
+Se ejecutan con `gradlew.bat :app:testDebugUnitTest`, o con clic derecho sobre
+la carpeta `test` → *Run tests*.
+
+**¿Cuánta cobertura tienen y qué se mide?**
+`gradlew.bat :app:koverHtmlReportDebug` genera el reporte en
+`app/build/reports/kover/htmlDebug/index.html`, y `koverVerifyDebug` falla si
+la cobertura de ramas (branch) baja del 80 %. El reporte solo incluye código
+con decisiones de negocio: `domain`, `core.Fechas`, `core.SesionManager`, los
+repositorios y los ViewModel. Pantallas Compose, tema, navegación, Room,
+datos semilla y `di` quedan fuera porque no tienen reglas que probar o solo
+se verifican en un dispositivo. Las fábricas de ViewModel se movieron a
+`di/FabricasViewModel.kt` justamente para que su código de conexión no se
+cuente como lógica. `PerfilViewModel` y `EvidenciasViewModel` se excluyen
+porque solo reenvían llamadas, sin decisiones.
+
+**¿Por qué una rama y no una línea?**
+Una línea como `if (rol == SUPERVISOR) null else usuario.id` está "cubierta"
+apenas se ejecuta una vez, pero solo se probó la mitad. La cobertura de ramas
+exige probar ambos caminos: por eso cada regla por perfil se prueba con un
+ejecutivo y con un supervisor.

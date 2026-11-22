@@ -1,17 +1,12 @@
 package cl.duoc.atenas.ui.seguimiento
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.core.SesionManager
 import cl.duoc.atenas.data.local.entity.Seguimiento
 import cl.duoc.atenas.data.repository.OportunidadRepository
 import cl.duoc.atenas.data.repository.SeguimientoRepository
-import cl.duoc.atenas.di.contenedor
 import cl.duoc.atenas.domain.model.EstadoOportunidad
 import cl.duoc.atenas.domain.model.TipoAccion
 import cl.duoc.atenas.domain.rules.TransicionesEstado
@@ -297,21 +292,6 @@ class RegistrarSeguimientoViewModel(
                         errorGeneral = "No se pudo registrar: ${excepcion.message ?: "error desconocido"}"
                     )
                 }
-            }
-        }
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val argumentos = createSavedStateHandle()
-                RegistrarSeguimientoViewModel(
-                    oportunidadId = argumentos.get<Long>("oportunidadId")
-                        ?: error("Falta el identificador de la oportunidad."),
-                    sesion = contenedor.sesion,
-                    oportunidades = contenedor.oportunidades,
-                    seguimientos = contenedor.seguimientos
-                )
             }
         }
     }

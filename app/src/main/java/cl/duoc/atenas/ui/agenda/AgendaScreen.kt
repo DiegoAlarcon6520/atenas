@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cl.duoc.atenas.di.FabricasViewModel
 import cl.duoc.atenas.ui.components.BloqueFecha
 import cl.duoc.atenas.ui.components.EstadoVacio
 import cl.duoc.atenas.ui.components.Etiqueta
@@ -53,7 +54,7 @@ import cl.duoc.atenas.ui.theme.Espaciado
 fun AgendaScreen(
     alAbrirOportunidad: (Long) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: AgendaViewModel = viewModel(factory = AgendaViewModel.Factory)
+    viewModel: AgendaViewModel = viewModel(factory = FabricasViewModel.agenda)
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
 

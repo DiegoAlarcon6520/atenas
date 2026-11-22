@@ -26,6 +26,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.data.local.dao.GestionDeOrganizacion
 import cl.duoc.atenas.data.local.entity.Contacto
+import cl.duoc.atenas.di.FabricasViewModel
 import cl.duoc.atenas.ui.components.EstadoVacio
 import cl.duoc.atenas.ui.components.Etiqueta
 import cl.duoc.atenas.ui.components.IndicadorCarga
@@ -47,7 +48,7 @@ fun DetalleOrganizacionScreen(
     alEditarContacto: (Long, Long) -> Unit,
     alAbrirOportunidad: (Long) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: DetalleOrganizacionViewModel = viewModel(factory = DetalleOrganizacionViewModel.Factory)
+    viewModel: DetalleOrganizacionViewModel = viewModel(factory = FabricasViewModel.detalleOrganizacion)
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
 

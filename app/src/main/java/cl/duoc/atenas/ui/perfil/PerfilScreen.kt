@@ -27,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.atenas.core.ModoTema
 import cl.duoc.atenas.data.local.entity.Usuario
+import cl.duoc.atenas.di.FabricasViewModel
 import cl.duoc.atenas.ui.components.Avatar
 import cl.duoc.atenas.ui.components.BotonContorno
 import cl.duoc.atenas.ui.components.ChipPildora
@@ -38,7 +39,7 @@ import cl.duoc.atenas.ui.theme.Espaciado
 fun PerfilScreen(
     usuario: Usuario,
     modifier: Modifier = Modifier,
-    viewModel: PerfilViewModel = viewModel(factory = PerfilViewModel.Factory)
+    viewModel: PerfilViewModel = viewModel(factory = FabricasViewModel.perfil)
 ) {
     val modoTema by viewModel.modoTema.collectAsStateWithLifecycle()
 

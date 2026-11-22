@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    // Kover: mide la cobertura de las pruebas unitarias y genera el reporte HTML.
+    alias(libs.plugins.kover)
 }
 
 android {
@@ -65,6 +67,8 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     testImplementation(libs.junit)
+    // Permite probar ViewModels que usan corrutinas sin abrir el emulador.
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -72,4 +76,52 @@ dependencies {
     androidTestImplementation(libs.androidx.room.testing)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+}
+
+/*
+ * COBERTURA DE PRUEBAS (Kover)
+ *
+ * Reporte:      gradlew.bat :app:koverHtmlReportDebug
+ *               -> app/build/reports/kover/htmlDebug/index.html
+ * Verificación: gradlew.bat :app:koverVerifyDebug (falla bajo 80 % de ramas)
+ *
+ * Se mide SOLO la lógica de negocio, con una lista de inclusión: todo lo que
+ * no aparece acá queda fuera del reporte (MainActivity, Application, temas,
+ * pantallas Compose, navegación, entidades, DAO generados por Room, datos
+ * semilla). El detalle de qué entra y por qué está en el README.
+ */
+kover {
+    reports {
+        filters {
+            includes {
+                classes(
+                    // Reglas de negocio, validaciones y enums con comportamiento
+                    "cl.duoc.atenas.domain.*",
+                    // Cálculos de fechas y control de la sesión
+                    "cl.duoc.atenas.core.Fechas",
+                    "cl.duoc.atenas.core.SesionManager",
+                    // Repositorios: traducen filtros y coordinan escrituras
+                    "cl.duoc.atenas.data.repository.*",
+                    // ViewModels: estado de cada pantalla y sus decisiones
+                    "cl.duoc.atenas.ui.*ViewModel",
+                    "cl.duoc.atenas.ui.*ViewModel\$*"
+                )
+            }
+            excludes {
+                classes(
+                    // Contenedor de datos sin lógica (solo campos).
+                    "cl.duoc.atenas.data.repository.CriteriosBusqueda",
+                    // Sin lógica de negocio: cambia el tema y cierra sesión.
+                    "cl.duoc.atenas.ui.perfil.PerfilViewModel*",
+                    // Sin lógica de negocio: guarda y borra archivos de fotos.
+                    "cl.duoc.atenas.ui.evidencias.EvidenciasViewModel*"
+                )
+            }
+        }
+        verify {
+            rule("Cobertura mínima de ramas en la lógica de negocio") {
+                minBound(80, kotlinx.kover.gradle.plugin.dsl.CoverageUnit.BRANCH)
+            }
+        }
+    }
 }

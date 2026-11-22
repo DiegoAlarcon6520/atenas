@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.atenas.core.Fechas
+import cl.duoc.atenas.di.FabricasViewModel
 import cl.duoc.atenas.domain.model.AfinidadPublico
 import cl.duoc.atenas.domain.model.PotencialComercial
 import cl.duoc.atenas.domain.model.Prioridad
@@ -89,7 +90,7 @@ fun FormularioOportunidadScreen(
     alTerminar: () -> Unit,
     mostrarMensaje: (String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: FormularioOportunidadViewModel = viewModel(factory = FormularioOportunidadViewModel.Factory)
+    viewModel: FormularioOportunidadViewModel = viewModel(factory = FabricasViewModel.formularioOportunidad)
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
 

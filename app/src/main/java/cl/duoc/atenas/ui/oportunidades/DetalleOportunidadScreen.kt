@@ -67,6 +67,7 @@ import cl.duoc.atenas.core.CalendarioApp
 import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.data.local.dao.OportunidadDetalle
 import cl.duoc.atenas.data.local.entity.Seguimiento
+import cl.duoc.atenas.di.FabricasViewModel
 import cl.duoc.atenas.domain.model.EstadoOportunidad
 import cl.duoc.atenas.domain.rules.GuiaGestion
 import cl.duoc.atenas.domain.rules.SugerenciaPrioridad
@@ -107,7 +108,7 @@ fun DetalleOportunidadScreen(
     alVerEvidencias: (Long) -> Unit,
     mostrarMensaje: (String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: DetalleOportunidadViewModel = viewModel(factory = DetalleOportunidadViewModel.Factory)
+    viewModel: DetalleOportunidadViewModel = viewModel(factory = FabricasViewModel.detalleOportunidad)
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
     val contexto = LocalContext.current

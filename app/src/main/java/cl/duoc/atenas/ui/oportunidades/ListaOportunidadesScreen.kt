@@ -52,6 +52,7 @@ import cl.duoc.atenas.data.local.entity.Comuna
 import cl.duoc.atenas.data.local.entity.Organizacion
 import cl.duoc.atenas.data.local.entity.Region
 import cl.duoc.atenas.data.local.entity.Usuario
+import cl.duoc.atenas.di.FabricasViewModel
 import cl.duoc.atenas.domain.model.EtapaCartera
 import cl.duoc.atenas.domain.model.PotencialComercial
 import cl.duoc.atenas.domain.model.Prioridad
@@ -80,7 +81,7 @@ import cl.duoc.atenas.ui.theme.Espaciado
 fun ListaOportunidadesScreen(
     alAbrirDetalle: (Long) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ListaOportunidadesViewModel = viewModel(factory = ListaOportunidadesViewModel.Factory)
+    viewModel: ListaOportunidadesViewModel = viewModel(factory = FabricasViewModel.listaOportunidades)
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
 

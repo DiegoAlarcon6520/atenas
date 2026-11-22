@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.atenas.core.Fechas
+import cl.duoc.atenas.di.FabricasViewModel
 import cl.duoc.atenas.domain.model.TipoAccion
 import cl.duoc.atenas.ui.components.BotonDegradado
 import cl.duoc.atenas.ui.components.CampoTexto
@@ -86,7 +87,7 @@ fun RegistrarSeguimientoScreen(
     alTerminar: () -> Unit,
     mostrarMensaje: (String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: RegistrarSeguimientoViewModel = viewModel(factory = RegistrarSeguimientoViewModel.Factory)
+    viewModel: RegistrarSeguimientoViewModel = viewModel(factory = FabricasViewModel.registrarSeguimiento)
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
     var verTodas by rememberSaveable { mutableStateOf(false) }
