@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -28,7 +27,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,9 +40,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.atenas.domain.model.EstadoOportunidad
+import cl.duoc.atenas.ui.components.Alerta
 import cl.duoc.atenas.ui.components.EncabezadoSaludo
 import cl.duoc.atenas.ui.components.EstadoVacio
 import cl.duoc.atenas.ui.components.EtiquetaSobreDegradado
+import cl.duoc.atenas.ui.components.GrupoAlertas
+import cl.duoc.atenas.ui.components.HojaAlertas
 import cl.duoc.atenas.ui.components.IndicadorCarga
 import cl.duoc.atenas.ui.components.TituloSeccion
 import cl.duoc.atenas.ui.theme.DegradadoTarjeta
@@ -50,7 +54,6 @@ import cl.duoc.atenas.ui.theme.colorDeEstado
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlinx.coroutines.launch
 
 /**
  * INICIO DEL EJECUTIVO: "QUÉ HACER HOY"
@@ -70,16 +73,24 @@ fun DashboardEjecutivoScreen(
     viewModel: DashboardEjecutivoViewModel = viewModel(factory = DashboardEjecutivoViewModel.Factory)
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
-    val estadoLista = rememberLazyListState()
-    val alcance = rememberCoroutineScope()
+    var mostrarAlertas by rememberSaveable { mutableStateOf(false) }
 
     if (estado.cargando) {
         IndicadorCarga(modifier)
         return
     }
 
+    // La campana abre el panel de alertas: siempre muestra algo, aunque no
+    // haya pendientes, para que el toque nunca parezca no hacer nada.
+    if (mostrarAlertas) {
+        HojaAlertas(
+            grupos = gruposDeAlertas(estado.tareas),
+            alCerrar = { mostrarAlertas = false },
+            alAbrirOportunidad = alAbrirOportunidad
+        )
+    }
+
     LazyColumn(
-        state = estadoLista,
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(
             start = Espaciado.pantalla,
@@ -96,8 +107,7 @@ fun DashboardEjecutivoScreen(
                 nombreAvatar = estado.nombreUsuario,
                 alertas = estado.tareas.size,
                 alTocarAvatar = alAbrirPerfil,
-                // La campana baja hasta la lista de tareas.
-                alTocarAlertas = { alcance.launch { estadoLista.animateScrollToItem(2) } }
+                alTocarAlertas = { mostrarAlertas = true }
             )
         }
 
@@ -131,6 +141,24 @@ fun DashboardEjecutivoScreen(
         item { TarjetaEmbudo(estado, alVerCartera) }
     }
 }
+
+/** Agrupa las tareas por motivo para el panel de alertas, en orden de urgencia. */
+@Composable
+private fun gruposDeAlertas(tareas: List<Tarea>): List<GrupoAlertas> =
+    listOf(
+        TipoTarea.ATRASADA to "Atrasadas",
+        TipoTarea.HOY to "Vencen hoy",
+        TipoTarea.PROPUESTA to "Propuestas sin respuesta",
+        TipoTarea.SIN_CONTACTO to "Sin primer contacto"
+    ).map { (tipo, titulo) ->
+        val estilo = estiloDe(tipo)
+        GrupoAlertas(
+            titulo = titulo,
+            alertas = tareas.filter { it.tipo == tipo }.map { t ->
+                Alerta(t.clave, t.oportunidadId, t.titulo, "${t.detalle} · ${t.meta}", estilo.icono, estilo.color)
+            }
+        )
+    }
 
 /** "Sábado 21 de noviembre", con mayúscula inicial. */
 private fun fechaDeHoy(): String =
