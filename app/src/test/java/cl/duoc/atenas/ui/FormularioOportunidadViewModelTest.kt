@@ -238,6 +238,41 @@ class FormularioOportunidadViewModelTest {
         assertEquals(listOf(1L), vm.estado.value.contactosDisponibles.map { it.id })
     }
 
+    @Test
+    fun `una organizacion registrada desde el paso 3 aparece en la lista sin perder lo escrito`() {
+        // Arrange: el usuario ya avanzó y escribió datos.
+        val e = Entorno()
+        val vm = crear(e)
+        llenarValido(vm)
+
+        // Act: mientras el formulario está abierto se registra otra organización.
+        e.organizacionDao.organizaciones.value += Datos.organizacion(id = 200, nombre = "Municipalidad de Cerro Verde")
+
+        // Assert: está disponible para elegirla, pero no se elige sola.
+        assertEquals(listOf(100L, 200L), vm.estado.value.organizaciones.map { it.id })
+        assertEquals(100L, vm.estado.value.organizacionId)
+        assertEquals("Feria de Beneficios", vm.estado.value.nombre)
+    }
+
+    @Test
+    fun `un contacto registrado desde el paso 3 aparece para la organizacion elegida sin seleccionarse`() {
+        // Arrange
+        val e = Entorno()
+        val vm = crear(e)
+        vm.alCambiarOrganizacion(100)
+        assertEquals(listOf(500L), vm.estado.value.contactosDisponibles.map { it.id })
+
+        // Act: se registra un contacto en esa organización y otro en una distinta.
+        e.contactoDao.contactos.value += listOf(
+            Datos.contacto(id = 501, nombre = "Tomás Riquelme"),
+            Datos.contacto(id = 600, organizacionId = 200)
+        )
+
+        // Assert
+        assertEquals(listOf(500L, 501L), vm.estado.value.contactosDisponibles.map { it.id })
+        assertNull(vm.estado.value.contactoId)
+    }
+
     // ---------- Prioridad sugerida (HU-06) ----------
 
     @Test

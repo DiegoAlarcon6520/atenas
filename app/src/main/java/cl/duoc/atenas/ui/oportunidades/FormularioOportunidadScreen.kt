@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.automirrored.filled.Notes
+import androidx.compose.material.icons.filled.AddBusiness
 import androidx.compose.material.icons.filled.AssignmentTurnedIn
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.AutoAwesome
@@ -41,6 +42,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.ThumbUp
@@ -83,11 +85,15 @@ import cl.duoc.atenas.ui.theme.Espaciado
  *
  * @param alTerminar se llama cuando el guardado fue exitoso; la navegación
  *        decide qué hacer (en nuestro caso, volver atrás).
+ * @param alCrearOrganizacion abre el registro de organización desde el paso 3.
+ * @param alCrearContacto abre el registro de contacto para la organización elegida.
  * @param mostrarMensaje muestra el Snackbar de confirmación.
  */
 @Composable
 fun FormularioOportunidadScreen(
     alTerminar: () -> Unit,
+    alCrearOrganizacion: () -> Unit,
+    alCrearContacto: (organizacionId: Long) -> Unit,
     mostrarMensaje: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: FormularioOportunidadViewModel = viewModel(factory = FabricasViewModel.formularioOportunidad)
@@ -301,6 +307,32 @@ fun FormularioOportunidadScreen(
                     "Opcional: aún puede no estar identificado"
                 }
             )
+
+            // Si la organización o el contacto todavía no están registrados,
+            // se crean aquí mismo: al volver aparecen en las listas para
+            // elegirlos y lo ya escrito en el formulario se conserva.
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                BotonContorno(
+                    onClick = alCrearOrganizacion,
+                    habilitado = estado.admiteCambios,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.AddBusiness, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Text("Nueva organización", modifier = Modifier.padding(start = 6.dp))
+                }
+                BotonContorno(
+                    // Un contacto siempre pertenece a una organización.
+                    onClick = { estado.organizacionId?.let(alCrearContacto) },
+                    habilitado = estado.admiteCambios && estado.organizacionId != null,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Text("Nuevo contacto", modifier = Modifier.padding(start = 6.dp))
+                }
+            }
         }
 
         // ---------- Paso 4: evaluación y antecedentes ----------

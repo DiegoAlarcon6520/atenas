@@ -164,7 +164,7 @@ class FormularioOportunidadViewModel(
     private fun cargarDatosIniciales() {
         viewModelScope.launch {
             // first() toma la primera emisión del Flow y deja de escuchar:
-            // los catálogos no cambian mientras el formulario está abierto.
+            // regiones y comunas no cambian mientras el formulario está abierto.
             val rol = sesion.requerirUsuario().rol
             val regiones = catalogo.observarRegiones().first()
             todasLasComunas = catalogo.observarComunas().first()
@@ -181,8 +181,36 @@ class FormularioOportunidadViewModel(
             }
 
             if (oportunidadId > 0) cargarOportunidadExistente()
+            escucharOrganizacionesYContactos()
         }
     }
+
+    /**
+     * Organizaciones y contactos sí pueden cambiar con el formulario abierto:
+     * desde el paso 3 se puede ir a registrar una organización o un contacto
+     * nuevo. Al volver, el formulario sigue en memoria con todo lo escrito y
+     * estas suscripciones ya agregaron lo nuevo a las listas, para elegirlo.
+     */
+    private fun escucharOrganizacionesYContactos() {
+        viewModelScope.launch {
+            organizaciones.observarTodas().collect { lista ->
+                _estado.update { it.copy(organizaciones = lista) }
+            }
+        }
+        viewModelScope.launch {
+            contactos.observarTodos().collect { lista ->
+                todosLosContactos = lista
+                _estado.update { it.copy(contactosDisponibles = contactosDe(it.organizacionId, it.contactoId)) }
+            }
+        }
+    }
+
+    /**
+     * Contactos que se ofrecen para una organización: los activos, más el que
+     * ya está elegido aunque se haya desactivado, para no perderlo al editar.
+     */
+    private fun contactosDe(organizacionId: Long?, elegido: Long?): List<Contacto> =
+        todosLosContactos.filter { c -> c.organizacionId == organizacionId && (c.activo || c.id == elegido) }
 
     /** Precarga el formulario con los datos actuales de la oportunidad a editar. */
     private suspend fun cargarOportunidadExistente() {
@@ -227,12 +255,7 @@ class FormularioOportunidadViewModel(
                 espaciosDisponibles = existente.espaciosDisponibles.orEmpty(),
                 observaciones = existente.observaciones.orEmpty(),
                 comunasDisponibles = todasLasComunas.filter { c -> c.regionId == comuna?.regionId },
-                // Se ofrecen los contactos activos, más el ya asignado aunque
-                // se haya desactivado, para no perderlo al editar.
-                contactosDisponibles = todosLosContactos.filter { c ->
-                    c.organizacionId == existente.organizacionId &&
-                        (c.activo || c.id == existente.contactoId)
-                }
+                contactosDisponibles = contactosDe(existente.organizacionId, existente.contactoId)
             )
         }
     }
@@ -329,7 +352,7 @@ class FormularioOportunidadViewModel(
             organizacionId = valor,
             contactoId = null,
             // Un contacto desactivado ya no es un interlocutor válido.
-            contactosDisponibles = todosLosContactos.filter { c -> c.organizacionId == valor && c.activo },
+            contactosDisponibles = contactosDe(valor, elegido = null),
             errores = it.errores.copy(organizacion = null)
         )
     }
