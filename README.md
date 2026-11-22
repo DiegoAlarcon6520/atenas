@@ -366,6 +366,50 @@ GET https://date.nager.at/api/v3/PublicHolidays/{año}/CL
 - **Sin conexión:** si la API no responde, la agenda funciona igual, sin
   feriados, y se vuelve a intentar la próxima vez que se abre.
 
+## Firma del APK release
+
+El APK de entrega se firma con una **clave exclusivamente de demostración
+académica**: sus contraseñas no se usan en ningún otro lado y no protegen
+nada real. Aun así, ni el `.jks` ni sus contraseñas están en el repositorio;
+se entregan aparte.
+
+**Cómo está configurado** (`app/build.gradle.kts`, bloque `signingConfigs`):
+Gradle lee la ruta del `.jks`, el alias y las contraseñas desde
+`keystore.properties`, en la raíz del proyecto. Ese archivo y los `.jks`
+están en `.gitignore`. Si no existe, el release se genera sin firmar y el
+resto del proyecto compila igual, así que clonar el repo no requiere la clave.
+
+**Para generar el APK firmado:**
+
+1. Copia `keystore.properties.example` como `keystore.properties`.
+2. Deja el `.jks` de demostración en `keystore/atenas-demo.jks` (o ajusta
+   `storeFile`) y completa alias y contraseñas.
+3. Ejecuta:
+
+   ```
+   .\gradlew.bat :app:assembleRelease
+   ```
+
+   El APK queda en `app/build/outputs/apk/release/app-release.apk`.
+4. Para comprobar la firma (con las build-tools del SDK):
+
+   ```
+   apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk
+   ```
+
+También se puede generar desde Android Studio con *Build → Generate Signed
+App Bundle or APK*, eligiendo el mismo `.jks`.
+
+**Versiones.** Cada APK publicado sube `versionCode` (entero que Android usa
+para saber si es una actualización; no deja instalar uno menor encima de uno
+mayor) y actualiza `versionName` (el texto que ve el usuario). La entrega
+actual es la **1.1 (código 2)**.
+
+**Descarga.** El APK firmado se publica en los
+[Releases del repositorio](https://github.com/DiegoAlarcon6520/atenas/releases),
+no dentro del código: así no engorda el historial de Git y cada APK queda
+asociado a la versión exacta del código que lo generó.
+
 ## Nota sobre los datos
 
 Todos los nombres de organizaciones, personas, correos, teléfonos, direcciones,

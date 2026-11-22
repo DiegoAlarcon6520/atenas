@@ -13,3 +13,14 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Firma del APK: la clave y sus contraseñas nunca se suben al repositorio.
+# Se entregan aparte; ver keystore.properties.example y la sección del README.
+keystore.properties
+*.jks
+*.keystore
+
+# APK y AAB generados (se publican como Release de GitHub, no en el código)
+/app/release/
+*.apk
+*.aab
