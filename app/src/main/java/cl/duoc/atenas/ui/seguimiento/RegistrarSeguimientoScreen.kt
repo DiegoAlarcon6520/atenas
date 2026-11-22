@@ -300,7 +300,8 @@ fun RegistrarSeguimientoScreen(
 
             Button(
                 onClick = viewModel::guardar,
-                enabled = !estado.guardando,
+                // Una oportunidad cerrada no admite gestiones nuevas.
+                enabled = !estado.guardando && estado.admiteCambios,
                 modifier = Modifier.weight(1f)
             ) {
                 if (estado.guardando) {

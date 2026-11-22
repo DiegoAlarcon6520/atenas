@@ -36,6 +36,7 @@ import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -326,38 +327,69 @@ fun FormularioOportunidadScreen(
             alSeleccionar = viewModel::alCambiarAfinidad
         )
 
-        ListaDesplegable(
-            etiqueta = "Prioridad",
-            icono = Icons.Default.Flag,
-            opciones = Prioridad.entries,
-            seleccionada = estado.prioridad,
-            textoDe = { it.etiqueta },
-            alSeleccionar = viewModel::alCambiarPrioridad
-        )
+        if (estado.puedeCambiarPrioridad) {
+            ListaDesplegable(
+                etiqueta = "Prioridad",
+                icono = Icons.Default.Flag,
+                opciones = Prioridad.entries,
+                seleccionada = estado.prioridad,
+                textoDe = { it.etiqueta },
+                alSeleccionar = viewModel::alCambiarPrioridad
+            )
 
-        // La sugerencia se recalcula sola al cambiar potencial o afinidad,
-        // pero solo se aplica si el usuario lo pide.
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.AutoAwesome,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(18.dp)
-            )
-            Text(
-                text = "Prioridad sugerida: ${estado.prioridadSugerida.etiqueta}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = Espaciado.sm)
-            )
-            if (estado.prioridad != estado.prioridadSugerida) {
-                TextButton(onClick = viewModel::aplicarPrioridadSugerida) {
-                    Text("Aplicar")
+            // La sugerencia se recalcula sola al cambiar potencial o afinidad,
+            // pero el supervisor decide si aplicarla.
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AutoAwesome,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp)
+                )
+                Text(
+                    text = "Prioridad sugerida: ${estado.prioridadSugerida.etiqueta}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = Espaciado.sm)
+                )
+                if (estado.prioridad != estado.prioridadSugerida) {
+                    TextButton(onClick = viewModel::aplicarPrioridadSugerida) {
+                        Text("Aplicar")
+                    }
+                }
+            }
+        } else {
+            // El ejecutivo no elige la prioridad (regla HU-05): al crear se
+            // le asigna la sugerida y al editar se conserva la vigente.
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Flag,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp)
+                )
+                Column(modifier = Modifier.padding(start = Espaciado.sm)) {
+                    Text(
+                        text = "Prioridad: ${estado.prioridad.etiqueta}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = if (estado.esEdicion) {
+                            "La prioridad la ajusta el supervisor comercial."
+                        } else {
+                            "Se asigna según la evaluación; el supervisor puede ajustarla."
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }
@@ -393,6 +425,15 @@ fun FormularioOportunidadScreen(
         )
 
         CampoTexto(
+            valor = estado.espaciosDisponibles,
+            alCambiar = viewModel::alCambiarEspacios,
+            etiqueta = "Espacios disponibles",
+            icono = Icons.Default.Storefront,
+            lineas = 2,
+            ayuda = "Stands, módulos o metros que ofrece el organizador"
+        )
+
+        CampoTexto(
             valor = estado.observaciones,
             alCambiar = viewModel::alCambiarObservaciones,
             etiqueta = "Observaciones",
@@ -421,7 +462,7 @@ fun FormularioOportunidadScreen(
 
             Button(
                 onClick = viewModel::guardar,
-                enabled = !estado.guardando,
+                enabled = !estado.guardando && estado.admiteCambios,
                 modifier = Modifier.weight(1f)
             ) {
                 if (estado.guardando) {

@@ -11,20 +11,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.data.local.dao.ConteoPorEstado
-import cl.duoc.atenas.data.local.dao.GestionPendiente
 import cl.duoc.atenas.ui.components.EstadoVacio
 import cl.duoc.atenas.ui.components.IndicadorCarga
+import cl.duoc.atenas.ui.components.TarjetaGestionAtrasada
 import cl.duoc.atenas.ui.components.TarjetaMetrica
 import cl.duoc.atenas.ui.components.TarjetaOportunidad
 import cl.duoc.atenas.ui.components.TituloSeccion
@@ -33,6 +32,8 @@ import cl.duoc.atenas.ui.theme.colorDeEstado
 
 @Composable
 fun DashboardEjecutivoScreen(
+    alAbrirOportunidad: (Long) -> Unit,
+    alVerPropuestas: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: DashboardEjecutivoViewModel = viewModel(factory = DashboardEjecutivoViewModel.Factory)
 ) {
@@ -107,7 +108,7 @@ fun DashboardEjecutivoScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "Atrasadas · gestiones cuya fecha de próxima acción ya venció y nadie retomó.",
+                        text = "Atrasadas · oportunidades cuya última gestión comprometió una acción con fecha ya vencida.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -115,10 +116,37 @@ fun DashboardEjecutivoScreen(
             }
         }
 
+        // ---------- Alertas (HU-17) ----------
         if (estado.atrasadas.isNotEmpty()) {
             item { TituloSeccion("Gestiones atrasadas") }
             items(estado.atrasadas, key = { "atraso-${it.id}" }) { gestion ->
-                TarjetaGestionAtrasada(gestion)
+                TarjetaGestionAtrasada(
+                    gestion = gestion,
+                    onClick = { alAbrirOportunidad(gestion.oportunidadId) }
+                )
+            }
+        }
+
+        item { TituloSeccion("Propuestas sin respuesta (${estado.propuestasSinRespuesta.size})") }
+        if (estado.propuestasSinRespuesta.isEmpty()) {
+            item { EstadoVacio("No tienes propuestas esperando respuesta.") }
+        } else {
+            items(estado.propuestasSinRespuesta, key = { "prop-${it.id}" }) { oportunidad ->
+                TarjetaOportunidad(oportunidad, onClick = { alAbrirOportunidad(oportunidad.id) })
+            }
+        }
+        item {
+            OutlinedButton(onClick = alVerPropuestas, modifier = Modifier.fillMaxWidth()) {
+                Text("Ver todas las propuestas enviadas")
+            }
+        }
+
+        item { TituloSeccion("Oportunidades sin contacto (${estado.sinContacto.size})") }
+        if (estado.sinContacto.isEmpty()) {
+            item { EstadoVacio("Ya contactaste a todas tus oportunidades activas.") }
+        } else {
+            items(estado.sinContacto, key = { "sinc-${it.id}" }) { oportunidad ->
+                TarjetaOportunidad(oportunidad, onClick = { alAbrirOportunidad(oportunidad.id) })
             }
         }
 
@@ -146,7 +174,7 @@ fun DashboardEjecutivoScreen(
             item { EstadoVacio("No hay eventos en los próximos 30 días.") }
         } else {
             items(estado.proximas, key = { it.id }) { oportunidad ->
-                TarjetaOportunidad(oportunidad)
+                TarjetaOportunidad(oportunidad, onClick = { alAbrirOportunidad(oportunidad.id) })
             }
         }
     }
@@ -174,31 +202,5 @@ private fun BarraEstado(conteo: ConteoPorEstado, maximo: Int) {
             trackColor = color.copy(alpha = 0.16f),
             modifier = Modifier.fillMaxWidth()
         )
-    }
-}
-
-@Composable
-private fun TarjetaGestionAtrasada(gestion: GestionPendiente) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer,
-            contentColor = MaterialTheme.colorScheme.onErrorContainer
-        ),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier.padding(Espaciado.md),
-            verticalArrangement = Arrangement.spacedBy(Espaciado.xs)
-        ) {
-            Text(gestion.oportunidadNombre, style = MaterialTheme.typography.titleSmall)
-            Text(
-                text = gestion.proximaAccion ?: "Sin próxima acción definida",
-                style = MaterialTheme.typography.bodySmall
-            )
-            Text(
-                text = "Vencía el ${Fechas.aTexto(gestion.fechaProximoSeguimiento)}",
-                style = MaterialTheme.typography.labelMedium
-            )
-        }
     }
 }

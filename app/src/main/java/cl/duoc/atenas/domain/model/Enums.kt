@@ -1,5 +1,7 @@
 package cl.duoc.atenas.domain.model
 
+import cl.duoc.atenas.core.Fechas
+
 /** Perfiles de usuario definidos para el MVP. */
 enum class RolUsuario(val etiqueta: String) {
     EJECUTIVO("Ejecutivo comercial"),
@@ -89,9 +91,16 @@ enum class EstadoOportunidad(val etiqueta: String, val orden: Int) {
     CERRADA("Oportunidad cerrada", 9)
 }
 
-enum class TipoAccion(val etiqueta: String) {
-    INVESTIGACION_INICIAL("Investigación inicial"),
-    BUSQUEDA_CONTACTO("Búsqueda de contacto"),
+/**
+ * Tipos de gestión comercial.
+ *
+ * [implicaContacto] indica si la gestión supone haber hablado o escrito al
+ * contacto de la organización. Las dos primeras son trabajo interno de
+ * investigación, así que no cuentan como contacto.
+ */
+enum class TipoAccion(val etiqueta: String, val implicaContacto: Boolean = true) {
+    INVESTIGACION_INICIAL("Investigación inicial", implicaContacto = false),
+    BUSQUEDA_CONTACTO("Búsqueda de contacto", implicaContacto = false),
     PRIMER_CONTACTO("Primer contacto"),
     ENVIO_PRESENTACION("Envío de presentación"),
     ENVIO_PROPUESTA("Envío de propuesta"),
@@ -102,4 +111,27 @@ enum class TipoAccion(val etiqueta: String) {
     RECEPCION_RESPUESTA("Recepción de respuesta"),
     CONFIRMACION("Confirmación"),
     CIERRE("Cierre")
+}
+
+/**
+ * Rangos rápidos para filtrar oportunidades por la fecha del evento (HU-18).
+ * Se usan rangos predefinidos en vez de dos calendarios porque en terreno es
+ * más rápido tocar una opción que elegir dos fechas.
+ */
+enum class RangoFecha(val etiqueta: String) {
+    PROXIMOS_7("Próximos 7 días"),
+    PROXIMOS_30("Próximos 30 días"),
+    PROXIMOS_90("Próximos 90 días"),
+    PASADOS("Ya ocurridos");
+
+    /**
+     * Límites del rango a partir de [hoy] (medianoche local). Devuelve el
+     * par (desde, hasta), ambos inclusive; null significa "sin límite".
+     */
+    fun limites(hoy: Long): Pair<Long?, Long?> = when (this) {
+        PROXIMOS_7 -> hoy to Fechas.masDias(hoy, 7)
+        PROXIMOS_30 -> hoy to Fechas.masDias(hoy, 30)
+        PROXIMOS_90 -> hoy to Fechas.masDias(hoy, 90)
+        PASADOS -> null to hoy - 1
+    }
 }

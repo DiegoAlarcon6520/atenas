@@ -106,6 +106,12 @@ interface OportunidadDao {
           AND (:prioridad IS NULL OR o.prioridad = :prioridad)
           AND (:tipo IS NULL OR o.tipo = :tipo)
           AND (:potencial IS NULL OR o.potencial = :potencial)
+          AND (:desde IS NULL OR o.fechaInicioEvento >= :desde)
+          AND (:hasta IS NULL OR o.fechaInicioEvento <= :hasta)
+          AND (:regionId IS NULL OR c.regionId = :regionId)
+          AND (:comunaId IS NULL OR o.comunaId = :comunaId)
+          AND (:organizacionId IS NULL OR o.organizacionId = :organizacionId)
+          AND (:filtroResponsableId IS NULL OR o.responsableId = :filtroResponsableId)
         ORDER BY o.fechaInicioEvento ASC
         """
     )
@@ -115,8 +121,43 @@ interface OportunidadDao {
         estado: String?,
         prioridad: String?,
         tipo: String?,
-        potencial: String?
+        potencial: String?,
+        desde: Long?,
+        hasta: Long?,
+        regionId: Long?,
+        comunaId: Long?,
+        organizacionId: Long?,
+        filtroResponsableId: Long?
     ): Flow<List<OportunidadResumen>>
+
+    /**
+     * Oportunidades que están en alguno de los [estados] indicados.
+     * Alimenta las alertas de "sin contacto" y "propuestas sin respuesta".
+     */
+    @Query(
+        """
+        SELECT o.id AS id,
+               o.nombre AS nombre,
+               o.tipo AS tipo,
+               o.estado AS estado,
+               o.prioridad AS prioridad,
+               o.fechaInicioEvento AS fechaInicioEvento,
+               o.publicoEsperado AS publicoEsperado,
+               o.potencial AS potencial,
+               o.afinidad AS afinidad,
+               org.nombre AS organizacionNombre,
+               c.nombre AS comunaNombre,
+               u.nombreCompleto AS responsableNombre
+        FROM oportunidad o
+        INNER JOIN organizacion org ON org.id = o.organizacionId
+        INNER JOIN comuna c ON c.id = o.comunaId
+        LEFT JOIN usuario u ON u.id = o.responsableId
+        WHERE o.estado IN (:estados)
+          AND (:responsableId IS NULL OR o.responsableId = :responsableId)
+        ORDER BY o.fechaInicioEvento ASC
+        """
+    )
+    fun observarEnEstados(estados: List<String>, responsableId: Long?): Flow<List<OportunidadResumen>>
 
     @Query(
         """
@@ -250,10 +291,11 @@ interface OportunidadDao {
         INNER JOIN comuna c ON c.id = o.comunaId
         LEFT JOIN usuario u ON u.id = o.responsableId
         WHERE o.organizacionId = :organizacionId
+          AND (:responsableId IS NULL OR o.responsableId = :responsableId)
         ORDER BY o.fechaInicioEvento DESC
         """
     )
-    fun observarPorOrganizacion(organizacionId: Long): Flow<List<OportunidadResumen>>
+    fun observarPorOrganizacion(organizacionId: Long, responsableId: Long?): Flow<List<OportunidadResumen>>
 
     @Query("SELECT * FROM oportunidad WHERE id = :id")
     fun observarPorId(id: Long): Flow<Oportunidad?>

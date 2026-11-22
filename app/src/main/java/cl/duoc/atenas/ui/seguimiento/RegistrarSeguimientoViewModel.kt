@@ -52,6 +52,8 @@ data class RegistrarSeguimientoUiState(
     val esCierre: Boolean = false,
     /** Aviso para el ejecutivo sobre lo que no puede hacer. */
     val mensajeRestriccion: String? = null,
+    /** False si la oportunidad está cerrada: el formulario queda bloqueado. */
+    val admiteCambios: Boolean = true,
 
     val tipoAccion: TipoAccion = TipoAccion.SEGUIMIENTO,
     val fechaAccion: Long = Fechas.hoy(),
@@ -87,6 +89,9 @@ class RegistrarSeguimientoViewModel(
     private val seguimientos: SeguimientoRepository
 ) : ViewModel() {
 
+    /** Contacto asociado a la oportunidad, para actualizar su fecha de último contacto. */
+    private var contactoId: Long? = null
+
     private val _estado = MutableStateFlow(RegistrarSeguimientoUiState())
     val estado: StateFlow<RegistrarSeguimientoUiState> = _estado.asStateFlow()
 
@@ -105,6 +110,8 @@ class RegistrarSeguimientoViewModel(
             // Se consulta si existe una gestión previa para habilitar el
             // botón de reutilizar sus datos.
             val anterior = seguimientos.ultima(oportunidadId)
+            contactoId = oportunidad.contactoId
+            val admite = TransicionesEstado.admiteCambios(oportunidad.estado)
 
             _estado.update {
                 it.copy(
@@ -115,13 +122,29 @@ class RegistrarSeguimientoViewModel(
                     estadosAnteriores = TransicionesEstado.anterioresPosibles(oportunidad.estado, rol),
                     hayGestionAnterior = anterior != null,
                     esCierre = TransicionesEstado.esEstadoDeCierre(oportunidad.estado),
-                    mensajeRestriccion = TransicionesEstado.mensajeRestriccion(rol)
+                    mensajeRestriccion = TransicionesEstado.mensajeRestriccion(rol),
+                    admiteCambios = admite,
+                    errorGeneral = if (admite) null else TransicionesEstado.MENSAJE_CERRADA
                 )
             }
         }
     }
 
-    fun alCambiarTipoAccion(valor: TipoAccion) = _estado.update { it.copy(tipoAccion = valor) }
+    /**
+     * Al elegir "Envío de propuesta", si la oportunidad todavía no está en
+     * "Propuesta enviada" y ese avance está disponible, se preselecciona el
+     * estado: así la propuesta queda registrada también en el embudo (HU-16).
+     * El usuario puede desmarcarlo si no corresponde.
+     */
+    fun alCambiarTipoAccion(valor: TipoAccion) = _estado.update { actual ->
+        val sugerirPropuesta = valor == TipoAccion.ENVIO_PROPUESTA &&
+            actual.nuevoEstado == null &&
+            EstadoOportunidad.PROPUESTA_ENVIADA in actual.estadosDisponibles
+        actual.copy(
+            tipoAccion = valor,
+            nuevoEstado = if (sugerirPropuesta) EstadoOportunidad.PROPUESTA_ENVIADA else actual.nuevoEstado
+        )
+    }
 
     fun alCambiarFechaAccion(valor: Long) = _estado.update {
         it.copy(fechaAccion = valor, errores = it.errores.copy(fechaAccion = null))
@@ -187,6 +210,10 @@ class RegistrarSeguimientoViewModel(
 
     fun guardar() {
         val actual = _estado.value
+        if (!actual.admiteCambios) {
+            _estado.update { it.copy(errorGeneral = TransicionesEstado.MENSAJE_CERRADA) }
+            return
+        }
 
         val errores = ErroresSeguimiento(
             resultado = Validadores.texto(actual.resultado, "El resultado", minimo = 10),
@@ -253,13 +280,11 @@ class RegistrarSeguimientoViewModel(
                         estadoAnterior = actual.estadoActual,
                         estadoNuevo = estadoDestino,
                         observaciones = actual.observaciones.ifBlank { null }
-                    )
+                    ),
+                    // Gestión, estado y último contacto se guardan en una
+                    // sola transacción (ver SeguimientoDao.registrarGestion).
+                    contactoId = contactoId
                 )
-
-                // Solo se toca la oportunidad si efectivamente cambió de estado.
-                if (estadoDestino != actual.estadoActual) {
-                    oportunidades.cambiarEstado(oportunidadId, estadoDestino)
-                }
 
                 _estado.update { it.copy(guardando = false, guardadoConExito = true) }
             } catch (excepcion: Exception) {

@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.atenas.core.Fechas
+import cl.duoc.atenas.data.local.dao.GestionDeOrganizacion
 import cl.duoc.atenas.data.local.entity.Contacto
 import cl.duoc.atenas.ui.components.EstadoVacio
 import cl.duoc.atenas.ui.components.Etiqueta
@@ -132,6 +133,52 @@ fun DetalleOrganizacionScreen(
                     onClick = { alAbrirOportunidad(oportunidad.id) }
                 )
             }
+        }
+
+        // HU-14: todo lo conversado con esta organización, en orden cronológico
+        // inverso, sin tener que entrar a cada oportunidad.
+        item { TituloSeccion("Historial de gestiones (${estado.gestiones.size})") }
+
+        if (estado.gestiones.isEmpty()) {
+            item { EstadoVacio("Todavía no hay gestiones registradas con esta organización.") }
+        } else {
+            items(estado.gestiones, key = { "ge-${it.id}" }) { gestion ->
+                TarjetaGestion(gestion) { alAbrirOportunidad(gestion.oportunidadId) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TarjetaGestion(gestion: GestionDeOrganizacion, onClick: () -> Unit) {
+    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(Espaciado.md),
+            verticalArrangement = Arrangement.spacedBy(Espaciado.xs)
+        ) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = gestion.tipoAccion.etiqueta,
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    text = Fechas.aTexto(gestion.fechaAccion),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Text(
+                text = gestion.oportunidadNombre,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(gestion.resultado, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = "Registrada por ${gestion.usuarioNombre}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

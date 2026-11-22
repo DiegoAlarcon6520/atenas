@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 /**
  * Utilidades de fecha. Se usa Calendar y SimpleDateFormat en lugar de java.time
@@ -28,6 +29,35 @@ object Fechas {
     }.timeInMillis
 
     fun ahora(): Long = System.currentTimeMillis()
+
+    /*
+     * CONVERSIÓN CON EL CALENDARIO DE MATERIAL 3
+     *
+     * El DatePicker trabaja con la medianoche en UTC de cada día, mientras que
+     * el resto de la aplicación guarda la medianoche en hora local (la que
+     * devuelve hoy()). En Chile, UTC-3, la medianoche UTC del 11/11 equivale
+     * al 10/11 a las 21:00: si se guardara tal cual, la fecha quedaría
+     * corrida un día. Estas dos funciones traducen entre ambos mundos
+     * conservando el día del calendario.
+     */
+
+    /** Medianoche local de un día -> medianoche UTC del mismo día (para el DatePicker). */
+    fun localAUtc(millisLocal: Long): Long {
+        val local = Calendar.getInstance().apply { timeInMillis = millisLocal }
+        return Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            clear()
+            set(local.get(Calendar.YEAR), local.get(Calendar.MONTH), local.get(Calendar.DAY_OF_MONTH))
+        }.timeInMillis
+    }
+
+    /** Medianoche UTC entregada por el DatePicker -> medianoche local del mismo día. */
+    fun utcALocal(millisUtc: Long): Long {
+        val utc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = millisUtc }
+        return Calendar.getInstance().apply {
+            clear()
+            set(utc.get(Calendar.YEAR), utc.get(Calendar.MONTH), utc.get(Calendar.DAY_OF_MONTH))
+        }.timeInMillis
+    }
 
     fun masDias(base: Long, dias: Int): Long = Calendar.getInstance().apply {
         timeInMillis = base
@@ -60,7 +90,10 @@ object Fechas {
         set(Calendar.MILLISECOND, 0)
     }.timeInMillis
 
-    /** Diferencia en días completos entre dos instantes (b - a). */
+    /**
+     * Diferencia en días entre dos fechas (b - a). Se redondea porque un
+     * cambio de horario de verano hace que un "día" mida 23 o 25 horas.
+     */
     fun diasEntre(a: Long, b: Long): Int =
-        ((b - a) / (1000L * 60 * 60 * 24)).toInt()
+        Math.round((b - a) / (1000.0 * 60 * 60 * 24)).toInt()
 }

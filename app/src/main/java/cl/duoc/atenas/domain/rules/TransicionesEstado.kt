@@ -134,6 +134,17 @@ object TransicionesEstado {
         EstadoOportunidad.CERRADA
     )
 
+    /**
+     * Una oportunidad cerrada tiene su historial sellado: no admite nuevas
+     * gestiones ni cambios en sus antecedentes. Cualquier otro estado, incluso
+     * descartada, todavía puede recibir gestiones (por ejemplo, para dejar
+     * constancia antes de cerrarla).
+     */
+    fun admiteCambios(estado: EstadoOportunidad): Boolean = estado != EstadoOportunidad.CERRADA
+
+    const val MENSAJE_CERRADA =
+        "La oportunidad está cerrada: su historial quedó sellado y no admite cambios."
+
     /** Explica por qué un ejecutivo no ve ciertas opciones. */
     fun mensajeRestriccion(rol: RolUsuario): String? =
         if (Permisos.puedeConfirmarODescartar(rol)) {

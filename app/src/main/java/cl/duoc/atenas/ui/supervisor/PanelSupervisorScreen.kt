@@ -9,19 +9,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.ui.components.EstadoVacio
 import cl.duoc.atenas.ui.components.Etiqueta
 import cl.duoc.atenas.ui.components.IndicadorCarga
+import cl.duoc.atenas.ui.components.TarjetaGestionAtrasada
 import cl.duoc.atenas.ui.components.TarjetaMetrica
 import cl.duoc.atenas.ui.components.TarjetaOportunidad
 import cl.duoc.atenas.ui.components.TituloSeccion
@@ -30,6 +30,8 @@ import cl.duoc.atenas.ui.theme.colorDeEstado
 
 @Composable
 fun PanelSupervisorScreen(
+    alAbrirOportunidad: (Long) -> Unit,
+    alVerPropuestas: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: PanelSupervisorViewModel = viewModel(factory = PanelSupervisorViewModel.Factory)
 ) {
@@ -164,7 +166,7 @@ fun PanelSupervisorScreen(
             item { EstadoVacio("Todas las oportunidades tienen responsable asignado.") }
         } else {
             items(estado.sinAsignar, key = { "sin-${it.id}" }) { oportunidad ->
-                TarjetaOportunidad(oportunidad)
+                TarjetaOportunidad(oportunidad, onClick = { alAbrirOportunidad(oportunidad.id) })
             }
         }
 
@@ -173,28 +175,35 @@ fun PanelSupervisorScreen(
             item { EstadoVacio("El equipo está al día con sus seguimientos.") }
         } else {
             items(estado.atrasadas, key = { "atraso-${it.id}" }) { gestion ->
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                        contentColor = MaterialTheme.colorScheme.onErrorContainer
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier.padding(Espaciado.md),
-                        verticalArrangement = Arrangement.spacedBy(Espaciado.xs)
-                    ) {
-                        Text(gestion.oportunidadNombre, style = MaterialTheme.typography.titleSmall)
-                        Text(
-                            text = gestion.responsableNombre ?: "Sin responsable",
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                        Text(
-                            text = "Vencía el ${Fechas.aTexto(gestion.fechaProximoSeguimiento)}",
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
-                }
+                TarjetaGestionAtrasada(
+                    gestion = gestion,
+                    onClick = { alAbrirOportunidad(gestion.oportunidadId) },
+                    mostrarResponsable = true
+                )
+            }
+        }
+
+        // ---------- Alertas del equipo (HU-17) ----------
+        item { TituloSeccion("Propuestas sin respuesta (${estado.propuestasSinRespuesta.size})") }
+        if (estado.propuestasSinRespuesta.isEmpty()) {
+            item { EstadoVacio("No hay propuestas esperando respuesta.") }
+        } else {
+            items(estado.propuestasSinRespuesta, key = { "prop-${it.id}" }) { oportunidad ->
+                TarjetaOportunidad(oportunidad, onClick = { alAbrirOportunidad(oportunidad.id) })
+            }
+        }
+        item {
+            OutlinedButton(onClick = alVerPropuestas, modifier = Modifier.fillMaxWidth()) {
+                Text("Revisar todas las propuestas enviadas")
+            }
+        }
+
+        item { TituloSeccion("Oportunidades sin contacto (${estado.sinContacto.size})") }
+        if (estado.sinContacto.isEmpty()) {
+            item { EstadoVacio("Todas las oportunidades activas ya fueron contactadas.") }
+        } else {
+            items(estado.sinContacto, key = { "sinc-${it.id}" }) { oportunidad ->
+                TarjetaOportunidad(oportunidad, onClick = { alAbrirOportunidad(oportunidad.id) })
             }
         }
     }

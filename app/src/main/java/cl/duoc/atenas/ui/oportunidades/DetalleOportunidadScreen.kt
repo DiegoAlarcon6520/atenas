@@ -14,13 +14,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.filled.AssignmentInd
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -44,13 +44,14 @@ import cl.duoc.atenas.core.CalendarioApp
 import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.data.local.dao.OportunidadDetalle
 import cl.duoc.atenas.data.local.entity.Seguimiento
+import cl.duoc.atenas.domain.rules.SugerenciaPrioridad
+import cl.duoc.atenas.domain.rules.TransicionesEstado
 import cl.duoc.atenas.ui.components.EstadoVacio
 import cl.duoc.atenas.ui.components.EtiquetaEstado
 import cl.duoc.atenas.ui.components.EtiquetaPrioridad
 import cl.duoc.atenas.ui.components.IndicadorCarga
 import cl.duoc.atenas.ui.components.ListaDesplegable
 import cl.duoc.atenas.ui.theme.Espaciado
-import cl.duoc.atenas.domain.rules.SugerenciaPrioridad
 import java.util.Locale
 
 @Composable
@@ -105,15 +106,25 @@ fun DetalleOportunidadScreen(
                 )
                 // Tanto el ejecutivo a cargo como el supervisor pueden editar
                 // los antecedentes; lo que cambia según el rol son los estados
-                // y la asignación, que se manejan aparte.
-                Button(
-                    onClick = { alRegistrarGestion(oportunidad.id) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.NoteAdd, contentDescription = null)
+                // y la asignación, que se manejan aparte. Una oportunidad
+                // cerrada ya no admite gestiones ni ediciones.
+                val admiteCambios = TransicionesEstado.admiteCambios(oportunidad.estado)
+                if (admiteCambios) {
+                    Button(
+                        onClick = { alRegistrarGestion(oportunidad.id) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.NoteAdd, contentDescription = null)
+                        Text(
+                            text = "Registrar gestión",
+                            modifier = Modifier.padding(start = Espaciado.sm)
+                        )
+                    }
+                } else {
                     Text(
-                        text = "Registrar gestión",
-                        modifier = Modifier.padding(start = Espaciado.sm)
+                        text = TransicionesEstado.MENSAJE_CERRADA,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 OutlinedButton(
@@ -165,15 +176,17 @@ fun DetalleOportunidadScreen(
                     )
                 }
 
-                OutlinedButton(
-                    onClick = { alEditar(oportunidad.id) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Edit, contentDescription = null)
-                    Text(
-                        text = "Editar antecedentes",
-                        modifier = Modifier.padding(start = Espaciado.sm)
-                    )
+                if (admiteCambios) {
+                    OutlinedButton(
+                        onClick = { alEditar(oportunidad.id) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = null)
+                        Text(
+                            text = "Editar antecedentes",
+                            modifier = Modifier.padding(start = Espaciado.sm)
+                        )
+                    }
                 }
             }
         }
@@ -274,6 +287,7 @@ fun DetalleOportunidadScreen(
                     "Costo referencial" to formatearMonto(oportunidad.costoReferencial),
                     "Condiciones" to (oportunidad.condiciones ?: "Sin condiciones registradas"),
                     "Requisitos" to (oportunidad.requisitos ?: "Sin requisitos registrados"),
+                    "Espacios disponibles" to (oportunidad.espaciosDisponibles ?: "Sin información de espacios"),
                     "Observaciones" to (oportunidad.observaciones ?: "Sin observaciones"),
                     "Última actualización" to Fechas.aTextoConHora(oportunidad.fechaActualizacion)
                 )

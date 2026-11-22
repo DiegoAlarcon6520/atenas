@@ -99,6 +99,12 @@ el ViewModel, y toda la regla de negocio en `domain/`.
 | Galería | `core/ArchivosImagen.kt` (`copiarDesdeGaleria`), `ui/evidencias/` |
 | Tema claro/oscuro | `core/PreferenciasApp.kt`, `MainActivity.kt`, `ui/perfil/` |
 | Potencial y afinidad (HU-06) | `domain/model/Enums.kt`, `domain/rules/SugerenciaPrioridad.kt`, formulario y detalle de oportunidad |
+| Alertas (atrasadas, propuestas sin respuesta, sin contacto) | `SeguimientoDao.observarGestionesAtrasadas`, `OportunidadRepository.observarSinContacto` / `observarPropuestasSinRespuesta`, tableros en `ui/dashboard/` y `ui/supervisor/` |
+| Propuestas enviadas | `SeguimientoDao.observarPropuestas`, `ui/propuestas/` |
+| Filtros por fecha, ubicación, organización y responsable | `OportunidadDao.buscar`, `CriteriosBusqueda`, `RangoFecha` |
+| Historial de gestiones por organización | `SeguimientoDao.observarPorOrganizacion`, `DetalleOrganizacionScreen.kt` |
+| Transacción de una gestión | `SeguimientoDao.registrarGestion` (`@Transaction`) |
+| Fechas del calendario (UTC vs. local) | `Fechas.localAUtc` / `utcALocal`, `SelectorFecha` |
 | Volver a la raíz de una sección | `NavegacionRaiz.kt` (`pestanaActual` y el `onClick` de la barra inferior) |
 | Asignar responsable | `ui/oportunidades/DetalleOportunidadViewModel.kt` |
 | Cámara y fotos | `core/ArchivosImagen.kt`, `ui/evidencias/`, manifest y `rutas_archivos.xml` |

@@ -6,13 +6,17 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import cl.duoc.atenas.core.SesionManager
+import cl.duoc.atenas.data.local.dao.GestionDeOrganizacion
 import cl.duoc.atenas.data.local.dao.OportunidadResumen
 import cl.duoc.atenas.data.local.dao.OrganizacionDetalle
 import cl.duoc.atenas.data.local.entity.Contacto
 import cl.duoc.atenas.data.repository.ContactoRepository
 import cl.duoc.atenas.data.repository.OportunidadRepository
 import cl.duoc.atenas.data.repository.OrganizacionRepository
+import cl.duoc.atenas.data.repository.SeguimientoRepository
 import cl.duoc.atenas.di.contenedor
+import cl.duoc.atenas.domain.rules.Permisos
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -22,7 +26,8 @@ data class DetalleOrganizacionUiState(
     val cargando: Boolean = true,
     val detalle: OrganizacionDetalle? = null,
     val contactos: List<Contacto> = emptyList(),
-    val oportunidades: List<OportunidadResumen> = emptyList()
+    val oportunidades: List<OportunidadResumen> = emptyList(),
+    val gestiones: List<GestionDeOrganizacion> = emptyList()
 )
 
 /**
@@ -35,21 +40,34 @@ data class DetalleOrganizacionUiState(
  */
 class DetalleOrganizacionViewModel(
     organizacionId: Long,
+    sesion: SesionManager,
     organizaciones: OrganizacionRepository,
     contactos: ContactoRepository,
-    oportunidades: OportunidadRepository
+    oportunidades: OportunidadRepository,
+    seguimientos: SeguimientoRepository
 ) : ViewModel() {
+
+    /**
+     * Mismo alcance que el resto de la aplicación: el supervisor ve todas las
+     * oportunidades y gestiones de la organización; el ejecutivo, solo las
+     * suyas. La organización y sus contactos son compartidos.
+     */
+    private val alcance: Long? = sesion.requerirUsuario().let { usuario ->
+        if (Permisos.puedeVerTodasLasOportunidades(usuario.rol)) null else usuario.id
+    }
 
     val estado: StateFlow<DetalleOrganizacionUiState> = combine(
         organizaciones.observarDetalle(organizacionId),
         contactos.observarPorOrganizacion(organizacionId),
-        oportunidades.observarPorOrganizacion(organizacionId)
-    ) { detalle, listaContactos, listaOportunidades ->
+        oportunidades.observarPorOrganizacion(organizacionId, alcance),
+        seguimientos.observarPorOrganizacion(organizacionId, alcance)
+    ) { detalle, listaContactos, listaOportunidades, listaGestiones ->
         DetalleOrganizacionUiState(
             cargando = false,
             detalle = detalle,
             contactos = listaContactos,
-            oportunidades = listaOportunidades
+            oportunidades = listaOportunidades,
+            gestiones = listaGestiones
         )
     }.stateIn(
         scope = viewModelScope,
@@ -64,9 +82,11 @@ class DetalleOrganizacionViewModel(
                 DetalleOrganizacionViewModel(
                     organizacionId = argumentos.get<Long>("organizacionId")
                         ?: error("Falta el identificador de la organización."),
+                    sesion = contenedor.sesion,
                     organizaciones = contenedor.organizaciones,
                     contactos = contenedor.contactos,
-                    oportunidades = contenedor.oportunidades
+                    oportunidades = contenedor.oportunidades,
+                    seguimientos = contenedor.seguimientos
                 )
             }
         }

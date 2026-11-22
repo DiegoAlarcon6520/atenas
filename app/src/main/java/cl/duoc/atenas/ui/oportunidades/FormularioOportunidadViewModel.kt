@@ -24,7 +24,9 @@ import cl.duoc.atenas.domain.model.PotencialComercial
 import cl.duoc.atenas.domain.model.Prioridad
 import cl.duoc.atenas.domain.model.RolUsuario
 import cl.duoc.atenas.domain.model.TipoOportunidad
+import cl.duoc.atenas.domain.rules.Permisos
 import cl.duoc.atenas.domain.rules.SugerenciaPrioridad
+import cl.duoc.atenas.domain.rules.TransicionesEstado
 import cl.duoc.atenas.domain.validation.Validadores
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -74,6 +76,10 @@ data class ErroresFormulario(
 data class FormularioOportunidadUiState(
     val cargando: Boolean = true,
     val esEdicion: Boolean = false,
+    /** Solo el supervisor elige la prioridad; al ejecutivo se le asigna la sugerida (HU-05). */
+    val puedeCambiarPrioridad: Boolean = false,
+    /** False si la oportunidad está cerrada: no se puede guardar. */
+    val admiteCambios: Boolean = true,
     val guardando: Boolean = false,
     val guardadoConExito: Boolean = false,
     val errorGeneral: String? = null,
@@ -101,6 +107,7 @@ data class FormularioOportunidadUiState(
     val costoReferencial: String = "",
     val condiciones: String = "",
     val requisitos: String = "",
+    val espaciosDisponibles: String = "",
     val observaciones: String = "",
 
     // --- Catálogos para las listas desplegables ---
@@ -161,6 +168,7 @@ class FormularioOportunidadViewModel(
         viewModelScope.launch {
             // first() toma la primera emisión del Flow y deja de escuchar:
             // los catálogos no cambian mientras el formulario está abierto.
+            val rol = sesion.requerirUsuario().rol
             val regiones = catalogo.observarRegiones().first()
             todasLasComunas = catalogo.observarComunas().first()
             val listaOrganizaciones = organizaciones.observarTodas().first()
@@ -169,6 +177,7 @@ class FormularioOportunidadViewModel(
             _estado.update {
                 it.copy(
                     cargando = false,
+                    puedeCambiarPrioridad = Permisos.puedeCambiarPrioridad(rol),
                     regiones = regiones,
                     organizaciones = listaOrganizaciones
                 )
@@ -186,6 +195,12 @@ class FormularioOportunidadViewModel(
         _estado.update {
             it.copy(
                 esEdicion = true,
+                admiteCambios = TransicionesEstado.admiteCambios(existente.estado),
+                errorGeneral = if (TransicionesEstado.admiteCambios(existente.estado)) {
+                    null
+                } else {
+                    TransicionesEstado.MENSAJE_CERRADA
+                },
                 nombre = existente.nombre,
                 descripcion = existente.descripcion,
                 fuenteInformacion = existente.fuenteInformacion,
@@ -212,10 +227,14 @@ class FormularioOportunidadViewModel(
                 },
                 condiciones = existente.condiciones.orEmpty(),
                 requisitos = existente.requisitos.orEmpty(),
+                espaciosDisponibles = existente.espaciosDisponibles.orEmpty(),
                 observaciones = existente.observaciones.orEmpty(),
                 comunasDisponibles = todasLasComunas.filter { c -> c.regionId == comuna?.regionId },
+                // Se ofrecen los contactos activos, más el ya asignado aunque
+                // se haya desactivado, para no perderlo al editar.
                 contactosDisponibles = todosLosContactos.filter { c ->
-                    c.organizacionId == existente.organizacionId
+                    c.organizacionId == existente.organizacionId &&
+                        (c.activo || c.id == existente.contactoId)
                 }
             )
         }
@@ -241,14 +260,37 @@ class FormularioOportunidadViewModel(
 
     fun alCambiarTipo(valor: TipoOportunidad) = _estado.update { it.copy(tipo = valor) }
 
-    fun alCambiarPrioridad(valor: Prioridad) = _estado.update { it.copy(prioridad = valor) }
+    /** Ignorado si el perfil no puede cambiar la prioridad (la pantalla tampoco lo ofrece). */
+    fun alCambiarPrioridad(valor: Prioridad) = _estado.update {
+        if (it.puedeCambiarPrioridad) it.copy(prioridad = valor) else it
+    }
 
-    fun alCambiarPotencial(valor: PotencialComercial) = _estado.update { it.copy(potencial = valor) }
+    fun alCambiarPotencial(valor: PotencialComercial) = _estado.update {
+        conPrioridadAutomatica(it.copy(potencial = valor))
+    }
 
-    fun alCambiarAfinidad(valor: AfinidadPublico) = _estado.update { it.copy(afinidad = valor) }
+    fun alCambiarAfinidad(valor: AfinidadPublico) = _estado.update {
+        conPrioridadAutomatica(it.copy(afinidad = valor))
+    }
 
-    /** Copia la prioridad sugerida al campo de prioridad. */
-    fun aplicarPrioridadSugerida() = _estado.update { it.copy(prioridad = it.prioridadSugerida) }
+    /**
+     * Cuando un ejecutivo registra una oportunidad nueva, la prioridad sigue
+     * a la sugerida: él evalúa y el supervisor decide si la ajusta. Al editar,
+     * el ejecutivo conserva la prioridad que fijó el supervisor.
+     */
+    private fun conPrioridadAutomatica(estado: FormularioOportunidadUiState) =
+        if (!estado.puedeCambiarPrioridad && !estado.esEdicion) {
+            estado.copy(prioridad = estado.prioridadSugerida)
+        } else {
+            estado
+        }
+
+    /** Copia la prioridad sugerida al campo de prioridad (solo supervisor). */
+    fun aplicarPrioridadSugerida() = _estado.update {
+        if (it.puedeCambiarPrioridad) it.copy(prioridad = it.prioridadSugerida) else it
+    }
+
+    fun alCambiarEspacios(valor: String) = _estado.update { it.copy(espaciosDisponibles = valor) }
 
     fun alCambiarFechaInicio(valor: Long) = _estado.update {
         it.copy(fechaInicioEvento = valor, errores = it.errores.copy(fechaInicioEvento = null))
@@ -289,7 +331,8 @@ class FormularioOportunidadViewModel(
         it.copy(
             organizacionId = valor,
             contactoId = null,
-            contactosDisponibles = todosLosContactos.filter { c -> c.organizacionId == valor },
+            // Un contacto desactivado ya no es un interlocutor válido.
+            contactosDisponibles = todosLosContactos.filter { c -> c.organizacionId == valor && c.activo },
             errores = it.errores.copy(organizacion = null)
         )
     }
@@ -365,6 +408,10 @@ class FormularioOportunidadViewModel(
      */
     fun guardar() {
         val actual = _estado.value
+        if (!actual.admiteCambios) {
+            _estado.update { it.copy(errorGeneral = TransicionesEstado.MENSAJE_CERRADA) }
+            return
+        }
         val errores = validar(actual)
 
         if (errores.hayErrores) {
@@ -404,12 +451,14 @@ class FormularioOportunidadViewModel(
                             contactoId = actual.contactoId,
                             publicoObjetivo = actual.publicoObjetivo.trim(),
                             publicoEsperado = actual.publicoEsperado.toInt(),
-                            prioridad = actual.prioridad,
+                            // El ejecutivo no puede cambiar la prioridad al editar.
+                            prioridad = if (actual.puedeCambiarPrioridad) actual.prioridad else original.prioridad,
                             potencial = actual.potencial,
                             afinidad = actual.afinidad,
                             costoReferencial = actual.costoReferencial.toDoubleOrNull() ?: 0.0,
                             condiciones = actual.condiciones.ifBlank { null },
                             requisitos = actual.requisitos.ifBlank { null },
+                            espaciosDisponibles = actual.espaciosDisponibles.ifBlank { null },
                             observaciones = actual.observaciones.ifBlank { null },
                             fechaActualizacion = ahora
                         )
@@ -437,7 +486,7 @@ class FormularioOportunidadViewModel(
                             creadoPorId = usuario.id,
                             publicoObjetivo = actual.publicoObjetivo.trim(),
                             publicoEsperado = actual.publicoEsperado.toInt(),
-                            prioridad = actual.prioridad,
+                            prioridad = if (actual.puedeCambiarPrioridad) actual.prioridad else actual.prioridadSugerida,
                             potencial = actual.potencial,
                             afinidad = actual.afinidad,
                             // Toda oportunidad nueva entra al embudo por el principio.
@@ -445,6 +494,7 @@ class FormularioOportunidadViewModel(
                             costoReferencial = actual.costoReferencial.toDoubleOrNull() ?: 0.0,
                             condiciones = actual.condiciones.ifBlank { null },
                             requisitos = actual.requisitos.ifBlank { null },
+                            espaciosDisponibles = actual.espaciosDisponibles.ifBlank { null },
                             observaciones = actual.observaciones.ifBlank { null },
                             fechaCreacion = ahora,
                             fechaActualizacion = ahora
