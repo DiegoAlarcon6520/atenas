@@ -14,6 +14,7 @@ import cl.duoc.atenas.data.local.dao.OrganizacionDetalle
 import cl.duoc.atenas.data.local.dao.OrganizacionResumen
 import cl.duoc.atenas.data.local.dao.PropuestaEnviada
 import cl.duoc.atenas.data.local.dao.SeguimientoDao
+import cl.duoc.atenas.data.local.dao.SincronizacionDao
 import cl.duoc.atenas.data.local.dao.UsuarioDao
 import cl.duoc.atenas.data.local.entity.Comuna
 import cl.duoc.atenas.data.local.entity.Contacto
@@ -68,6 +69,9 @@ class UsuarioDaoFalso(usuarios: List<Usuario> = listOf(Datos.ejecutiva, Datos.ej
     override suspend fun actualizar(usuario: Usuario) {
         usuarios.update { lista -> lista.map { if (it.id == usuario.id) usuario else it } }
     }
+    override suspend fun guardar(usuario: Usuario) {
+        usuarios.update { lista -> lista.filterNot { it.id == usuario.id } + usuario }
+    }
 }
 
 class CatalogoDaoFalso : CatalogoDao {
@@ -109,7 +113,7 @@ class OrganizacionDaoFalso : OrganizacionDao {
 
     override suspend fun insertar(organizacion: Organizacion): Long {
         if (fallar) throw FalloSimulado(mensajeFallo)
-        val id = siguienteId++
+        val id = if (organizacion.id != 0L) organizacion.id else siguienteId++
         organizaciones.update { it + organizacion.copy(id = id) }
         return id
     }
@@ -136,7 +140,7 @@ class ContactoDaoFalso : ContactoDao {
 
     override suspend fun insertar(contacto: Contacto): Long {
         if (fallar) throw FalloSimulado(mensajeFallo)
-        val id = siguienteId++
+        val id = if (contacto.id != 0L) contacto.id else siguienteId++
         contactos.update { it + contacto.copy(id = id) }
         return id
     }
@@ -295,7 +299,7 @@ class OportunidadDaoFalso : OportunidadDao {
 
     override suspend fun insertar(oportunidad: Oportunidad): Long {
         if (fallar) throw FalloSimulado(mensajeFallo)
-        val id = siguienteId++
+        val id = if (oportunidad.id != 0L) oportunidad.id else siguienteId++
         oportunidades.update { it + oportunidad.copy(id = id) }
         return id
     }
@@ -360,7 +364,7 @@ class SeguimientoDaoFalso(private val oportunidades: OportunidadDaoFalso? = null
 
     override suspend fun insertar(seguimiento: Seguimiento): Long {
         if (fallar) throw FalloSimulado(mensajeFallo)
-        val id = siguienteId++
+        val id = if (seguimiento.id != 0L) seguimiento.id else siguienteId++
         seguimientos.update { it + seguimiento.copy(id = id) }
         return id
     }
@@ -387,4 +391,35 @@ class EvidenciaDaoFalso : EvidenciaDao {
     override suspend fun eliminar(evidencia: Evidencia) {
         evidencias.update { it - evidencia }
     }
+}
+
+/**
+ * La sincronización real (reemplazarTodo) corre con su código verdadero:
+ * este falso solo dirige cada borrado e inserción a los DAO falsos.
+ */
+class SincronizacionDaoFalso(
+    private val usuarios: UsuarioDaoFalso,
+    private val catalogo: CatalogoDaoFalso,
+    private val organizaciones: OrganizacionDaoFalso,
+    private val contactos: ContactoDaoFalso,
+    private val oportunidades: OportunidadDaoFalso,
+    private val seguimientos: SeguimientoDaoFalso,
+    private val evidencias: EvidenciaDaoFalso
+) : SincronizacionDao() {
+    override suspend fun borrarEvidencias() { evidencias.evidencias.value = emptyList() }
+    override suspend fun borrarSeguimientos() { seguimientos.seguimientos.value = emptyList() }
+    override suspend fun borrarOportunidades() { oportunidades.oportunidades.value = emptyList() }
+    override suspend fun borrarContactos() { contactos.contactos.value = emptyList() }
+    override suspend fun borrarOrganizaciones() { organizaciones.organizaciones.value = emptyList() }
+    override suspend fun borrarComunas() { catalogo.comunas.value = emptyList() }
+    override suspend fun borrarRegiones() { catalogo.regiones.value = emptyList() }
+    override suspend fun borrarUsuarios() { usuarios.usuarios.value = emptyList() }
+    override suspend fun insertarUsuarios(usuarios: List<Usuario>) { this.usuarios.usuarios.update { it + usuarios } }
+    override suspend fun insertarRegiones(regiones: List<Region>) { catalogo.regiones.update { it + regiones } }
+    override suspend fun insertarComunas(comunas: List<Comuna>) { catalogo.comunas.update { it + comunas } }
+    override suspend fun insertarOrganizaciones(organizaciones: List<Organizacion>) { this.organizaciones.organizaciones.update { it + organizaciones } }
+    override suspend fun insertarContactos(contactos: List<Contacto>) { this.contactos.contactos.update { it + contactos } }
+    override suspend fun insertarOportunidades(oportunidades: List<Oportunidad>) { this.oportunidades.oportunidades.update { it + oportunidades } }
+    override suspend fun insertarSeguimientos(seguimientos: List<Seguimiento>) { this.seguimientos.seguimientos.update { it + seguimientos } }
+    override suspend fun insertarEvidencias(evidencias: List<Evidencia>) { this.evidencias.evidencias.update { it + evidencias } }
 }

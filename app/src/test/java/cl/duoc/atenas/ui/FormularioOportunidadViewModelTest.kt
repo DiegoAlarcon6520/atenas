@@ -10,6 +10,7 @@ import cl.duoc.atenas.domain.rules.TransicionesEstado
 import cl.duoc.atenas.prueba.Datos
 import cl.duoc.atenas.prueba.Entorno
 import cl.duoc.atenas.prueba.ReglaCorrutinas
+import cl.duoc.atenas.prueba.errorHttp
 import cl.duoc.atenas.ui.oportunidades.FormularioOportunidadViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -356,6 +357,19 @@ class FormularioOportunidadViewModelTest {
         assertFalse(vm.estado.value.guardadoConExito)
         assertFalse(vm.estado.value.guardando)
         assertEquals("No se pudo guardar: la base de datos rechazó la operación", vm.estado.value.errorGeneral)
+    }
+
+    @Test
+    fun `si el servidor rechaza la oportunidad se muestra su motivo`() {
+        val e = Entorno()
+        e.api.fallo = errorHttp(400, "La comuna 10 no existe")
+        val vm = crear(e)
+        llenarValido(vm)
+
+        vm.guardar()
+
+        assertEquals("No se pudo guardar: La comuna 10 no existe", vm.estado.value.errorGeneral)
+        assertTrue(e.oportunidadDao.oportunidades.value.isEmpty())
     }
 
     @Test

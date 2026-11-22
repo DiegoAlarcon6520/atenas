@@ -114,26 +114,30 @@ class PanelSupervisorViewModel(
                 _mensajes.tryEmit("No se puede aplicar ese cambio desde el estado actual.")
                 return@launch
             }
-            seguimientos.registrar(
-                Seguimiento(
-                    oportunidadId = oportunidadId,
-                    usuarioId = usuario.id,
-                    tipoAccion = if (confirmar) TipoAccion.CONFIRMACION else TipoAccion.CIERRE,
-                    fechaAccion = Fechas.hoy(),
-                    resultado = if (confirmar) {
-                        "Participación confirmada por el supervisor desde el panel."
-                    } else {
-                        "Oportunidad descartada por el supervisor desde el panel."
-                    },
-                    proximaAccion = null,
-                    fechaProximoSeguimiento = null,
-                    estadoAnterior = oportunidad.estado,
-                    estadoNuevo = destino,
-                    observaciones = null
-                ),
-                contactoId = null
-            )
-            _mensajes.tryEmit(if (confirmar) "Participación confirmada" else "Oportunidad descartada")
+            try {
+                seguimientos.registrar(
+                    Seguimiento(
+                        oportunidadId = oportunidadId,
+                        usuarioId = usuario.id,
+                        tipoAccion = if (confirmar) TipoAccion.CONFIRMACION else TipoAccion.CIERRE,
+                        fechaAccion = Fechas.hoy(),
+                        resultado = if (confirmar) {
+                            "Participación confirmada por el supervisor desde el panel."
+                        } else {
+                            "Oportunidad descartada por el supervisor desde el panel."
+                        },
+                        proximaAccion = null,
+                        fechaProximoSeguimiento = null,
+                        estadoAnterior = oportunidad.estado,
+                        estadoNuevo = destino,
+                        observaciones = null
+                    ),
+                    contactoId = null
+                )
+                _mensajes.tryEmit(if (confirmar) "Participación confirmada" else "Oportunidad descartada")
+            } catch (excepcion: Exception) {
+                _mensajes.tryEmit("No se pudo registrar la decisión: ${excepcion.message}")
+            }
         }
     }
 }

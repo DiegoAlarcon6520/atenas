@@ -7,7 +7,10 @@ import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.data.local.entity.Evidencia
 import cl.duoc.atenas.data.repository.EvidenciaRepository
 import cl.duoc.atenas.data.repository.OportunidadRepository
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
@@ -50,25 +53,44 @@ class EvidenciasViewModel(
         initialValue = EvidenciasUiState()
     )
 
-    /** Registra en la base la foto que la cámara acaba de escribir. */
-    fun agregarEvidencia(uri: String, descripcion: String?) {
+    /** Resultado de cada operación, para el snackbar. */
+    private val _mensajes = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    val mensajes: SharedFlow<String> = _mensajes.asSharedFlow()
+
+    /**
+     * Registra la foto que la cámara acaba de escribir. Si el servidor no la
+     * acepta (por ejemplo, sin conexión), se borra el archivo para no dejar
+     * una foto huérfana que no aparece en ninguna lista.
+     */
+    fun agregarEvidencia(uri: String, descripcion: String?, mensajeExito: String = "Evidencia guardada") {
         viewModelScope.launch {
-            evidencias.agregar(
-                Evidencia(
-                    oportunidadId = oportunidadId,
-                    uri = uri,
-                    descripcion = descripcion?.ifBlank { null },
-                    fechaCaptura = Fechas.ahora()
+            try {
+                evidencias.agregar(
+                    Evidencia(
+                        oportunidadId = oportunidadId,
+                        uri = uri,
+                        descripcion = descripcion?.ifBlank { null },
+                        fechaCaptura = Fechas.ahora()
+                    )
                 )
-            )
+                _mensajes.tryEmit(mensajeExito)
+            } catch (excepcion: Exception) {
+                ArchivosImagen.eliminarArchivo(uri)
+                _mensajes.tryEmit("No se pudo guardar la evidencia: ${excepcion.message}")
+            }
         }
     }
 
-    /** Elimina la fila y además el archivo físico, para no dejar basura. */
+    /** Elimina el registro y después el archivo físico, para no dejar basura. */
     fun eliminarEvidencia(evidencia: Evidencia) {
         viewModelScope.launch {
-            evidencias.eliminar(evidencia)
-            ArchivosImagen.eliminarArchivo(evidencia.uri)
+            try {
+                evidencias.eliminar(evidencia)
+                ArchivosImagen.eliminarArchivo(evidencia.uri)
+                _mensajes.tryEmit("Evidencia eliminada")
+            } catch (excepcion: Exception) {
+                _mensajes.tryEmit("No se pudo eliminar la evidencia: ${excepcion.message}")
+            }
         }
     }
 }

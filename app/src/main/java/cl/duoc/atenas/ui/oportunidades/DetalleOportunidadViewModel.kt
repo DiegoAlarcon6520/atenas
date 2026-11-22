@@ -11,7 +11,10 @@ import cl.duoc.atenas.data.repository.SeguimientoRepository
 import cl.duoc.atenas.data.repository.UsuarioRepository
 import cl.duoc.atenas.domain.model.RolUsuario
 import cl.duoc.atenas.domain.rules.Permisos
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
@@ -79,10 +82,20 @@ class DetalleOportunidadViewModel(
      * control a los supervisores: la regla no puede depender de la UI.
      * Pasar null deja la oportunidad sin responsable.
      */
+    /** Mensajes de una sola vez para el snackbar (resultado de la asignación). */
+    private val _mensajes = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    val mensajes: SharedFlow<String> = _mensajes.asSharedFlow()
+
     fun asignarResponsable(responsableId: Long?) {
         if (!Permisos.puedeAsignarResponsable(usuario.rol)) return
         viewModelScope.launch {
-            oportunidades.asignarResponsable(oportunidadId, responsableId)
+            try {
+                oportunidades.asignarResponsable(oportunidadId, responsableId, asignadoPor = usuario.id)
+                _mensajes.tryEmit(if (responsableId == null) "Responsable quitado" else "Responsable asignado")
+            } catch (excepcion: Exception) {
+                // Sin conexión o rechazado por el servidor: no cambia nada y se avisa.
+                _mensajes.tryEmit("No se pudo asignar: ${excepcion.message}")
+            }
         }
     }
 }

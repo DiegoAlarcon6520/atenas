@@ -5,6 +5,9 @@ import androidx.lifecycle.viewModelScope
 import cl.duoc.atenas.core.SesionManager
 import cl.duoc.atenas.data.repository.UsuarioRepository
 import cl.duoc.atenas.domain.validation.Validadores
+import cl.duoc.atenas.data.repository.ErrorDelServidor
+import cl.duoc.atenas.data.repository.SincronizacionRepository
+import cl.duoc.atenas.data.repository.SinConexionException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,6 +38,7 @@ data class LoginUiState(
 
 class LoginViewModel(
     private val usuarios: UsuarioRepository,
+    private val sincronizacion: SincronizacionRepository,
     private val sesion: SesionManager
 ) : ViewModel() {
 
@@ -78,6 +82,15 @@ class LoginViewModel(
                     )
                 }
             } else {
+                // Antes de entrar se descarga la cartera desde el servidor. Si
+                // no hay conexión se entra igual, con la copia local.
+                try {
+                    sincronizacion.sincronizar(encontrado.id)
+                } catch (e: SinConexionException) {
+                    // Sin red: se trabaja con los últimos datos descargados.
+                } catch (e: ErrorDelServidor) {
+                    // El servidor falló: misma decisión, mejor entrar con la copia local que no entrar.
+                }
                 _estado.update { it.copy(cargando = false) }
                 sesion.iniciarSesion(encontrado)
             }

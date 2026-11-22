@@ -11,6 +11,7 @@ import cl.duoc.atenas.data.local.dao.EvidenciaDao
 import cl.duoc.atenas.data.local.dao.OportunidadDao
 import cl.duoc.atenas.data.local.dao.OrganizacionDao
 import cl.duoc.atenas.data.local.dao.SeguimientoDao
+import cl.duoc.atenas.data.local.dao.SincronizacionDao
 import cl.duoc.atenas.data.local.dao.UsuarioDao
 import cl.duoc.atenas.data.local.entity.Comuna
 import cl.duoc.atenas.data.local.entity.Contacto
@@ -58,6 +59,7 @@ abstract class AtenasDatabase : RoomDatabase() {
     abstract fun oportunidadDao(): OportunidadDao
     abstract fun seguimientoDao(): SeguimientoDao
     abstract fun evidenciaDao(): EvidenciaDao
+    abstract fun sincronizacionDao(): SincronizacionDao
 
     companion object {
 

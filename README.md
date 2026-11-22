@@ -119,7 +119,9 @@ El rediseño parte de cómo trabaja el equipo comercial, no solo del aspecto:
 Patrón **MVVM** sobre Jetpack Compose y Material Design 3:
 
 ```
-UI (Composables) → ViewModel (StateFlow) → Repository → DAO (Room) → SQLite
+                                         ┌→ DAO (Room) → SQLite                 lecturas y copia local
+UI (Composables) → ViewModel (StateFlow) → Repository
+                                         └→ AtenasApi (Retrofit) → atenas-backend   escrituras
 ```
 
 La interfaz no toma decisiones: observa el estado que publica el ViewModel y le
@@ -138,6 +140,7 @@ app/src/main/java/cl/duoc/atenas/
 │   └── validation/       Validadores de formulario (funciones puras)
 ├── data/
 │   ├── local/            Base de datos Room, entidades, DAOs y datos semilla
+│   ├── remote/           Retrofit: endpoints del backend y DTO del JSON
 │   └── repository/       Única puerta de acceso a datos para los ViewModel
 ├── di/                   Inyección de dependencias manual
 └── ui/
@@ -222,7 +225,7 @@ Al volver a abrir la aplicación la base se siembra nuevamente desde cero.
 
 ## Pruebas unitarias y cobertura
 
-Hay **222 pruebas unitarias** (JUnit 4, patrón Arrange–Act–Assert) que corren
+Hay **242 pruebas unitarias** (JUnit 4, patrón Arrange–Act–Assert) que corren
 en la JVM, sin emulador. Se agrupan en tres capas:
 
 | Capa | Archivo | Pruebas | Qué verifica |
@@ -235,21 +238,23 @@ en la JVM, sin emulador. Se agrupan en tres capas:
 | | `domain/ReglasComplementariasTest` | 10 | Casos de borde: cada rama de los `when` y valores límite |
 | | `core/FechasTest` | 5 | Conversión de fechas entre el calendario (UTC) y la hora local |
 | Datos | `data/RepositoriosTest` | 25 | Traducción de filtros a la base, rangos de fechas, autenticación, transacción de gestiones, sesión |
-| Pantallas | `ui/LoginViewModelTest` | 7 | Validación de campos y credenciales |
+| | `data/ServidorTest` | 13 | Login con y sin conexión, sincronización que conserva la clave local, mensajes de error del servidor, escrituras rechazadas que no tocan la copia local |
+| Pantallas | `ui/LoginViewModelTest` | 10 | Validación de campos y credenciales; descarga de la cartera al entrar, con y sin conexión |
 | | `ui/DashboardEjecutivoViewModelTest` | 7 | "Qué hacer hoy": orden por urgencia, sin repetidos, embudo |
-| | `ui/PanelSupervisorViewModelTest` | 6 | Métricas del equipo, conversión, confirmar y descartar |
+| | `ui/PanelSupervisorViewModelTest` | 7 | Métricas del equipo, conversión, confirmar y descartar, decisión rechazada por el servidor |
 | | `ui/AgendaViewModelTest` | 5 | Agrupación por cercanía, eventos en riesgo, alcance por perfil |
 | | `ui/ListaOportunidadesViewModelTest` | 10 | Pestañas por etapa, cada filtro, región y comuna |
-| | `ui/DetallesViewModelTest` | 9 | Acceso por perfil al detalle, asignación, ficha y listado de organizaciones |
-| | `ui/FormularioOportunidadViewModelTest` | 27 | Pasos, validaciones, prioridad sugerida, crear, editar, oportunidad cerrada, errores de la base |
+| | `ui/DetallesViewModelTest` | 11 | Acceso por perfil al detalle, asignación (y su error), ficha y listado de organizaciones |
+| | `ui/FormularioOportunidadViewModelTest` | 28 | Pasos, validaciones, prioridad sugerida, crear, editar, oportunidad cerrada, errores de la base y del servidor |
 | | `ui/RegistrarSeguimientoViewModelTest` | 21 | Transiciones por perfil, próxima acción, cierre, reutilizar gestión, errores |
 | | `ui/AlertasYPropuestasViewModelTest` | 6 | Alertas de la campana por perfil y filtro de propuestas |
 | | `ui/FormulariosOrganizacionViewModelTest` | 17 | Alta y edición de organizaciones y contactos |
 
 Los ViewModel se prueban con **DAO falsos en memoria**
-(`app/src/test/.../prueba/DaosFalsos.kt`): reemplazan a Room, permiten fijar
-exactamente qué datos ve la pantalla y simular que la base rechaza una
-escritura. `ReglaCorrutinas` reemplaza el hilo principal de Android por un
+(`app/src/test/.../prueba/DaosFalsos.kt`) y un **servidor falso**
+(`ApiFalsa.kt`): reemplazan a Room y a Retrofit, permiten fijar exactamente
+qué datos ve la pantalla y simular que la base o el servidor rechazan una
+escritura, o que no hay conexión. `ReglaCorrutinas` reemplaza el hilo principal de Android por un
 despachador de prueba (`kotlinx-coroutines-test`) para que cada prueba sea
 determinista.
 
@@ -280,16 +285,42 @@ lógica de negocio (configurado en `app/build.gradle.kts`, bloque `kover`):
 
 - `domain` completo: validaciones, permisos, máquina de estados y reglas.
 - `core.Fechas` y `core.SesionManager`.
-- `data.repository`: la traducción entre el dominio y la base.
+- `data.repository`: la traducción entre el dominio, la base y el servidor
+  (qué hacer sin conexión, cómo mostrar un error del servidor).
 - Los ViewModel de `ui`: deciden qué ve cada perfil y qué se puede guardar.
 
 Queda fuera, a propósito, lo que no tiene decisiones que probar o que solo se
 puede verificar en un dispositivo: `MainActivity`, `AtenasApp`, las pantallas
 Compose, el tema, la navegación, la base Room (`data.local`, que Room genera),
 los datos semilla, la inyección de dependencias (`di`, donde viven las
-fábricas de ViewModel), cámara, calendario y preferencias. También se excluyen
+fábricas de ViewModel), la configuración de Retrofit y los DTO (`data.remote`,
+que solo describen la forma del JSON), cámara, calendario y preferencias. También se excluyen
 `PerfilViewModel` y `EvidenciasViewModel`, que solo reenvían llamadas sin
 tomar decisiones, y `CriteriosBusqueda`, que es solo un contenedor de datos.
+
+## Conexión con el backend
+
+La app consume el microservicio
+[atenas-backend](https://github.com/DiegoAlarcon6520/atenas-backend)
+(Spring Boot + MySQL) con Retrofit.
+
+- **El servidor es la fuente de verdad.** Crear, editar, asignar y registrar
+  gestiones va primero al servidor, que vuelve a aplicar las reglas de
+  negocio. Lo que confirma se guarda en Room.
+- **Room es la copia para trabajar sin conexión.** Las pantallas leen siempre
+  de Room, así que la cartera, la agenda y las alertas funcionan sin red.
+- **Al iniciar sesión** se valida la clave en el servidor y se descarga la
+  cartera (`GET /api/sincronizacion`). El ejecutivo recibe solo la suya; el
+  supervisor, la de todo el equipo.
+- **Sin conexión** se puede entrar con una cuenta que ya inició sesión en ese
+  teléfono y consultar los datos. Las escrituras muestran "Sin conexión con
+  el servidor" y no cambian nada.
+
+Para probarla: levanta atenas-backend en IntelliJ (con MySQL de XAMPP) y
+ejecuta la app en el emulador. La dirección del servidor está en
+`data/remote/RetrofitClient.kt` (`http://10.0.2.2:8080/api/`, que en el
+emulador apunta al PC). Para un celular físico, usa la IP del PC y agrégala
+en `res/xml/network_security_config.xml`.
 
 ## Nota sobre los datos
 

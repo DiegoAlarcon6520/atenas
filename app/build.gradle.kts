@@ -62,7 +62,11 @@ dependencies {
     // Carga y cacheo de imágenes (vista previa de las evidencias)
     implementation(libs.coil.compose)
 
-    // Persistencia local
+    // Comunicación con el microservicio (atenas-backend): HTTP + JSON
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+
+    // Persistencia local: copia de los datos del servidor para trabajar sin conexión
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
 

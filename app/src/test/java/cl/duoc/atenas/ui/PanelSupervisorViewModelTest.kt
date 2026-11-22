@@ -6,6 +6,7 @@ import cl.duoc.atenas.domain.model.TipoAccion
 import cl.duoc.atenas.prueba.Datos
 import cl.duoc.atenas.prueba.Entorno
 import cl.duoc.atenas.prueba.ReglaCorrutinas
+import cl.duoc.atenas.prueba.errorHttp
 import cl.duoc.atenas.prueba.observar
 import cl.duoc.atenas.prueba.recolectar
 import cl.duoc.atenas.ui.supervisor.PanelSupervisorViewModel
@@ -115,6 +116,23 @@ class PanelSupervisorViewModelTest {
         assertEquals(EstadoOportunidad.CERRADA, e.oportunidadDao.oportunidades.value.single().estado)
         assertTrue(e.seguimientoDao.seguimientos.value.isEmpty())
         assertEquals(listOf("No se puede aplicar ese cambio desde el estado actual."), mensajes)
+    }
+
+    @Test
+    fun `si el servidor rechaza la decision se avisa su motivo y nada cambia`() = runTest {
+        // Arrange
+        e.oportunidadDao.agregar(Datos.oportunidad(id = 1, estado = EstadoOportunidad.EN_ESPERA_RESPUESTA))
+        e.api.fallo = errorHttp(409, "La oportunidad cambió de estado: recarga los datos")
+        val vm = crear()
+        val mensajes = recolectar(vm.mensajes)
+
+        // Act
+        vm.decidir(1, confirmar = true)
+
+        // Assert
+        assertEquals(EstadoOportunidad.EN_ESPERA_RESPUESTA, e.oportunidadDao.oportunidades.value.single().estado)
+        assertTrue(e.seguimientoDao.seguimientos.value.isEmpty())
+        assertEquals(listOf("No se pudo registrar la decisión: La oportunidad cambió de estado: recarga los datos"), mensajes)
     }
 
     @Test

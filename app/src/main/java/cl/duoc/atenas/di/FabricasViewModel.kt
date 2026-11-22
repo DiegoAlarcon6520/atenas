@@ -77,6 +77,7 @@ object FabricasViewModel {
         initializer {
             LoginViewModel(
                 usuarios = contenedor.usuarios,
+                sincronizacion = contenedor.sincronizacion,
                 sesion = contenedor.sesion
             )
         }
