@@ -2,10 +2,14 @@ package cl.duoc.atenas.ui.navigation
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -13,8 +17,6 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -22,11 +24,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -36,7 +43,13 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import cl.duoc.atenas.AtenasApp
 import cl.duoc.atenas.data.local.entity.Usuario
+import cl.duoc.atenas.domain.model.RolUsuario
 import cl.duoc.atenas.domain.rules.Permisos
+import cl.duoc.atenas.ui.agenda.AgendaScreen
+import cl.duoc.atenas.ui.alertas.AlertasViewModel
+import cl.duoc.atenas.ui.components.EncabezadoSaludo
+import cl.duoc.atenas.ui.components.HojaAlertas
+import cl.duoc.atenas.ui.components.gruposDeAlertas
 import cl.duoc.atenas.ui.dashboard.DashboardEjecutivoScreen
 import cl.duoc.atenas.ui.evidencias.EvidenciasScreen
 import cl.duoc.atenas.ui.login.LoginScreen
@@ -51,6 +64,10 @@ import cl.duoc.atenas.ui.perfil.PerfilScreen
 import cl.duoc.atenas.ui.propuestas.PropuestasScreen
 import cl.duoc.atenas.ui.seguimiento.RegistrarSeguimientoScreen
 import cl.duoc.atenas.ui.supervisor.PanelSupervisorScreen
+import cl.duoc.atenas.ui.theme.Espaciado
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlinx.coroutines.launch
 
 /**
@@ -125,84 +142,118 @@ private fun ContenedorPrincipal(usuario: Usuario) {
         alcanceCorrutina.launch { estadoSnackbar.showSnackbar(mensaje) }
     }
 
+    // Abre una pestaña sin apilar copias: cada pestaña recuerda su propia
+    // pila (popUpTo + saveState + restoreState). Tocar la pestaña en la que
+    // ya se está vuelve a su pantalla raíz.
+    val irAPestana: (String) -> Unit = { ruta ->
+        if (pestanaActual == ruta) {
+            navController.popBackStack(ruta, inclusive = false)
+        } else {
+            navController.navigate(ruta) {
+                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
+
+    // Alertas de la campana. La clave por usuario evita que, al cerrar sesión
+    // y entrar con otra cuenta, se reutilice el ViewModel de la anterior.
+    val alertasViewModel: AlertasViewModel = viewModel(
+        key = "alertas-${usuario.id}",
+        factory = AlertasViewModel.Factory
+    )
+    val alertas by alertasViewModel.alertas.collectAsStateWithLifecycle()
+    var mostrarAlertas by rememberSaveable { mutableStateOf(false) }
+
+    // El panel siempre muestra algo (los pendientes o "Estás al día"), así el
+    // toque en la campana nunca parece no haber hecho nada.
+    if (mostrarAlertas) {
+        HojaAlertas(
+            grupos = gruposDeAlertas(alertas),
+            alCerrar = { mostrarAlertas = false },
+            alAbrirOportunidad = { id -> navController.navigate(Rutas.detalleOportunidad(id)) }
+        )
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(estadoSnackbar) },
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(tituloDeRuta(rutaActual, usuario.rol)) },
-                navigationIcon = {
-                    // La flecha de volver solo aparece en pantallas que se
-                    // abrieron encima de una pestaña (detalle, formulario).
-                    if (!esRutaPrincipal) {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Volver"
-                            )
-                        }
-                    }
-                },
-                // Barra sobre la superficie de la aplicación, con el título
-                // en el color de marca. Un bloque de color saturado arriba
-                // compite con los colores semánticos de los estados, que son
-                // los que tienen que destacar.
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.primary
+            // Las cuatro pestañas comparten un encabezado con el avatar (abre
+            // el perfil), el título de la sección y la campana de alertas: así
+            // el perfil y las alertas están a mano en toda la aplicación.
+            // Las pantallas internas muestran un título centrado y la flecha
+            // para volver.
+            if (esRutaPrincipal) {
+                val (subtitulo, titulo) = encabezadoDe(rutaActual, usuario)
+                EncabezadoSaludo(
+                    saludo = subtitulo,
+                    nombre = titulo,
+                    nombreAvatar = usuario.nombreCompleto,
+                    alertas = alertas.size,
+                    alTocarAvatar = { navController.navigate(Rutas.PERFIL) },
+                    alTocarAlertas = { mostrarAlertas = true },
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.background)
+                        .statusBarsPadding()
+                        .padding(horizontal = Espaciado.pantalla, vertical = 12.dp)
                 )
-            )
+            } else {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            text = tituloDeRuta(rutaActual, usuario.rol),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    },
+                    navigationIcon = {
+                        if (!esRutaPrincipal) {
+                            IconButton(onClick = { navController.popBackStack() }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBackIos,
+                                    contentDescription = "Volver",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    },
+                    // La barra se funde con el fondo: sin bloque de color, el
+                    // acento queda reservado para lo importante.
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        scrolledContainerColor = MaterialTheme.colorScheme.background,
+                        titleContentColor = MaterialTheme.colorScheme.onBackground,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onBackground
+                    )
+                )
+            }
         },
         floatingActionButton = {
-            // El botón de crear cambia de destino según la pestaña activa,
-            // y no aparece en las pantallas donde no tendría sentido.
-            when (rutaActual) {
-                Rutas.OPORTUNIDADES -> if (Permisos.puedeCrearOportunidad(usuario.rol)) {
-                    ExtendedFloatingActionButton(
-                        onClick = { navController.navigate(Rutas.formularioOportunidad()) },
-                        icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                        text = { Text("Nueva") }
-                    )
-                }
-
-                Rutas.ORGANIZACIONES -> ExtendedFloatingActionButton(
+            // El "+" central de la barra crea oportunidades; en Empresas el
+            // botón flotante crea organizaciones.
+            if (rutaActual == Rutas.ORGANIZACIONES) {
+                ExtendedFloatingActionButton(
                     onClick = { navController.navigate(Rutas.formularioOrganizacion()) },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = CircleShape,
                     icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                    text = { Text("Nueva") }
+                    text = { Text("Nueva empresa") }
                 )
             }
         },
         bottomBar = {
-            NavigationBar {
-                items.forEach { item ->
-                    NavigationBarItem(
-                        // Marcada también en sus pantallas internas.
-                        selected = pestanaActual == item.ruta,
-                        onClick = {
-                            if (pestanaActual == item.ruta) {
-                                // Ya estamos en esta sección: tocar su ícono
-                                // cierra las pantallas internas y vuelve a la
-                                // raíz de la sección. Si ya está en la raíz,
-                                // no hace nada.
-                                navController.popBackStack(item.ruta, inclusive = false)
-                            } else {
-                                navController.navigate(item.ruta) {
-                                    // popUpTo + saveState: al cambiar de
-                                    // pestaña no se apilan copias y cada una
-                                    // recuerda dónde iba el scroll.
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        },
-                        icon = { Icon(item.icono, contentDescription = item.etiqueta) },
-                        label = { Text(item.etiqueta) }
-                    )
-                }
+            // Los flujos de captura (formularios, registrar gestión) ocupan
+            // toda la pantalla para que el usuario se concentre en completarlos.
+            if (rutaActual !in rutasDeFlujo) {
+                BarraInferior(
+                    items = items,
+                    pestanaActual = pestanaActual,
+                    alSeleccionar = { item -> irAPestana(item.ruta) },
+                    alCrear = { navController.navigate(Rutas.formularioOportunidad()) }
+                )
             }
         }
     ) { innerPadding ->
@@ -214,22 +265,33 @@ private fun ContenedorPrincipal(usuario: Usuario) {
 
             // Inicio: el contenido depende del perfil autenticado.
             composable(Rutas.INICIO) {
-                // Las alertas del tablero llevan directo a la oportunidad.
                 val alAbrirOportunidad: (Long) -> Unit = { id ->
                     navController.navigate(Rutas.detalleOportunidad(id))
+                }
+                val alRegistrarGestion: (Long) -> Unit = { id ->
+                    navController.navigate(Rutas.registrarSeguimiento(id))
                 }
                 val alVerPropuestas = { navController.navigate(Rutas.PROPUESTAS) }
                 if (Permisos.puedeVerPanelDeEquipo(usuario.rol)) {
                     PanelSupervisorScreen(
                         alAbrirOportunidad = alAbrirOportunidad,
-                        alVerPropuestas = alVerPropuestas
+                        alVerPropuestas = alVerPropuestas,
+                        mostrarMensaje = mostrarMensaje
                     )
                 } else {
                     DashboardEjecutivoScreen(
                         alAbrirOportunidad = alAbrirOportunidad,
-                        alVerPropuestas = alVerPropuestas
+                        alRegistrarGestion = alRegistrarGestion,
+                        alVerCartera = { irAPestana(Rutas.OPORTUNIDADES) }
                     )
                 }
+            }
+
+            // Agenda: eventos por fecha, para anticiparse.
+            composable(Rutas.AGENDA) {
+                AgendaScreen(
+                    alAbrirOportunidad = { id -> navController.navigate(Rutas.detalleOportunidad(id)) }
+                )
             }
 
             // Propuestas enviadas (HU-16), abierta desde los tableros.
@@ -255,6 +317,7 @@ private fun ContenedorPrincipal(usuario: Usuario) {
             ) {
                 DetalleOportunidadScreen(
                     alEditar = { id -> navController.navigate(Rutas.formularioOportunidad(id)) },
+                    alAbrirOrganizacion = { id -> navController.navigate(Rutas.detalleOrganizacion(id)) },
                     alRegistrarGestion = { id ->
                         navController.navigate(Rutas.registrarSeguimiento(id))
                     },
@@ -368,5 +431,21 @@ private fun ContenedorPrincipal(usuario: Usuario) {
                 PerfilScreen(usuario = usuario)
             }
         }
+    }
+}
+
+/** Subtítulo y título del encabezado común de cada pestaña. */
+private fun encabezadoDe(ruta: String, usuario: Usuario): Pair<String, String> {
+    val locale = Locale.forLanguageTag("es-CL")
+    val supervisor = usuario.rol == RolUsuario.SUPERVISOR
+    return when (ruta) {
+        Rutas.AGENDA -> SimpleDateFormat("MMMM yyyy", locale).format(Date())
+            .replaceFirstChar { it.uppercase() } to "Agenda"
+        Rutas.OPORTUNIDADES -> (if (supervisor) "Todo el equipo" else "Asignadas a ti") to
+            (if (supervisor) "Cartera comercial" else "Mi cartera")
+        Rutas.ORGANIZACIONES -> "Organizaciones y contactos" to "Empresas"
+        else -> SimpleDateFormat("EEEE d 'de' MMMM", locale).format(Date())
+            .replaceFirstChar { it.uppercase() } to
+            (if (supervisor) "Panel del equipo" else "Hola, ${usuario.nombreCompleto.substringBefore(" ")}")
     }
 }

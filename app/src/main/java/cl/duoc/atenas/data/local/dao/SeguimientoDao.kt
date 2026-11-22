@@ -91,6 +91,36 @@ abstract class SeguimientoDao {
     )
     abstract fun observarGestionesAtrasadas(hoy: Long, responsableId: Long?): Flow<List<GestionPendiente>>
 
+    /**
+     * Igual que las atrasadas, pero para la última gestión cuya próxima acción
+     * cae dentro de [desde, hasta): se usa para "lo que vence hoy".
+     */
+    @Query(
+        """
+        SELECT s.id AS id,
+               s.oportunidadId AS oportunidadId,
+               o.nombre AS oportunidadNombre,
+               s.proximaAccion AS proximaAccion,
+               s.fechaProximoSeguimiento AS fechaProximoSeguimiento,
+               u.nombreCompleto AS responsableNombre
+        FROM seguimiento s
+        INNER JOIN oportunidad o ON o.id = s.oportunidadId
+        LEFT JOIN usuario u ON u.id = o.responsableId
+        WHERE s.id = (
+                SELECT s2.id FROM seguimiento s2
+                WHERE s2.oportunidadId = s.oportunidadId
+                ORDER BY s2.fechaAccion DESC, s2.id DESC
+                LIMIT 1
+              )
+          AND s.fechaProximoSeguimiento >= :desde
+          AND s.fechaProximoSeguimiento < :hasta
+          AND o.estado NOT IN ('DESCARTADA', 'CERRADA', 'ACTIVACION_REALIZADA')
+          AND (:responsableId IS NULL OR o.responsableId = :responsableId)
+        ORDER BY s.fechaProximoSeguimiento ASC
+        """
+    )
+    abstract fun observarGestionesEntre(desde: Long, hasta: Long, responsableId: Long?): Flow<List<GestionPendiente>>
+
     @Query("SELECT * FROM seguimiento WHERE oportunidadId = :oportunidadId ORDER BY fechaAccion DESC, id DESC")
     abstract fun observarHistorial(oportunidadId: Long): Flow<List<Seguimiento>>
 

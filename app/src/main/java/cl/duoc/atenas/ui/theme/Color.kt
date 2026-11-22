@@ -3,89 +3,84 @@ package cl.duoc.atenas.ui.theme
 import androidx.compose.ui.graphics.Color
 
 /*
- * Paleta centralizada. Ninguna pantalla debe declarar colores hexadecimales:
- * todo se consume desde MaterialTheme.colorScheme o desde los colores
- * semánticos definidos más abajo.
+ * PALETA DE ATENAS
+ *
+ * Inspirada en una interfaz nocturna: fondo azul noche casi negro, tarjetas
+ * apenas más claras y un acento con degradado de menta a azul. El acento se
+ * reserva para lo importante (botón principal, tarjeta destacada, pestaña
+ * activa) y así la pantalla "respira".
+ *
+ * Ninguna pantalla declara colores hexadecimales: todo se consume desde
+ * MaterialTheme.colorScheme, desde los degradados de Degradados.kt o desde
+ * los colores semánticos de ColoresSemanticos.kt.
  */
 
-// ---- Esquema claro ----
-val AzulPrimario = Color(0xFF14557A)
-val SobreAzulPrimario = Color(0xFFFFFFFF)
-val ContenedorPrimario = Color(0xFFCFE5F7)
-val SobreContenedorPrimario = Color(0xFF001E31)
-val AzulSecundario = Color(0xFF4E616D)
-val SobreAzulSecundario = Color(0xFFFFFFFF)
-val ContenedorSecundario = Color(0xFFD1E5F3)
-val SobreContenedorSecundario = Color(0xFF0A1D28)
-val AmbarTerciario = Color(0xFF8A5100)
-val SobreAmbarTerciario = Color(0xFFFFFFFF)
-val ContenedorTerciario = Color(0xFFFFDDB7)
-val SobreContenedorTerciario = Color(0xFF2C1700)
-val RojoError = Color(0xFFBA1A1A)
-val SobreRojoError = Color(0xFFFFFFFF)
-val ContenedorError = Color(0xFFFFDAD6)
-val SobreContenedorError = Color(0xFF410002)
-val FondoClaro = Color(0xFFF2F5FA)
-val SobreFondoClaro = Color(0xFF161A1D)
-val VarianteSuperficieClara = Color(0xFFDDE3EA)
-val SobreVarianteSuperficieClara = Color(0xFF444B51)
-val ContornoClaro = Color(0xFF6E767D)
-val ContornoVarianteClaro = Color(0xFFD3DAE2)
+// ---- Marca (compartida por ambos temas) ----
+val MentaMarca = Color(0xFF5EE6B8)
+val TurquesaMarca = Color(0xFF2CC2A6)
+val AzulMarca = Color(0xFF1B6FB6)
+val AzulProfundoMarca = Color(0xFF145A9C)
 
-/*
- * Roles de contenedor de superficie.
- *
- * Material 3 los usa para decidir el color de fondo de tarjetas, barras y
- * menús. Si no se declaran, Compose los deriva de su paleta por defecto y
- * todo queda con el tinte lila genérico de Material.
- *
- * Acá las tarjetas quedan blancas sobre un lienzo levemente azulado, que es
- * lo que da la sensación de limpieza y separación entre elementos.
- */
-val SuperficieMinimaClara = Color(0xFFFFFFFF)
-val SuperficieBajaClara = Color(0xFFFBFCFE)
-val SuperficieMediaClara = Color(0xFFF4F7FB)
-val SuperficieAltaClara = Color(0xFFEDF1F7)
-val SuperficieMaximaClara = Color(0xFFFFFFFF)
+// ---- Esquema oscuro (el de la referencia) ----
+val FondoOscuro = Color(0xFF12131A)
+val SobreFondoOscuro = Color(0xFFF3F5F9)
+val TextoSecundarioOscuro = Color(0xFF9CA3B4)
+val TarjetaOscura = Color(0xFF1D1F2A)
+val TarjetaAltaOscura = Color(0xFF252836)
+val TarjetaBajaOscura = Color(0xFF181A23)
+val ContornoOscuro = Color(0xFF4A4F63)
+val ContornoVarianteOscuro = Color(0xFF2B2E3D)
+val PrimarioOscuro = Color(0xFF5EE6B8)
+val SobrePrimarioOscuro = Color(0xFF052A20)
+val ContenedorPrimarioOscuro = Color(0xFF123B3A)
+val SobreContenedorPrimarioOscuro = Color(0xFFB5F5DD)
+val SecundarioOscuro = Color(0xFF6CB4F0)
+val SobreSecundarioOscuro = Color(0xFF06223B)
+val ContenedorSecundarioOscuro = Color(0xFF17304A)
+val SobreContenedorSecundarioOscuro = Color(0xFFCDE5FB)
+val TerciarioOscuro = Color(0xFFFFC46B)
+val SobreTerciarioOscuro = Color(0xFF3D2500)
+val ContenedorTerciarioOscuro = Color(0xFF3A2A12)
+val SobreContenedorTerciarioOscuro = Color(0xFFFFE2B8)
+val ErrorOscuro = Color(0xFFFF8A80)
+val SobreErrorOscuro = Color(0xFF4A0703)
+val ContenedorErrorOscuro = Color(0xFF3A1A1E)
+val SobreContenedorErrorOscuro = Color(0xFFFFD6D2)
 
-// ---- Esquema oscuro ----
-val AzulPrimarioOscuro = Color(0xFF94CCF4)
-val SobreAzulPrimarioOscuro = Color(0xFF003351)
-val ContenedorPrimarioOscuro = Color(0xFF004B73)
-val SobreContenedorPrimarioOscuro = Color(0xFFCFE5F7)
-val AzulSecundarioOscuro = Color(0xFFB6C9D8)
-val SobreAzulSecundarioOscuro = Color(0xFF21333E)
-val ContenedorSecundarioOscuro = Color(0xFF374955)
-val SobreContenedorSecundarioOscuro = Color(0xFFD1E5F3)
-val AmbarTerciarioOscuro = Color(0xFFFFB95C)
-val SobreAmbarTerciarioOscuro = Color(0xFF492900)
-val ContenedorTerciarioOscuro = Color(0xFF693C00)
-val SobreContenedorTerciarioOscuro = Color(0xFFFFDDB7)
-val RojoErrorOscuro = Color(0xFFFFB4AB)
-val SobreRojoErrorOscuro = Color(0xFF690005)
-val ContenedorErrorOscuro = Color(0xFF93000A)
-val SobreContenedorErrorOscuro = Color(0xFFFFDAD6)
-val FondoOscuro = Color(0xFF0E1214)
-val SobreFondoOscuro = Color(0xFFE2E4E7)
-val VarianteSuperficieOscura = Color(0xFF41484D)
-val SobreVarianteSuperficieOscura = Color(0xFFC1C7CE)
-val ContornoOscuro = Color(0xFF8B9198)
-val ContornoVarianteOscuro = Color(0xFF353B40)
-
-val SuperficieMinimaOscura = Color(0xFF090C0E)
-val SuperficieBajaOscura = Color(0xFF161A1D)
-val SuperficieMediaOscura = Color(0xFF1A1F22)
-val SuperficieAltaOscura = Color(0xFF242A2E)
-val SuperficieMaximaOscura = Color(0xFF1E2427)
+// ---- Esquema claro (misma identidad, lienzo luminoso) ----
+val FondoClaro = Color(0xFFF4F6FA)
+val SobreFondoClaro = Color(0xFF12131A)
+val TextoSecundarioClaro = Color(0xFF5E6577)
+val TarjetaClara = Color(0xFFFFFFFF)
+val TarjetaAltaClara = Color(0xFFEDF1F7)
+val TarjetaBajaClara = Color(0xFFF9FAFC)
+val ContornoClaro = Color(0xFF8A90A0)
+val ContornoVarianteClaro = Color(0xFFE1E5EE)
+val PrimarioClaro = Color(0xFF0E8F74)
+val SobrePrimarioClaro = Color(0xFFFFFFFF)
+val ContenedorPrimarioClaro = Color(0xFFD3F6EA)
+val SobreContenedorPrimarioClaro = Color(0xFF00382B)
+val SecundarioClaro = Color(0xFF1B6FB6)
+val SobreSecundarioClaro = Color(0xFFFFFFFF)
+val ContenedorSecundarioClaro = Color(0xFFDCEBFA)
+val SobreContenedorSecundarioClaro = Color(0xFF062A4A)
+val TerciarioClaro = Color(0xFF9A5B00)
+val SobreTerciarioClaro = Color(0xFFFFFFFF)
+val ContenedorTerciarioClaro = Color(0xFFFFE7C6)
+val SobreContenedorTerciarioClaro = Color(0xFF2E1A00)
+val ErrorClaro = Color(0xFFC62828)
+val SobreErrorClaro = Color(0xFFFFFFFF)
+val ContenedorErrorClaro = Color(0xFFFFE3E0)
+val SobreContenedorErrorClaro = Color(0xFF450A07)
 
 // ---- Colores semánticos (estados de la gestión) ----
-val ExitoClaro = Color(0xFF2E6B3E)
-val ExitoOscuro = Color(0xFF8FD6A3)
+val ExitoClaro = Color(0xFF1E7A4F)
+val ExitoOscuro = Color(0xFF6BE3A4)
 val AdvertenciaClaro = Color(0xFF9A5B00)
 val AdvertenciaOscuro = Color(0xFFFFC46B)
-val PeligroClaro = Color(0xFFB3261E)
-val PeligroOscuro = Color(0xFFFFB4AB)
-val InformacionClaro = Color(0xFF1565A0)
-val InformacionOscuro = Color(0xFF8FC7F0)
-val NeutroClaro = Color(0xFF5A6570)
-val NeutroOscuro = Color(0xFFAAB4BE)
+val PeligroClaro = Color(0xFFC62828)
+val PeligroOscuro = Color(0xFFFF8A80)
+val InformacionClaro = Color(0xFF1B6FB6)
+val InformacionOscuro = Color(0xFF6CB4F0)
+val NeutroClaro = Color(0xFF5E6577)
+val NeutroOscuro = Color(0xFFA9B0C0)

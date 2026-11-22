@@ -87,6 +87,33 @@ Toda la información de organizaciones, contactos, usuarios y eventos es
 - Vista previa de las fotografías asociadas a cada oportunidad
 - Agenda de eventos y recordatorios en el calendario del dispositivo
 
+## Diseño y experiencia de uso
+
+El rediseño parte de cómo trabaja el equipo comercial, no solo del aspecto:
+
+- **Inicio "Qué hacer hoy"**: lista de tareas (atrasadas, que vencen hoy,
+  propuestas sin respuesta, oportunidades sin contacto) con la acción directa
+  en cada tarjeta, y el embudo como una barra de colores
+- **Agenda**: eventos por fecha, franja de la semana y aviso cuando hay eventos
+  cercanos sin confirmar, para anticiparse
+- **Cartera por etapas**: pestañas siempre visibles (Por contactar, En curso,
+  Confirmadas, Cerradas), filtros en una hoja inferior y chips de filtros
+  activos que se quitan con un toque
+- **Detalle con siguiente paso**: indicador de avance por etapas, tarjeta con
+  la próxima acción (llamar, registrar gestión) y pestañas Resumen, Gestiones
+  y Contacto
+- **Registrar gestión** eligiendo el tipo con íconos y la fecha del próximo
+  seguimiento con atajos (mañana, en 3 días, en 1 semana)
+- **Nueva oportunidad en 4 pasos** con barra de progreso y aviso del margen
+  que queda hasta el evento
+- **Panel del supervisor** que parte por lo que requiere su decisión, con
+  confirmar o descartar en la misma tarjeta
+- Barra inferior con botón "+" central para registrar rápido en terreno; el
+  perfil se abre desde el avatar
+- Tema oscuro azul noche con acento en degradado de menta a azul, y su
+  equivalente claro; tipografía Plus Jakarta Sans incluida en `res/font`
+  (licencia SIL Open Font License, ver `licencias/`), sin dependencias nuevas
+
 ## Arquitectura
 
 Patrón **MVVM** sobre Jetpack Compose y Material Design 3:
@@ -208,6 +235,9 @@ El proyecto incluye pruebas de las reglas de negocio, en
 - `ReglasAuditoriaTest` — 8 pruebas de las reglas agregadas tras la auditoría
   funcional: prioridad por perfil, oportunidades cerradas, qué gestiones
   cuentan como contacto y rangos del filtro por fecha
+- `GuiaGestionTest` — 13 pruebas del siguiente paso sugerido, el indicador de
+  etapas, la tasa de conversión, los textos de vencimiento y las etapas de la
+  cartera
 - `core/FechasTest` — 5 pruebas de la conversión de fechas entre el calendario
   de Material 3 (UTC) y la hora local de Chile
 
