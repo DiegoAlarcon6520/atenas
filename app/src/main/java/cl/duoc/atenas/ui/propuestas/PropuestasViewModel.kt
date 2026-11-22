@@ -1,14 +1,10 @@
 package cl.duoc.atenas.ui.propuestas
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import cl.duoc.atenas.core.SesionManager
 import cl.duoc.atenas.data.local.dao.PropuestaEnviada
 import cl.duoc.atenas.data.repository.SeguimientoRepository
-import cl.duoc.atenas.di.contenedor
 import cl.duoc.atenas.domain.model.EstadoOportunidad
 import cl.duoc.atenas.domain.rules.Permisos
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -66,14 +62,5 @@ class PropuestasViewModel(
         fun esperaRespuesta(propuesta: PropuestaEnviada): Boolean =
             propuesta.estadoActual == EstadoOportunidad.PROPUESTA_ENVIADA ||
                 propuesta.estadoActual == EstadoOportunidad.EN_ESPERA_RESPUESTA
-
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                PropuestasViewModel(
-                    sesion = contenedor.sesion,
-                    seguimientos = contenedor.seguimientos
-                )
-            }
-        }
     }
 }

@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.atenas.data.local.dao.OportunidadResumen
+import cl.duoc.atenas.di.FabricasViewModel
 import cl.duoc.atenas.domain.model.EstadoOportunidad
 import cl.duoc.atenas.ui.components.Avatar
 import cl.duoc.atenas.ui.components.EstadoVacio
@@ -57,7 +58,7 @@ fun PanelSupervisorScreen(
     alVerPropuestas: () -> Unit,
     mostrarMensaje: (String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: PanelSupervisorViewModel = viewModel(factory = PanelSupervisorViewModel.Factory)
+    viewModel: PanelSupervisorViewModel = viewModel(factory = FabricasViewModel.panelSupervisor)
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
 

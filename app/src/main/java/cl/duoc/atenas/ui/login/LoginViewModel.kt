@@ -1,13 +1,9 @@
 package cl.duoc.atenas.ui.login
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import cl.duoc.atenas.core.SesionManager
 import cl.duoc.atenas.data.repository.UsuarioRepository
-import cl.duoc.atenas.di.contenedor
 import cl.duoc.atenas.domain.validation.Validadores
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -84,17 +80,6 @@ class LoginViewModel(
             } else {
                 _estado.update { it.copy(cargando = false) }
                 sesion.iniciarSesion(encontrado)
-            }
-        }
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                LoginViewModel(
-                    usuarios = contenedor.usuarios,
-                    sesion = contenedor.sesion
-                )
             }
         }
     }

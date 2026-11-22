@@ -1,18 +1,13 @@
 package cl.duoc.atenas.ui.organizaciones
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.data.local.entity.Comuna
 import cl.duoc.atenas.data.local.entity.Organizacion
 import cl.duoc.atenas.data.local.entity.Region
 import cl.duoc.atenas.data.repository.CatalogoRepository
 import cl.duoc.atenas.data.repository.OrganizacionRepository
-import cl.duoc.atenas.di.contenedor
 import cl.duoc.atenas.domain.model.TipoOrganizacion
 import cl.duoc.atenas.domain.validation.Validadores
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -185,19 +180,6 @@ class FormularioOrganizacionViewModel(
                         errorGeneral = "No se pudo guardar: ${excepcion.message ?: "error desconocido"}"
                     )
                 }
-            }
-        }
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val argumentos = createSavedStateHandle()
-                FormularioOrganizacionViewModel(
-                    organizacionId = argumentos.get<Long>("organizacionId") ?: -1L,
-                    organizaciones = contenedor.organizaciones,
-                    catalogo = contenedor.catalogo
-                )
             }
         }
     }

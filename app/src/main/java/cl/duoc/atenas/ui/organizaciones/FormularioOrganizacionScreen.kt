@@ -17,12 +17,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.WorkOutline
 import androidx.compose.material3.Button
@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cl.duoc.atenas.di.FabricasViewModel
 import cl.duoc.atenas.domain.model.TipoOrganizacion
 import cl.duoc.atenas.ui.components.CampoTexto
 import cl.duoc.atenas.ui.components.IndicadorCarga
@@ -51,7 +52,7 @@ fun FormularioOrganizacionScreen(
     alTerminar: () -> Unit,
     mostrarMensaje: (String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: FormularioOrganizacionViewModel = viewModel(factory = FormularioOrganizacionViewModel.Factory)
+    viewModel: FormularioOrganizacionViewModel = viewModel(factory = FabricasViewModel.formularioOrganizacion)
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
 

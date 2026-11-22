@@ -1,10 +1,7 @@
 package cl.duoc.atenas.ui.supervisor
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.core.SesionManager
 import cl.duoc.atenas.data.local.dao.GestionPendiente
@@ -13,7 +10,6 @@ import cl.duoc.atenas.data.local.entity.Seguimiento
 import cl.duoc.atenas.data.repository.OportunidadRepository
 import cl.duoc.atenas.data.repository.SeguimientoRepository
 import cl.duoc.atenas.data.repository.UsuarioRepository
-import cl.duoc.atenas.di.contenedor
 import cl.duoc.atenas.domain.model.EstadoOportunidad
 import cl.duoc.atenas.domain.model.TipoAccion
 import cl.duoc.atenas.domain.rules.GuiaGestion
@@ -138,19 +134,6 @@ class PanelSupervisorViewModel(
                 contactoId = null
             )
             _mensajes.tryEmit(if (confirmar) "Participación confirmada" else "Oportunidad descartada")
-        }
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                PanelSupervisorViewModel(
-                    sesion = contenedor.sesion,
-                    oportunidades = contenedor.oportunidades,
-                    seguimientos = contenedor.seguimientos,
-                    usuarios = contenedor.usuarios
-                )
-            }
         }
     }
 }

@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.atenas.data.local.dao.OrganizacionResumen
+import cl.duoc.atenas.di.FabricasViewModel
 import cl.duoc.atenas.domain.model.TipoOrganizacion
 import cl.duoc.atenas.ui.components.EstadoVacio
 import cl.duoc.atenas.ui.components.Etiqueta
@@ -47,7 +48,7 @@ import cl.duoc.atenas.ui.theme.Espaciado
 fun ListaOrganizacionesScreen(
     alAbrirDetalle: (Long) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ListaOrganizacionesViewModel = viewModel(factory = ListaOrganizacionesViewModel.Factory)
+    viewModel: ListaOrganizacionesViewModel = viewModel(factory = FabricasViewModel.listaOrganizaciones)
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
 

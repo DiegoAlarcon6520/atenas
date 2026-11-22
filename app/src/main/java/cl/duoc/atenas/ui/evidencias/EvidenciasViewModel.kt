@@ -1,17 +1,12 @@
 package cl.duoc.atenas.ui.evidencias
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import cl.duoc.atenas.core.ArchivosImagen
 import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.data.local.entity.Evidencia
 import cl.duoc.atenas.data.repository.EvidenciaRepository
 import cl.duoc.atenas.data.repository.OportunidadRepository
-import cl.duoc.atenas.di.contenedor
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -74,20 +69,6 @@ class EvidenciasViewModel(
         viewModelScope.launch {
             evidencias.eliminar(evidencia)
             ArchivosImagen.eliminarArchivo(evidencia.uri)
-        }
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val argumentos = createSavedStateHandle()
-                EvidenciasViewModel(
-                    oportunidadId = argumentos.get<Long>("oportunidadId")
-                        ?: error("Falta el identificador de la oportunidad."),
-                    evidencias = contenedor.evidencias,
-                    oportunidades = contenedor.oportunidades
-                )
-            }
         }
     }
 }

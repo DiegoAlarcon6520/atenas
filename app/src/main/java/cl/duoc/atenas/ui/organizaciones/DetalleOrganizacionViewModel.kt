@@ -1,11 +1,7 @@
 package cl.duoc.atenas.ui.organizaciones
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import cl.duoc.atenas.core.SesionManager
 import cl.duoc.atenas.data.local.dao.GestionDeOrganizacion
 import cl.duoc.atenas.data.local.dao.OportunidadResumen
@@ -15,7 +11,6 @@ import cl.duoc.atenas.data.repository.ContactoRepository
 import cl.duoc.atenas.data.repository.OportunidadRepository
 import cl.duoc.atenas.data.repository.OrganizacionRepository
 import cl.duoc.atenas.data.repository.SeguimientoRepository
-import cl.duoc.atenas.di.contenedor
 import cl.duoc.atenas.domain.rules.Permisos
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -74,21 +69,4 @@ class DetalleOrganizacionViewModel(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = DetalleOrganizacionUiState()
     )
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val argumentos = createSavedStateHandle()
-                DetalleOrganizacionViewModel(
-                    organizacionId = argumentos.get<Long>("organizacionId")
-                        ?: error("Falta el identificador de la organización."),
-                    sesion = contenedor.sesion,
-                    organizaciones = contenedor.organizaciones,
-                    contactos = contenedor.contactos,
-                    oportunidades = contenedor.oportunidades,
-                    seguimientos = contenedor.seguimientos
-                )
-            }
-        }
-    }
 }

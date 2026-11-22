@@ -1,14 +1,10 @@
 package cl.duoc.atenas.ui.alertas
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import cl.duoc.atenas.core.SesionManager
 import cl.duoc.atenas.data.repository.OportunidadRepository
 import cl.duoc.atenas.data.repository.SeguimientoRepository
-import cl.duoc.atenas.di.contenedor
 import cl.duoc.atenas.domain.model.EstadoOportunidad
 import cl.duoc.atenas.domain.rules.Permisos
 import cl.duoc.atenas.ui.dashboard.DashboardEjecutivoViewModel
@@ -103,16 +99,4 @@ class AlertasViewModel(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = emptyList()
     )
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                AlertasViewModel(
-                    sesion = contenedor.sesion,
-                    oportunidades = contenedor.oportunidades,
-                    seguimientos = contenedor.seguimientos
-                )
-            }
-        }
-    }
 }

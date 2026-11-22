@@ -1,10 +1,7 @@
 package cl.duoc.atenas.ui.dashboard
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import cl.duoc.atenas.core.Fechas
 import cl.duoc.atenas.core.SesionManager
 import cl.duoc.atenas.data.local.dao.ConteoPorEstado
@@ -12,7 +9,6 @@ import cl.duoc.atenas.data.local.dao.GestionPendiente
 import cl.duoc.atenas.data.local.dao.OportunidadResumen
 import cl.duoc.atenas.data.repository.OportunidadRepository
 import cl.duoc.atenas.data.repository.SeguimientoRepository
-import cl.duoc.atenas.di.contenedor
 import cl.duoc.atenas.domain.model.EstadoOportunidad
 import cl.duoc.atenas.domain.rules.GuiaGestion
 import kotlinx.coroutines.flow.SharingStarted
@@ -94,16 +90,6 @@ class DashboardEjecutivoViewModel(
     )
 
     companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                DashboardEjecutivoViewModel(
-                    sesion = contenedor.sesion,
-                    oportunidades = contenedor.oportunidades,
-                    seguimientos = contenedor.seguimientos
-                )
-            }
-        }
-
         /** Junta los pendientes en una sola lista, sin repetir oportunidades. */
         fun armarTareas(
             atrasadas: List<GestionPendiente>,

@@ -1,15 +1,10 @@
 package cl.duoc.atenas.ui.organizaciones
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import cl.duoc.atenas.data.local.entity.Contacto
 import cl.duoc.atenas.data.repository.ContactoRepository
 import cl.duoc.atenas.data.repository.OrganizacionRepository
-import cl.duoc.atenas.di.contenedor
 import cl.duoc.atenas.domain.model.AreaContacto
 import cl.duoc.atenas.domain.model.MedioContacto
 import cl.duoc.atenas.domain.validation.Validadores
@@ -178,21 +173,6 @@ class FormularioContactoViewModel(
                         errorGeneral = "No se pudo guardar: ${excepcion.message ?: "error desconocido"}"
                     )
                 }
-            }
-        }
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val argumentos = createSavedStateHandle()
-                FormularioContactoViewModel(
-                    organizacionId = argumentos.get<Long>("organizacionId")
-                        ?: error("Falta la organización del contacto."),
-                    contactoId = argumentos.get<Long>("contactoId") ?: -1L,
-                    contactos = contenedor.contactos,
-                    organizaciones = contenedor.organizaciones
-                )
             }
         }
     }

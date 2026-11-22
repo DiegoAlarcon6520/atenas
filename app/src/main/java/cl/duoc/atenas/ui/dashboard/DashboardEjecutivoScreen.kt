@@ -37,6 +37,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cl.duoc.atenas.di.FabricasViewModel
 import cl.duoc.atenas.domain.model.EstadoOportunidad
 import cl.duoc.atenas.ui.components.EstadoVacio
 import cl.duoc.atenas.ui.components.EtiquetaSobreDegradado
@@ -60,7 +61,7 @@ fun DashboardEjecutivoScreen(
     alRegistrarGestion: (Long) -> Unit,
     alVerCartera: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: DashboardEjecutivoViewModel = viewModel(factory = DashboardEjecutivoViewModel.Factory)
+    viewModel: DashboardEjecutivoViewModel = viewModel(factory = FabricasViewModel.dashboardEjecutivo)
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
 

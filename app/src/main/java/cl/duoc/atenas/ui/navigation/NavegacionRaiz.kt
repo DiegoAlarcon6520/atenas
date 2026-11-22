@@ -43,6 +43,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import cl.duoc.atenas.AtenasApp
 import cl.duoc.atenas.data.local.entity.Usuario
+import cl.duoc.atenas.di.FabricasViewModel
 import cl.duoc.atenas.domain.model.RolUsuario
 import cl.duoc.atenas.domain.rules.Permisos
 import cl.duoc.atenas.ui.agenda.AgendaScreen
@@ -161,7 +162,7 @@ private fun ContenedorPrincipal(usuario: Usuario) {
     // y entrar con otra cuenta, se reutilice el ViewModel de la anterior.
     val alertasViewModel: AlertasViewModel = viewModel(
         key = "alertas-${usuario.id}",
-        factory = AlertasViewModel.Factory
+        factory = FabricasViewModel.alertas
     )
     val alertas by alertasViewModel.alertas.collectAsStateWithLifecycle()
     var mostrarAlertas by rememberSaveable { mutableStateOf(false) }
