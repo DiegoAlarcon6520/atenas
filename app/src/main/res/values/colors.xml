@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fondo de la ventana mientras arranca la aplicación: evita un destello
+         de otro color antes de que Compose dibuje la primera pantalla. -->
+    <color name="fondo_ventana">#F4F6FA</color>
+</resources>

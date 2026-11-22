@@ -4,8 +4,10 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -15,6 +17,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -26,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -127,32 +131,43 @@ private fun ContenedorPrincipal(usuario: Usuario) {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(estadoSnackbar) },
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(tituloDeRuta(rutaActual, usuario.rol)) },
-                navigationIcon = {
-                    // La flecha de volver solo aparece en pantallas que se
-                    // abrieron encima de una pestaña (detalle, formulario).
-                    if (!esRutaPrincipal) {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Volver"
-                            )
+            // Inicio no lleva barra: su encabezado es el saludo con avatar,
+            // como en la referencia visual. El resto muestra un título
+            // centrado y, si corresponde, la flecha para volver.
+            if (rutaActual != Rutas.INICIO) {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            text = tituloDeRuta(rutaActual, usuario.rol),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    },
+                    navigationIcon = {
+                        // La flecha de volver solo aparece en pantallas que se
+                        // abrieron encima de una pestaña (detalle, formulario).
+                        if (!esRutaPrincipal) {
+                            IconButton(onClick = { navController.popBackStack() }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBackIos,
+                                    contentDescription = "Volver",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                         }
-                    }
-                },
-                // Barra sobre la superficie de la aplicación, con el título
-                // en el color de marca. Un bloque de color saturado arriba
-                // compite con los colores semánticos de los estados, que son
-                // los que tienen que destacar.
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.primary
+                    },
+                    // La barra se funde con el fondo: sin bloque de color, el
+                    // acento queda reservado para lo importante.
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        scrolledContainerColor = MaterialTheme.colorScheme.background,
+                        titleContentColor = MaterialTheme.colorScheme.onBackground,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onBackground
+                    )
                 )
-            )
+            }
         },
         floatingActionButton = {
             // El botón de crear cambia de destino según la pestaña activa,
@@ -161,6 +176,9 @@ private fun ContenedorPrincipal(usuario: Usuario) {
                 Rutas.OPORTUNIDADES -> if (Permisos.puedeCrearOportunidad(usuario.rol)) {
                     ExtendedFloatingActionButton(
                         onClick = { navController.navigate(Rutas.formularioOportunidad()) },
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        shape = CircleShape,
                         icon = { Icon(Icons.Default.Add, contentDescription = null) },
                         text = { Text("Nueva") }
                     )
@@ -168,13 +186,19 @@ private fun ContenedorPrincipal(usuario: Usuario) {
 
                 Rutas.ORGANIZACIONES -> ExtendedFloatingActionButton(
                     onClick = { navController.navigate(Rutas.formularioOrganizacion()) },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = CircleShape,
                     icon = { Icon(Icons.Default.Add, contentDescription = null) },
                     text = { Text("Nueva") }
                 )
             }
         },
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                tonalElevation = 0.dp
+            ) {
                 items.forEach { item ->
                     NavigationBarItem(
                         // Marcada también en sus pantallas internas.
@@ -200,7 +224,16 @@ private fun ContenedorPrincipal(usuario: Usuario) {
                             }
                         },
                         icon = { Icon(item.icono, contentDescription = item.etiqueta) },
-                        label = { Text(item.etiqueta) }
+                        label = { Text(item.etiqueta, style = MaterialTheme.typography.labelSmall) },
+                        // Pestaña activa en el color de marca con un halo
+                        // suave; las demás, en gris.
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     )
                 }
             }

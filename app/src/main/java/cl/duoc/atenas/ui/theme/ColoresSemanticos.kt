@@ -1,15 +1,22 @@
 package cl.duoc.atenas.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import cl.duoc.atenas.domain.model.EstadoOportunidad
 import cl.duoc.atenas.domain.model.Prioridad
 
+/*
+ * COLORES SEMÁNTICOS
+ *
+ * Siguen el tema elegido en la aplicación (LocalTemaOscuro), no el del
+ * teléfono: si el usuario fuerza el modo oscuro desde su perfil, los estados
+ * también se dibujan en su versión oscura.
+ */
+
 /** Color asociado a cada estado del embudo comercial. */
 @Composable
 fun colorDeEstado(estado: EstadoOportunidad): Color {
-    val oscuro = isSystemInDarkTheme()
+    val oscuro = LocalTemaOscuro.current
     return when (estado) {
         EstadoOportunidad.IDENTIFICADA,
         EstadoOportunidad.CERRADA -> if (oscuro) NeutroOscuro else NeutroClaro
@@ -30,7 +37,7 @@ fun colorDeEstado(estado: EstadoOportunidad): Color {
 /** Color asociado al nivel de prioridad. */
 @Composable
 fun colorDePrioridad(prioridad: Prioridad): Color {
-    val oscuro = isSystemInDarkTheme()
+    val oscuro = LocalTemaOscuro.current
     return when (prioridad) {
         Prioridad.ALTA -> if (oscuro) PeligroOscuro else PeligroClaro
         Prioridad.MEDIA -> if (oscuro) AdvertenciaOscuro else AdvertenciaClaro

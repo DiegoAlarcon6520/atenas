@@ -13,23 +13,26 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -38,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.duoc.atenas.data.local.entity.Comuna
@@ -49,10 +53,12 @@ import cl.duoc.atenas.domain.model.PotencialComercial
 import cl.duoc.atenas.domain.model.Prioridad
 import cl.duoc.atenas.domain.model.RangoFecha
 import cl.duoc.atenas.domain.model.TipoOportunidad
+import cl.duoc.atenas.ui.components.ChipPildora
 import cl.duoc.atenas.ui.components.EstadoVacio
 import cl.duoc.atenas.ui.components.IndicadorCarga
 import cl.duoc.atenas.ui.components.ListaDesplegable
 import cl.duoc.atenas.ui.components.TarjetaOportunidad
+import cl.duoc.atenas.ui.components.coloresCampo
 import cl.duoc.atenas.ui.theme.Espaciado
 
 /**
@@ -84,12 +90,12 @@ fun ListaOportunidadesScreen(
         // El espacio inferior extra deja leer la última tarjeta por encima
         // del botón flotante.
         contentPadding = PaddingValues(
-            start = Espaciado.md,
-            end = Espaciado.md,
+            start = Espaciado.pantalla,
+            end = Espaciado.pantalla,
             top = Espaciado.sm,
             bottom = Espaciado.xl * 3
         ),
-        verticalArrangement = Arrangement.spacedBy(Espaciado.sm)
+        verticalArrangement = Arrangement.spacedBy(Espaciado.entreTarjetas)
     ) {
 
         // ---------- Buscador ----------
@@ -112,6 +118,9 @@ fun ListaOportunidadesScreen(
                         }
                     },
                     singleLine = true,
+                    // Buscador en píldora, sin borde marcado, como en una app comercial.
+                    shape = CircleShape,
+                    colors = coloresCampo(),
                     modifier = Modifier.weight(1f)
                 )
 
@@ -122,8 +131,23 @@ fun ListaOportunidadesScreen(
                         }
                     }
                 ) {
-                    IconButton(onClick = viewModel::alternarPanelFiltros) {
-                        Icon(Icons.Default.FilterList, contentDescription = "Filtros")
+                    FilledTonalIconButton(
+                        onClick = viewModel::alternarPanelFiltros,
+                        modifier = Modifier.size(52.dp),
+                        colors = IconButtonDefaults.filledTonalIconButtonColors(
+                            containerColor = if (estado.mostrarFiltros) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.surfaceContainerHighest
+                            },
+                            contentColor = if (estado.mostrarFiltros) {
+                                MaterialTheme.colorScheme.onPrimary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            }
+                        )
+                    ) {
+                        Icon(Icons.Default.Tune, contentDescription = "Filtros")
                     }
                 }
             }
@@ -136,7 +160,7 @@ fun ListaOportunidadesScreen(
                 enter = fadeIn(tween(200)) + expandVertically(tween(200)),
                 exit = fadeOut(tween(150)) + shrinkVertically(tween(150))
             ) {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                Card(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
                     Column(
                         modifier = Modifier.padding(vertical = Espaciado.sm),
                         verticalArrangement = Arrangement.spacedBy(Espaciado.xs)
@@ -293,10 +317,10 @@ private fun <T> GrupoFiltros(
         horizontalArrangement = Arrangement.spacedBy(Espaciado.sm)
     ) {
         items(opciones) { opcion ->
-            FilterChip(
-                selected = seleccionada == opcion,
-                onClick = { alSeleccionar(opcion) },
-                label = { Text(etiqueta(opcion)) }
+            ChipPildora(
+                texto = etiqueta(opcion),
+                seleccionado = seleccionada == opcion,
+                onClick = { alSeleccionar(opcion) }
             )
         }
     }

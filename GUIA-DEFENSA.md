@@ -46,7 +46,7 @@ app/src/main/
     ├── di/                   AppContainer y acceso desde las fábricas
     │
     └── ui/
-        ├── theme/            Color, Type, Formas, Espaciado, ColoresSemanticos
+        ├── theme/            Color, Degradados, Type, Formas, Espaciado, ColoresSemanticos
         ├── components/       Etiquetas, tarjetas, campos de formulario
         ├── navigation/       Rutas.kt y NavegacionRaiz.kt
         ├── login/            Autenticación
@@ -105,6 +105,8 @@ el ViewModel, y toda la regla de negocio en `domain/`.
 | Historial de gestiones por organización | `SeguimientoDao.observarPorOrganizacion`, `DetalleOrganizacionScreen.kt` |
 | Transacción de una gestión | `SeguimientoDao.registrarGestion` (`@Transaction`) |
 | Fechas del calendario (UTC vs. local) | `Fechas.localAUtc` / `utcALocal`, `SelectorFecha` |
+| Identidad visual (paleta, degradados, fuente) | `ui/theme/Color.kt`, `Degradados.kt`, `Type.kt`, `res/font/` |
+| Botón con degradado, avatar, tarjeta destacada, chips | `ui/components/Marca.kt` |
 | Volver a la raíz de una sección | `NavegacionRaiz.kt` (`pestanaActual` y el `onClick` de la barra inferior) |
 | Asignar responsable | `ui/oportunidades/DetalleOportunidadViewModel.kt` |
 | Cámara y fotos | `core/ArchivosImagen.kt`, `ui/evidencias/`, manifest y `rutas_archivos.xml` |
@@ -121,7 +123,11 @@ el ViewModel, y toda la regla de negocio en `domain/`.
 Los botones toman su color del tema, no de la pantalla.
 
 1. Abre `ui/theme/Color.kt`
-2. Cambia `AzulPrimario` (modo claro) o `AzulPrimarioOscuro` (modo oscuro)
+2. Cambia `PrimarioClaro` (modo claro) o `PrimarioOscuro` (modo oscuro)
+
+Los botones principales con degradado (Ingresar, Registrar gestión) no usan
+ese color: toman `DegradadoBoton` de `ui/theme/Degradados.kt`, que se arma con
+`AzulProfundoMarca`, `AzulMarca` y `TurquesaMarca`.
 3. Vuelve a ejecutar
 
 Eso afecta a todos los botones y acentos a la vez. Si te piden cambiar **un
@@ -144,8 +150,9 @@ el tablero, el listado, el detalle y el panel del supervisor.
 
 ### Cambiar el fondo de las tarjetas
 
-`ui/theme/Color.kt` → los valores `Superficie*`. Material 3 usa esos roles para
-las tarjetas, la barra inferior y los menús.
+`ui/theme/Color.kt` → `TarjetaOscura` (modo oscuro) o `TarjetaClara` (modo
+claro). En `Theme.kt` se asignan a `surfaceContainerHighest`, que es el rol que
+Material 3 usa como fondo de todas las Card y de la barra inferior.
 
 ### Cambiar un texto visible
 

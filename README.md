@@ -87,6 +87,17 @@ Toda la información de organizaciones, contactos, usuarios y eventos es
 - Vista previa de las fotografías asociadas a cada oportunidad
 - Agenda de eventos y recordatorios en el calendario del dispositivo
 
+## Diseño visual
+
+- Tema oscuro azul noche con acento en degradado de menta a azul, y su
+  equivalente claro; el usuario elige el modo desde su perfil
+- Tipografía Plus Jakarta Sans incluida en `res/font` (licencia SIL Open Font
+  License, ver `licencias/`), sin dependencias nuevas
+- Tableros con saludo, campana de alertas, próximo evento destacado y una lista
+  a la vez elegida con chips, para que la pantalla respire
+- Sistema centralizado en `ui/theme/` (colores, degradados, tipografía, formas
+  y espaciado) y piezas reutilizables en `ui/components/Marca.kt`
+
 ## Arquitectura
 
 Patrón **MVVM** sobre Jetpack Compose y Material Design 3:

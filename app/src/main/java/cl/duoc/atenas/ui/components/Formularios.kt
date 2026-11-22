@@ -12,11 +12,13 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -67,6 +69,8 @@ fun CampoTexto(
     prefijo: String? = null
 ) {
     OutlinedTextField(
+        shape = MaterialTheme.shapes.medium,
+        colors = coloresCampo(),
         value = valor,
         onValueChange = alCambiar,
         label = { Text(etiqueta) },
@@ -95,6 +99,24 @@ fun CampoTexto(
         modifier = modifier.fillMaxWidth()
     )
 }
+
+/**
+ * Colores comunes de los campos: fondo de tarjeta, borde apenas visible en
+ * reposo y el color de marca al enfocar. Así los formularios se ven como
+ * bloques suaves en vez de cajas con borde marcado.
+ */
+@Composable
+fun coloresCampo() = OutlinedTextFieldDefaults.colors(
+    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+    disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+    errorContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+    focusedBorderColor = MaterialTheme.colorScheme.primary,
+    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+    focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
+    unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    focusedLabelColor = MaterialTheme.colorScheme.primary
+)
 
 /**
  * Lista desplegable genérica.
@@ -128,6 +150,8 @@ fun <T> ListaDesplegable(
         modifier = modifier.fillMaxWidth()
     ) {
         OutlinedTextField(
+            shape = MaterialTheme.shapes.medium,
+            colors = coloresCampo(),
             value = seleccionada?.let(textoDe) ?: "",
             onValueChange = { },
             readOnly = true,
@@ -181,6 +205,8 @@ fun SelectorFecha(
     var mostrarCalendario by remember { mutableStateOf(false) }
 
     OutlinedTextField(
+        shape = MaterialTheme.shapes.medium,
+        colors = coloresCampo(),
         value = valor?.let { Fechas.aTexto(it) } ?: "",
         onValueChange = { },
         readOnly = true,
@@ -254,6 +280,8 @@ fun SelectorHora(
     var mostrarReloj by remember { mutableStateOf(false) }
 
     OutlinedTextField(
+        shape = MaterialTheme.shapes.medium,
+        colors = coloresCampo(),
         value = Fechas.horaATexto(minutosDelDia),
         onValueChange = { },
         readOnly = true,
