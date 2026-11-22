@@ -340,6 +340,9 @@ private fun ContenedorPrincipal(usuario: Usuario) {
             ) {
                 FormularioOportunidadScreen(
                     alTerminar = { navController.popBackStack() },
+                    // Al guardar, esos formularios vuelven atrás: de regreso al paso 3.
+                    alCrearOrganizacion = { navController.navigate(Rutas.formularioOrganizacion()) },
+                    alCrearContacto = { organizacionId -> navController.navigate(Rutas.formularioContacto(organizacionId)) },
                     mostrarMensaje = mostrarMensaje
                 )
             }

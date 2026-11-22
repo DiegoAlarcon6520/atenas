@@ -225,7 +225,7 @@ Al volver a abrir la aplicación la base se siembra nuevamente desde cero.
 
 ## Pruebas unitarias y cobertura
 
-Hay **242 pruebas unitarias** (JUnit 4, patrón Arrange–Act–Assert) que corren
+Hay **244 pruebas unitarias** (JUnit 4, patrón Arrange–Act–Assert) que corren
 en la JVM, sin emulador. Se agrupan en tres capas:
 
 | Capa | Archivo | Pruebas | Qué verifica |
@@ -245,7 +245,7 @@ en la JVM, sin emulador. Se agrupan en tres capas:
 | | `ui/AgendaViewModelTest` | 5 | Agrupación por cercanía, eventos en riesgo, alcance por perfil |
 | | `ui/ListaOportunidadesViewModelTest` | 10 | Pestañas por etapa, cada filtro, región y comuna |
 | | `ui/DetallesViewModelTest` | 11 | Acceso por perfil al detalle, asignación (y su error), ficha y listado de organizaciones |
-| | `ui/FormularioOportunidadViewModelTest` | 28 | Pasos, validaciones, prioridad sugerida, crear, editar, oportunidad cerrada, errores de la base y del servidor |
+| | `ui/FormularioOportunidadViewModelTest` | 30 | Pasos, validaciones, prioridad sugerida, organizaciones y contactos registrados desde el paso 3, crear, editar, oportunidad cerrada, errores de la base y del servidor |
 | | `ui/RegistrarSeguimientoViewModelTest` | 21 | Transiciones por perfil, próxima acción, cierre, reutilizar gestión, errores |
 | | `ui/AlertasYPropuestasViewModelTest` | 6 | Alertas de la campana por perfil y filtro de propuestas |
 | | `ui/FormulariosOrganizacionViewModelTest` | 17 | Alta y edición de organizaciones y contactos |

@@ -66,7 +66,7 @@ app/src/test/java/cl/duoc/atenas/
 └── prueba/               DAO falsos, datos de ejemplo y regla de corrutinas
 ```
 
-**13 pantallas · 14 ViewModels · 8 entidades · 7 DAOs · 7 repositorios · 242 pruebas unitarias**
+**13 pantallas · 14 ViewModels · 8 entidades · 7 DAOs · 7 repositorios · 244 pruebas unitarias**
 
 ---
 
@@ -333,7 +333,7 @@ identifica los tres estados de cierre, el ViewModel salta esas dos validaciones
 y guarda `null`.
 
 **¿Cómo se prueban las reglas de negocio?**
-Hay 242 pruebas unitarias en tres capas: dominio (validaciones, máquina de
+Hay 244 pruebas unitarias en tres capas: dominio (validaciones, máquina de
 estados, prioridad, guía de gestión), repositorios y ViewModel. Corren sin
 emulador. Los ViewModel reciben repositorios armados con DAO falsos en memoria
 (`prueba/DaosFalsos.kt`) y un servidor falso (`prueba/ApiFalsa.kt`), así cada prueba decide qué datos hay en la "base" y
