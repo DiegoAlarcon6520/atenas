@@ -291,6 +291,14 @@ fábricas de ViewModel), cámara, calendario y preferencias. También se excluye
 `PerfilViewModel` y `EvidenciasViewModel`, que solo reenvían llamadas sin
 tomar decisiones, y `CriteriosBusqueda`, que es solo un contenedor de datos.
 
+## Backend (microservicio)
+
+La carpeta [`atenas-api/`](atenas-api/README.md) contiene el microservicio
+REST en Spring Boot 4 + MySQL que la app consume con Retrofit. Ahí está la
+guía para ejecutarlo en IntelliJ con XAMPP, la lista de endpoints y las
+decisiones de diseño. Android Studio ignora esa carpeta: son dos proyectos
+independientes dentro del mismo repositorio.
+
 ## Nota sobre los datos
 
 Todos los nombres de organizaciones, personas, correos, teléfonos, direcciones,
