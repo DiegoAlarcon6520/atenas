@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -18,16 +20,41 @@ android {
         applicationId = "cl.duoc.atenas"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        // Cada APK publicado debe subir versionCode (entero, lo usa Android para
+        // decidir si es una actualización). versionName es el texto que ve el usuario.
+        versionCode = 2
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    // Firma del APK release con una clave EXCLUSIVAMENTE DE DEMOSTRACIÓN.
+    // Las claves no están en el repositorio: se leen de keystore.properties
+    // (ignorado por Git; ver keystore.properties.example). Si ese archivo no
+    // existe, el release se genera sin firmar y el resto del proyecto compila igual.
+    val archivoFirma = rootProject.file("keystore.properties")
+    val firma = Properties().apply {
+        if (archivoFirma.exists()) archivoFirma.inputStream().use { load(it) }
+    }
+
+    signingConfigs {
+        if (archivoFirma.exists()) {
+            create("demo") {
+                storeFile = rootProject.file(firma.getProperty("storeFile"))
+                storePassword = firma.getProperty("storePassword")
+                keyAlias = firma.getProperty("keyAlias")
+                keyPassword = firma.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
         release {
             optimization {
                 enable = false
+            }
+            if (archivoFirma.exists()) {
+                signingConfig = signingConfigs.getByName("demo")
             }
         }
     }

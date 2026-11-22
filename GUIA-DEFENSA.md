@@ -377,3 +377,18 @@ esconde el botón cuando no corresponde, pero quien decide es el servidor: si
 otro usuario registró una gestión que aún no llega al teléfono, responde 409,
 la app muestra el motivo y no borra nada en Room. Lo que ya tiene historial se
 descarta (oportunidad) o se desactiva (contacto) en vez de borrarse.
+
+**¿Cómo se firma el APK y dónde está la clave?**
+Con una clave de demostración (`.jks`) que se entrega aparte. En
+`app/build.gradle.kts`, el bloque `signingConfigs` lee la ruta, el alias y las
+contraseñas desde `keystore.properties`, que está en `.gitignore` junto con
+los `.jks`: ningún secreto queda en el repositorio. Sin ese archivo el release
+sale sin firmar y el proyecto igual compila. El APK firmado se publica como
+Release de GitHub, no dentro del código.
+
+**¿Cómo se pasa de la versión 1.0 a la 1.1?**
+En `defaultConfig` de `app/build.gradle.kts`: se sube `versionCode` (de 1 a 2)
+y se cambia `versionName` (de "1.0" a "1.1"), y se vuelve a generar el APK
+firmado con la **misma** clave. Android usa `versionCode` para decidir si es
+una actualización: rechaza instalar un código menor sobre uno mayor, y también
+una actualización firmada con otra clave.
